@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { SiteSettings, AIModel, Page } from '../types';
 import { INITIAL_SETTINGS, DEFAULT_CATEGORIES } from '../constants';
 
@@ -16,12 +17,22 @@ const AdminSettings: React.FC = () => {
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [categories, setCategories] = useState<string[]>([]);
   const [newCategory, setNewCategory] = useState('');
+  const [editingCategory, setEditingCategory] = useState<{ index: number; value: string } | null>(null);
+  
   const [pages, setPages] = useState<Page[]>([]);
   const [isEditingPage, setIsEditingPage] = useState(false);
   const [currentPage, setCurrentPage] = useState<Partial<Page>>({ title: '', slug: '', content: '', isVisible: true });
   const [activeTab, setActiveTab] = useState<'general' | 'ai' | 'pages' | 'categories' | 'smtp' | 'social'>('general');
 
+  const [searchParams] = useSearchParams();
+
   useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    const createParam = searchParams.get('create');
+    
+    if (tabParam) setActiveTab(tabParam as any);
+    if (createParam === 'true' && tabParam === 'pages') setIsEditingPage(true);
+
     const stored = localStorage.getItem('site_settings');
     if (stored) setSettings(JSON.parse(stored));
     
@@ -30,7 +41,7 @@ const AdminSettings: React.FC = () => {
 
     const storedCats = localStorage.getItem('site_categories');
     setCategories(storedCats ? JSON.parse(storedCats) : DEFAULT_CATEGORIES);
-  }, []);
+  }, [searchParams]);
 
   const handleSaveSettings = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -51,8 +62,21 @@ const AdminSettings: React.FC = () => {
   };
 
   const deleteCategory = (cat: string) => {
-    if (confirm(`Decommission category "${cat}"?`)) {
+    if (confirm(`Decommission category "${cat}" permanently? This might leave existing posts orphaned.`)) {
       setCategories(categories.filter(c => c !== cat));
+    }
+  };
+
+  const startEditCategory = (index: number, cat: string) => {
+    setEditingCategory({ index, value: cat });
+  };
+
+  const saveEditCategory = () => {
+    if (editingCategory) {
+      const updated = [...categories];
+      updated[editingCategory.index] = editingCategory.value;
+      setCategories(updated);
+      setEditingCategory(null);
     }
   };
 
@@ -94,7 +118,7 @@ const AdminSettings: React.FC = () => {
                   <input type="text" className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value={settings.tagline} onChange={e => setSettings({...settings, tagline: e.target.value})} />
                 </label>
               </div>
-              <button type="submit" className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl">Commit Identity</button>
+              <button type="submit" className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl hover:bg-white hover:text-[#ff3e3e] transition-all">Commit Identity</button>
             </form>
           )}
 
@@ -123,7 +147,7 @@ const AdminSettings: React.FC = () => {
                    </button>
                  ))}
                </div>
-               <button onClick={() => handleSaveSettings()} className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest">Update AI Logic</button>
+               <button onClick={() => handleSaveSettings()} className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-[#ff3e3e] transition-all">Update AI Logic</button>
             </div>
           )}
 
@@ -131,18 +155,31 @@ const AdminSettings: React.FC = () => {
             <div className="space-y-6">
                <h3 className="text-xl font-condensed font-black text-white uppercase italic">Taxonomy Engine</h3>
                <div className="flex gap-4 mb-8">
-                 <input type="text" placeholder="New Category Name..." className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-bold" value={newCategory} onChange={e => setNewCategory(e.target.value)} />
-                 <button onClick={addCategory} className="bg-white/10 hover:bg-[#ff3e3e] text-white px-6 py-3 rounded-xl font-black uppercase italic transition-all">Add</button>
+                 <input type="text" placeholder="Registry Title..." className="flex-grow bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white font-bold" value={newCategory} onChange={e => setNewCategory(e.target.value)} />
+                 <button onClick={addCategory} className="bg-[#ff3e3e] text-white px-8 py-3 rounded-xl font-black uppercase italic transition-all hover:bg-white hover:text-[#ff3e3e] border border-transparent">Add</button>
                </div>
-               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {categories.map(cat => (
-                    <div key={cat} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between group hover:border-[#ff3e3e]/50 transition-all">
-                      <span className="text-[11px] font-black text-white uppercase italic tracking-tighter">{cat}</span>
-                      <button onClick={() => deleteCategory(cat)} className="text-gray-500 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i className="bi bi-trash"></i></button>
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {categories.map((cat, idx) => (
+                    <div key={idx} className="bg-white/5 border border-white/10 p-4 rounded-xl flex items-center justify-between group hover:border-[#ff3e3e]/50 transition-all shadow-sm">
+                      {editingCategory?.index === idx ? (
+                        <div className="flex gap-2 w-full">
+                          <input type="text" className="bg-black/60 text-white font-bold px-2 py-1 rounded w-full border border-white/20" value={editingCategory.value} onChange={e => setEditingCategory({...editingCategory, value: e.target.value})} autoFocus />
+                          <button onClick={saveEditCategory} className="text-green-500 hover:text-white"><i className="bi bi-check-lg"></i></button>
+                          <button onClick={() => setEditingCategory(null)} className="text-gray-500 hover:text-white"><i className="bi bi-x-lg"></i></button>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="text-[11px] font-black text-white uppercase italic tracking-tighter">{cat}</span>
+                          <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-all">
+                            <button onClick={() => startEditCategory(idx, cat)} className="text-gray-500 hover:text-[#ff3e3e]"><i className="bi bi-pencil-fill fs-6"></i></button>
+                            <button onClick={() => deleteCategory(cat)} className="text-gray-500 hover:text-red-500"><i className="bi bi-trash-fill fs-6"></i></button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   ))}
                </div>
-               <button onClick={handleSaveCategories} className="mt-8 bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest">Commit Taxonomy</button>
+               <button onClick={handleSaveCategories} className="mt-8 bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-[#ff3e3e] transition-all">Commit Taxonomy</button>
             </div>
           )}
 
@@ -175,7 +212,7 @@ const AdminSettings: React.FC = () => {
                   <input type="text" placeholder="Site Identity" className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value={settings.smtp.senderName} onChange={e => setSettings({...settings, smtp: {...settings.smtp, senderName: e.target.value}})} />
                 </label>
               </div>
-              <button type="submit" className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl">Apply SMTP Config</button>
+              <button type="submit" className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl hover:bg-white hover:text-[#ff3e3e] transition-all">Apply SMTP Config</button>
             </form>
           )}
 
@@ -200,25 +237,24 @@ const AdminSettings: React.FC = () => {
                     </label>
                  </div>
                </div>
-               <button onClick={() => handleSaveSettings()} className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl">Commit Social Pulse</button>
+               <button onClick={() => handleSaveSettings()} className="bg-[#ff3e3e] text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest shadow-xl hover:bg-white hover:text-[#ff3e3e] transition-all">Commit Social Pulse</button>
             </div>
           )}
 
           {activeTab === 'pages' && (
             <div className="space-y-8">
-               <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-condensed font-black text-white uppercase italic">CMS Infrastructure</h3>
-                  {/* FIXED: hover:text-[#0a0e17] and explicit text color classes ensure readability on hover */}
+               <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-condensed font-black text-white uppercase italic mb-0">CMS Infrastructure</h3>
                   <button 
                     onClick={() => { setIsEditingPage(true); setCurrentPage({ title: '', slug: '', content: '', isVisible: true }); }} 
-                    className="bg-white/10 border border-white/10 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all hover:bg-white hover:text-[#0a0e17] focus:outline-none shadow-sm active:scale-95"
+                    className="bg-white/10 border border-white/10 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:bg-white hover:text-black focus:outline-none shadow-sm active:scale-95"
                   >
                     Deploy New Node
                   </button>
                </div>
 
                {isEditingPage ? (
-                 <div className="space-y-6 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl">
+                 <div className="space-y-6 bg-black/40 p-8 rounded-3xl border border-white/5 shadow-2xl animate-in fade-in zoom-in-95 duration-300">
                     <div className="grid grid-cols-2 gap-4">
                       <label className="block">
                         <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Page Title</span>
@@ -231,20 +267,21 @@ const AdminSettings: React.FC = () => {
                     </div>
                     <label className="block">
                        <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Page Content</span>
-                       <textarea className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white min-h-[350px]" value={currentPage.content} onChange={e => setCurrentPage({...currentPage, content: e.target.value})} />
+                       <textarea className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white min-h-[350px] font-medium" value={currentPage.content} onChange={e => setCurrentPage({...currentPage, content: e.target.value})} />
                     </label>
                     <div className="flex justify-end gap-4 border-t border-white/5 pt-6">
-                       <button onClick={() => setIsEditingPage(false)} className="text-gray-500 uppercase font-black text-[10px] hover:text-white transition-all">Abort</button>
-                       <button onClick={handleSavePage} className="bg-[#ff3e3e] text-white px-8 py-2.5 rounded-xl font-black uppercase italic tracking-widest shadow-lg">Commit Node</button>
+                       <button onClick={() => setIsEditingPage(false)} className="text-gray-500 uppercase font-black text-[10px] hover:text-white transition-all tracking-widest">Abort</button>
+                       <button onClick={handleSavePage} className="bg-[#ff3e3e] text-white px-8 py-3 rounded-xl font-black uppercase italic tracking-widest shadow-lg hover:bg-white hover:text-[#ff3e3e] transition-all">Commit Node</button>
                     </div>
                  </div>
                ) : (
-                 <div className="space-y-3">
+                 <div className="space-y-4">
                     {pages.map(page => (
                       <div key={page.id} className="flex items-center justify-between p-5 bg-white/5 rounded-2xl border border-white/5 hover:border-white/20 transition-all group shadow-sm">
-                        <div>
+                        <div className="flex items-center">
+                          <div className="bg-white/10 w-2 h-2 rounded-full mr-4 group-hover:bg-[#ff3e3e] transition-all"></div>
                           <span className="text-white font-black uppercase italic text-sm tracking-tight">{page.title}</span>
-                          <span className="text-[9px] text-gray-500 uppercase font-bold ml-4 tracking-[0.2em]">/{page.slug}</span>
+                          <span className="text-[9px] text-gray-500 uppercase font-bold ml-4 tracking-[0.2em] opacity-40">/{page.slug}</span>
                         </div>
                         <div className="flex gap-4 opacity-0 group-hover:opacity-100 transition-all">
                            <button onClick={() => { setCurrentPage(page); setIsEditingPage(true); }} className="text-gray-500 hover:text-white transition-all"><i className="bi bi-pencil-square fs-5"></i></button>
@@ -252,7 +289,7 @@ const AdminSettings: React.FC = () => {
                         </div>
                       </div>
                     ))}
-                    {pages.length === 0 && <p className="text-center text-gray-600 font-black uppercase italic text-xs py-12">No nodes deployed to current infrastructure.</p>}
+                    {pages.length === 0 && <div className="text-center text-gray-600 font-black uppercase italic text-xs py-20 border-2 border-dashed border-white/5 rounded-3xl">No CMS nodes deployed to current infrastructure.</div>}
                  </div>
                )}
             </div>

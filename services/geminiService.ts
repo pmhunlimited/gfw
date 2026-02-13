@@ -40,34 +40,6 @@ function createCacheKey(params: any): string {
   return btoa(unescape(encodeURIComponent(JSON.stringify(params)))).substring(0, 32);
 }
 
-async function callDeepSeek(modelName: string, prompt: string): Promise<string> {
-  const storedSettings = localStorage.getItem('site_settings');
-  const settings: SiteSettings | null = storedSettings ? JSON.parse(storedSettings) : null;
-  const apiKey = settings?.deepseekApiKey || process.env.DEEPSEEK_API_KEY;
-
-  if (!apiKey) throw new Error("DeepSeek API Key missing.");
-
-  const response = await fetch('https://api.deepseek.com/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: modelName,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7
-    })
-  });
-
-  if (!response.ok) {
-    if (response.status === 429) throw new Error("DeepSeek Quota Exceeded (429). Check your billing.");
-    throw new Error(`DeepSeek API Error: ${response.status}`);
-  }
-  const data = await response.json();
-  return data.choices[0].message.content;
-}
-
 async function executeAI(modelName: AIModel, prompt: string, isImage = false): Promise<any> {
   const cacheKey = createCacheKey({ modelName, prompt, isImage });
   const cachedResult = getFromCache(cacheKey);
@@ -83,8 +55,10 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
     await throttle();
 
     try {
+      const apiKey = settings?.geminiApiKey || process.env.API_KEY || '';
+      const ai = new GoogleGenAI({ apiKey });
+
       if (isImage) {
-        const ai = new GoogleGenAI({ apiKey: settings?.geminiApiKey || process.env.API_KEY || '' });
         const response = await ai.models.generateContent({
           model: 'gemini-2.5-flash-image',
           contents: { parts: [{ text: prompt }] },
@@ -100,12 +74,7 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
           }
         }
         throw new Error("No image data returned");
-      } else if (modelName.startsWith('deepseek')) {
-        const text = await callDeepSeek(modelName, prompt);
-        saveToCache(cacheKey, text);
-        return text;
       } else {
-        const ai = new GoogleGenAI({ apiKey: settings?.geminiApiKey || process.env.API_KEY || '' });
         const response = await ai.models.generateContent({
           model: modelName as any,
           contents: prompt,
@@ -115,9 +84,10 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
         return text;
       }
     } catch (error: any) {
-      if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
-        console.warn("AI Quota Exceeded. Please check your API billing or key limits.");
-        return "### QUOTA EXCEEDED (429)\nIntelligence stream throttled by provider. Please update your API Key or check billing in Systems tab.";
+      // Robust 429 Quota Exceeded Handling
+      if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED') || error?.status === 'RESOURCE_EXHAUSTED') {
+        console.warn("AI Intelligence Throttled: Quota Exceeded.");
+        return "### BROADCAST WARNING: QUOTA LIMIT REACHED\nThe AI tactical feed is currently throttled due to high demand or plan limits. Please verify your API Key billing status in the System Settings to restore high-frequency intelligence updates.";
       }
       console.error("AI execution failed:", error);
       throw error;
@@ -125,19 +95,10 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
   }));
 }
 
-/**
- * Enhanced Markdown to HTML converter for professional sports journalism
- */
 export function renderMarkdown(text: string): string {
   if (!text) return "";
-  
-  // Clean up code blocks and technical wrappers (common in AI outputs)
-  let cleanText = text
-    .replace(/```json\n?|```markdown\n?|```[a-z]*\n?/gi, '')
-    .replace(/```/g, '')
-    .trim();
+  let cleanText = text.replace(/```[a-z]*\n?/gi, '').replace(/```/g, '').trim();
 
-  // Convert headers with high contrast styling
   let html = cleanText
     .replace(/^# (.*$)/gm, '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 border-bottom border-danger border-opacity-25 pb-2 uppercase italic">$1</h2>')
     .replace(/^## (.*$)/gm, '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>')
@@ -145,15 +106,12 @@ export function renderMarkdown(text: string): string {
     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white fw-bold">$1</strong>')
     .replace(/\*(.*?)\*/g, '<em class="italic text-white-50">$1</em>');
 
-  // Advanced Table handling with Bootstrap classes for better visual display
   if (html.includes('|')) {
     const lines = html.split('\n');
     let tableHtml = '';
     let inTable = false;
-
     lines.forEach((line) => {
       const isTableRow = line.trim().startsWith('|') && line.trim().endsWith('|');
-      
       if (isTableRow) {
         const cells = line.split('|').map(c => c.trim()).filter((c, i, arr) => i > 0 && i < arr.length - 1);
         if (cells.length > 0) {
@@ -163,9 +121,7 @@ export function renderMarkdown(text: string): string {
             cells.forEach(c => tableHtml += `<th class="text-electric-red font-black uppercase py-3 border-danger border-opacity-25">${c}</th>`);
             tableHtml += '</tr></thead><tbody>';
             inTable = true;
-          } else if (line.includes('---')) {
-            // Divider row, skip
-          } else {
+          } else if (!line.includes('---')) {
             tableHtml += '<tr>';
             cells.forEach(c => tableHtml += `<td class="text-white-50 py-3 border-white border-opacity-5">${c}</td>`);
             tableHtml += '</tr>';
@@ -179,64 +135,45 @@ export function renderMarkdown(text: string): string {
         if (line.trim()) tableHtml += `<p class="my-3 text-white-50">${line}</p>`;
       }
     });
-    
     if (inTable) tableHtml += '</tbody></table></div>';
     html = tableHtml;
   } else {
-    // Basic paragraph wrapping
     html = html.split('\n\n').map(p => p.trim() ? `<p class="mb-4 text-white-50 leading-relaxed">${p.replace(/\n/g, '<br/>')}</p>` : '').join('');
   }
-
   return html;
 }
 
 export async function fetchAndRefineNews(category: string, subCategory: string, model: AIModel): Promise<Post[]> {
-  const prompt = `Generate 6 professional football news articles for: ${category} / ${subCategory}. Return RAW JSON array with keys: id, title, excerpt, content, category, author, date, image, isTopStory, tags. Use realistic data. Ensure image is a high-quality Unsplash sports URL.`;
+  const prompt = `Generate 6 professional football news articles for: ${category}. Return JSON array with keys: id, title, excerpt, content, category, author, date, image, isTopStory. Use high-quality Unsplash sports URLs.`;
   try {
     const raw = await executeAI(model, prompt);
     const jsonStr = raw.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonStr);
-  } catch (e) {
-    return MOCK_POSTS;
-  }
+  } catch (e) { return MOCK_POSTS; }
 }
 
 export async function fetchSportsData(type: string, competition: string, model: AIModel): Promise<string> {
-  const prompt = `Provide a detailed ${type} report for ${competition}. Include rankings, tactical insights, and key performance indicators. Use Markdown tables for data. Do not include markdown code block backticks.`;
-  try {
-    return await executeAI(model, prompt);
-  } catch (e) {
-    return "### DATA STREAM INTERRUPTED\nPlease verify API Credentials in Admin Systems.";
-  }
+  const prompt = `Provide a detailed ${type} report for ${competition}. Use Markdown tables for data.`;
+  return await executeAI(model, prompt);
 }
 
 export async function getAIFootballInsight(prompt: string): Promise<string> {
-  try {
-    const stored = localStorage.getItem('site_settings');
-    const model = stored ? JSON.parse(stored).selectedModel : 'gemini-3-flash-preview';
-    return await executeAI(model, prompt);
-  } catch (e) {
-    return "Analysis calibration required.";
-  }
+  const stored = localStorage.getItem('site_settings');
+  const model = stored ? JSON.parse(stored).selectedModel : 'gemini-3-flash-preview';
+  return await executeAI(model, prompt);
 }
 
 export async function generateNewsArticle(title: string, category: string) {
-  const prompt = `Write a comprehensive 500-word football news article: "${title}". Category: ${category}. Format: JSON with "content" and "excerpt".`;
+  const stored = localStorage.getItem('site_settings');
+  const model = stored ? JSON.parse(stored).selectedModel : 'gemini-3-flash-preview';
+  const prompt = `Write a 500-word football article: "${title}". JSON with "content" and "excerpt".`;
   try {
-    const stored = localStorage.getItem('site_settings');
-    const model = stored ? JSON.parse(stored).selectedModel : 'gemini-3-flash-preview';
     const raw = await executeAI(model, prompt);
     const jsonStr = raw.replace(/```json|```/g, '').trim();
     return JSON.parse(jsonStr);
-  } catch (e) {
-    return { content: "Drafting in progress.", excerpt: "Updates to follow." };
-  }
+  } catch (e) { return { content: "Intelligence gathering in progress...", excerpt: "Tactical data incoming." }; }
 }
 
 export async function generatePostImage(prompt: string): Promise<string | null> {
-  try {
-    return await executeAI('gemini-3-pro-image-preview', prompt, true);
-  } catch (e) {
-    return null;
-  }
+  return await executeAI('gemini-3-pro-image-preview', prompt, true);
 }

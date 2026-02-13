@@ -48,7 +48,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   if (location.pathname === '/admin/login') return <>{children}</>;
 
   return (
-    <div className="min-h-screen bg-[#05070a] flex flex-col md:flex-row text-gray-300">
+    <div className="min-h-screen bg-[#05070a] flex flex-col md:flex-row text-gray-300 overflow-x-hidden">
       
       {/* MOBILE TOP BAR */}
       <div className="md:hidden bg-[#0a0e17] border-b border-white/5 p-4 flex items-center justify-between sticky top-0 z-[110]">
@@ -129,14 +129,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           <div className="flex items-center gap-4 ml-8">
             {/* QUICK ACTIONS AT TOP MENU */}
             <div className="flex gap-2">
-               <button onClick={() => navigate('/admin/posts?create=true')} className="bg-white/5 border border-white/10 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#ff3e3e] hover:border-[#ff3e3e] transition-all">New Post</button>
-               <button onClick={() => navigate('/admin/settings?tab=pages&create=true')} className="bg-white/5 border border-white/10 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">New Page</button>
+               <button onClick={() => navigate('/admin/posts?create=true')} className="bg-[#ff3e3e] text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-[#ff3e3e] border border-transparent transition-all shadow-lg active:scale-95">New Post</button>
+               <button onClick={() => navigate('/admin/settings?tab=pages&create=true')} className="bg-white/10 border border-white/10 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-[#0a0e17] transition-all shadow-sm active:scale-95">New Page</button>
             </div>
 
-            <div className="flex items-center gap-6 ml-4">
+            <div className="flex items-center gap-6 ml-6 border-l border-white/5 pl-6">
               <div className="text-right">
                 <p className="text-[10px] font-black text-white uppercase tracking-widest mb-0 leading-tight">ADMIN ROOT</p>
-                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0">SESSION SECURE</p>
+                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0 opacity-40">SESSION_SSL_SECURE</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-[#ff3e3e] flex items-center justify-center text-white font-black italic shadow-[0_0_15px_rgba(255,62,62,0.2)]">AR</div>
             </div>
