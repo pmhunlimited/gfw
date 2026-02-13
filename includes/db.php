@@ -30,14 +30,23 @@ function get_db_connection() {
         try {
             $conn->query("SELECT fb_access_token FROM site_settings LIMIT 1");
         } catch (Exception $e) {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN fb_app_id VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN fb_app_secret VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN fb_page_id VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN fb_access_token TEXT");
+
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_client_id VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_client_secret VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_api_key VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_api_secret VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_access_token VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tw_access_secret VARCHAR(255)");
+
             $conn->exec("ALTER TABLE site_settings ADD COLUMN ig_account_id VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN ig_access_token TEXT");
+
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tt_client_key VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tt_client_secret VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tt_access_token TEXT");
         }
 

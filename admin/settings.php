@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 
     // Handle Logo Upload
     if (!empty($_FILES['logo']['name'])) {
-        $target_dir = "../assets/uploads/";
+        $target_dir = __DIR__ . "/../assets/uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
         $file_ext = strtolower(pathinfo($_FILES["logo"]["name"], PATHINFO_EXTENSION));
         $target_file = $target_dir . "logo_" . time() . '.' . $file_ext;
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 
     // Handle Favicon Upload
     if (!empty($_FILES['favicon']['name'])) {
-        $target_dir = "../assets/uploads/";
+        $target_dir = __DIR__ . "/../assets/uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
         $file_ext = strtolower(pathinfo($_FILES["favicon"]["name"], PATHINFO_EXTENSION));
         $target_file = $target_dir . "favicon_" . time() . '.' . $file_ext;
@@ -84,17 +84,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_security'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_social'])) {
     $stmt = $conn->prepare("UPDATE site_settings SET
         tw_url = ?, fb_url = ?, ig_url = ?, yt_url = ?,
-        fb_page_id = ?, fb_access_token = ?,
-        tw_api_key = ?, tw_api_secret = ?, tw_access_token = ?, tw_access_secret = ?,
+        fb_app_id = ?, fb_app_secret = ?, fb_page_id = ?, fb_access_token = ?,
+        tw_client_id = ?, tw_client_secret = ?, tw_api_key = ?, tw_api_secret = ?, tw_access_token = ?, tw_access_secret = ?,
         ig_account_id = ?, ig_access_token = ?,
-        tt_access_token = ?
+        tt_client_key = ?, tt_client_secret = ?, tt_access_token = ?
         WHERE id = 1");
     $stmt->execute([
         sanitize($_POST['tw_url']), sanitize($_POST['fb_url']), sanitize($_POST['ig_url']), sanitize($_POST['yt_url']),
-        sanitize($_POST['fb_page_id']), $_POST['fb_access_token'],
-        sanitize($_POST['tw_api_key']), sanitize($_POST['tw_api_secret']), sanitize($_POST['tw_access_token']), sanitize($_POST['tw_access_secret']),
+        sanitize($_POST['fb_app_id']), $_POST['fb_app_secret'], sanitize($_POST['fb_page_id']), $_POST['fb_access_token'],
+        sanitize($_POST['tw_client_id']), $_POST['tw_client_secret'], sanitize($_POST['tw_api_key']), sanitize($_POST['tw_api_secret']), sanitize($_POST['tw_access_token']), sanitize($_POST['tw_access_secret']),
         sanitize($_POST['ig_account_id']), $_POST['ig_access_token'],
-        $_POST['tt_access_token']
+        sanitize($_POST['tt_client_key']), $_POST['tt_client_secret'], $_POST['tt_access_token']
     ]);
     $success = "Social API Hub updated.";
 }
@@ -203,8 +203,8 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
                     <?php
                     $models = [
-                        ['id' => 'gemini-3-flash-preview', 'name' => 'Gemini 3 Flash (Prime)', 'provider' => 'Google'],
-                        ['id' => 'gemini-flash-latest', 'name' => 'Gemini 1.5 Flash (Stable)', 'provider' => 'Google'],
+                        ['id' => 'gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (Fast)', 'provider' => 'Google'],
+                        ['id' => 'gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro (Advanced)', 'provider' => 'Google'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3', 'provider' => 'DeepSeek'],
                     ];
                     foreach ($models as $m):
@@ -309,6 +309,9 @@ $activeTab = $_GET['tab'] ?? 'general';
             </form>
 
         <?php elseif ($activeTab == 'social'): ?>
+            <?php if (isset($_GET['success'])): ?>
+                <div class="alert alert-success bg-green-900 bg-opacity-20 border-green-500 text-green-500 font-black uppercase italic mb-8 p-4 rounded-3xl">Account Successfully Linked!</div>
+            <?php endif; ?>
             <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-8 p-4 rounded-3xl">
                 <h5 class="fw-black mb-3">Automatic Link-Up Instructions</h5>
                 <p class="small opacity-75 mb-0">To enable automatic posting, follow these simple steps for each platform:</p>
@@ -349,27 +352,35 @@ $activeTab = $_GET['tab'] ?? 'general';
 
                 <!-- Facebook API -->
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
-                    <h4 class="text-white font-black uppercase italic mb-6 small">Facebook Automation</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-6">
+                        <h4 class="text-white font-black uppercase italic mb-0 small">Facebook Automation</h4>
+                        <a href="social_connect.php?platform=facebook" class="btn btn-sm btn-primary font-condensed fw-black italic uppercase px-4">Link Facebook</a>
+                    </div>
                     <div class="row g-4">
-                        <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Page ID</label><input type="text" name="fb_page_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_page_id'] ?? ''; ?>"></div>
-                        <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Page Access Token</label><input type="password" name="fb_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_access_token'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">App ID</label><input type="text" name="fb_app_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_app_id'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">App Secret</label><input type="password" name="fb_app_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_app_secret'] ?? ''; ?>"></div>
+                        <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Linked Page ID</label><input type="text" name="fb_page_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_page_id'] ?? ''; ?>" readonly placeholder="Auto-populated after linking"></div>
+                        <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Page Access Token</label><input type="password" name="fb_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_access_token'] ?? ''; ?>" readonly placeholder="Auto-populated after linking"></div>
                     </div>
                 </div>
 
                 <!-- X API -->
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
-                    <h4 class="text-white font-black uppercase italic mb-6 small">X (Twitter) Automation</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-6">
+                        <h4 class="text-white font-black uppercase italic mb-0 small">X (Twitter) Automation</h4>
+                        <a href="social_connect.php?platform=x" class="btn btn-sm btn-primary font-condensed fw-black italic uppercase px-4">Link X Account</a>
+                    </div>
                     <div class="row g-4">
-                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">API Key</label><input type="text" name="tw_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_api_key'] ?? ''; ?>"></div>
-                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">API Secret</label><input type="password" name="tw_api_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_api_secret'] ?? ''; ?>"></div>
-                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="text" name="tw_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_access_token'] ?? ''; ?>"></div>
-                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Secret</label><input type="password" name="tw_access_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_access_secret'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Client ID</label><input type="text" name="tw_client_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_client_id'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Client Secret</label><input type="password" name="tw_client_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_client_secret'] ?? ''; ?>"></div>
+                        <div class="col-md-12"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="text" name="tw_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_access_token'] ?? ''; ?>" readonly placeholder="Auto-populated after linking"></div>
                     </div>
                 </div>
 
                 <!-- Instagram API -->
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
                     <h4 class="text-white font-black uppercase italic mb-6 small">Instagram Automation</h4>
+                    <p class="text-[10px] text-white-50 mb-4 italic uppercase">Linked automatically when you connect Facebook and select a page with an associated Instagram account.</p>
                     <div class="row g-4">
                         <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Business Account ID</label><input type="text" name="ig_account_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_account_id'] ?? ''; ?>"></div>
                         <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="password" name="ig_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_access_token'] ?? ''; ?>"></div>
@@ -378,9 +389,14 @@ $activeTab = $_GET['tab'] ?? 'general';
 
                 <!-- TikTok API -->
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
-                    <h4 class="text-white font-black uppercase italic mb-6 small">TikTok Automation</h4>
+                    <div class="d-flex justify-content-between align-items-center mb-6">
+                        <h4 class="text-white font-black uppercase italic mb-0 small">TikTok Automation</h4>
+                        <a href="social_connect.php?platform=tiktok" class="btn btn-sm btn-primary font-condensed fw-black italic uppercase px-4">Link TikTok</a>
+                    </div>
                     <div class="row g-4">
-                        <div class="col-12"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">TikTok Access Token</label><input type="password" name="tt_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tt_access_token'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Client Key</label><input type="text" name="tt_client_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tt_client_key'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Client Secret</label><input type="password" name="tt_client_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tt_client_secret'] ?? ''; ?>"></div>
+                        <div class="col-12"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">TikTok Access Token</label><input type="password" name="tt_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tt_access_token'] ?? ''; ?>" readonly placeholder="Auto-populated after linking"></div>
                     </div>
                 </div>
 

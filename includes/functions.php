@@ -180,17 +180,26 @@ function get_ai_insight($prompt) {
 
 function get_suggested_topics() {
     $today = date('D d M Y');
-    $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings only. Be specific about teams and players.";
+    $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"]. Be very specific about current teams, transfers and players.";
     $raw = get_ai_insight($prompt);
 
-    // Clean JSON from potential AI markdown
-    $json_start = strpos($raw, '[');
-    $json_end = strrpos($raw, ']');
-    if ($json_start !== false && $json_end !== false) {
-        $json_str = substr($raw, $json_start, $json_end - $json_start + 1);
-        return json_decode($json_str, true) ?: [];
+    // Attempt to extract JSON array
+    if (preg_match('/\[.*\]/s', $raw, $matches)) {
+        $topics = json_decode($matches[0], true);
+        if (is_array($topics)) return array_slice($topics, 0, 5);
     }
-    return [];
+
+    // Fallback: If no JSON array found, try to split by lines if it looks like a list
+    $lines = explode("\n", $raw);
+    $topics = [];
+    foreach ($lines as $line) {
+        $line = trim(preg_replace('/^\d+\.\s*/', '', $line)); // Remove numbering
+        if (!empty($line) && strlen($line) > 10 && count($topics) < 5) {
+            $topics[] = $line;
+        }
+    }
+
+    return $topics;
 }
 
 // Basic Markdown to HTML

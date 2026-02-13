@@ -5,7 +5,7 @@ $slug = $_GET['slug'] ?? null;
 $conn = get_db_connection();
 $post = null;
 if ($conn && $slug) {
-    $stmt = $conn->prepare("SELECT * FROM posts WHERE slug = ?");
+    $stmt = $conn->prepare("SELECT * FROM posts WHERE slug = ? AND (is_scheduled = 0 OR publish_date <= NOW())");
     $stmt->execute([$slug]);
     $post = $stmt->fetch();
 }

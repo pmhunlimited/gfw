@@ -26,9 +26,12 @@ if (isset($_POST['save_manual'])) {
     $image = sanitize($_POST['image']);
     $author = sanitize($_POST['author'] ?? 'STAFF');
 
+    $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
+    $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
+
     // Handle Image Upload
     if (!empty($_FILES['image_file']['name'])) {
-        $target_dir = "../assets/uploads/";
+        $target_dir = __DIR__ . "/../assets/uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
         $file_ext = strtolower(pathinfo($_FILES["image_file"]["name"], PATHINFO_EXTENSION));
         $target_file = $target_dir . time() . '.' . $file_ext;
@@ -38,11 +41,15 @@ if (isset($_POST['save_manual'])) {
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date])) {
         $post_id = $conn->lastInsertId();
-        broadcast_to_social($post_id);
-        $success = "Intelligence report deployed and broadcasted.";
+        if (!$is_scheduled || strtotime($publish_date) <= time()) {
+            broadcast_to_social($post_id);
+            $success = "Intelligence report deployed and broadcasted.";
+        } else {
+            $success = "Intelligence report scheduled for $publish_date.";
+        }
     } else {
         $error = "Failed to deploy report.";
     }
@@ -52,17 +59,22 @@ if (isset($_POST['save_manual'])) {
 if (isset($_POST['generate_ai'])) {
     $topic = sanitize($_POST['topic']);
     $cat = sanitize($_POST['cat']);
+    $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
+    $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
+
     $prompt = "Generate a professional football news article about '$topic' in the category '$cat'.
                Write in a first-person 'fan blogger' perspective.
                Return JSON with 'title', 'content', 'image_keyword' (a specific search term for a football photo).";
     $raw = get_ai_insight($prompt);
 
-    $json_start = strpos($raw, '{');
-    $json_end = strrpos($raw, '}');
-    $data = ($json_start !== false) ? json_decode(substr($raw, $json_start, $json_end - $json_start + 1), true) : null;
+    // Improved JSON extraction
+    $data = null;
+    if (preg_match('/\{.*\}/s', $raw, $matches)) {
+        $data = json_decode($matches[0], true);
+    }
 
     if ($data && !empty($data['title']) && !empty($data['content'])) {
-        $title = $data['title'];
+        $title = sanitize($data['title']);
         $content = $data['content'];
         $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
@@ -71,23 +83,28 @@ if (isset($_POST['generate_ai'])) {
         $keyword = urlencode(($data['image_keyword'] ?? $topic) . " football");
         $image_url = "https://loremflickr.com/1600/900/" . $keyword;
         $img_data = @file_get_contents($image_url);
-        $db_image = "/assets/uploads/ai_" . time() . ".jpg";
+        $image_filename = "ai_" . time() . ".jpg";
+        $db_image = "/assets/uploads/" . $image_filename;
         if ($img_data) {
-            file_put_contents(".." . $db_image, $img_data);
+            file_put_contents(__DIR__ . "/../assets/uploads/" . $image_filename, $img_data);
         } else {
             $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
         }
 
-        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI ANALYST', $db_image])) {
+        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI ANALYST', $db_image, $is_scheduled, $publish_date])) {
             $post_id = $conn->lastInsertId();
-            broadcast_to_social($post_id);
-            $success = "AI Intelligence generated, deployed and broadcasted.";
+            if (!$is_scheduled || strtotime($publish_date) <= time()) {
+                broadcast_to_social($post_id);
+                $success = "AI Intelligence generated, deployed and broadcasted.";
+            } else {
+                $success = "AI Intelligence generated and scheduled for $publish_date.";
+            }
         } else {
             $error = "Database insertion failed.";
         }
     } else {
-        $error = "AI extraction failed or returned invalid format.";
+        $error = "AI extraction failed or returned invalid format. Raw: " . htmlspecialchars(substr($raw, 0, 100)) . "...";
     }
 }
 
@@ -138,7 +155,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <span class="text-white-50 small font-bold italic"><?php echo $post['author']; ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
-                        <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d', strtotime($post['created_at'])); ?></span>
+                        <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d', strtotime($post['publish_date'] ?: $post['created_at'])); ?></span>
+                        <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()): ?>
+                            <div class="text-danger font-black uppercase italic" style="font-size: 8px;">SCHEDULED</div>
+                        <?php endif; ?>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
                         <a href="?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
@@ -186,6 +206,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Leave blank for immediate broadcast)</label>
+                            <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
                         <div class="col-12">
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
                             <textarea name="content" rows="10" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
@@ -232,6 +256,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                                 <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
                             <?php endforeach; ?>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Optional)</label>
+                        <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                     </div>
                 </div>
                 <div class="modal-footer border-white border-opacity-10">

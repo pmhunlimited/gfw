@@ -6,22 +6,22 @@ $conn = get_db_connection();
 $posts = [];
 if ($conn) {
     if ($category) {
-        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? ORDER BY created_at DESC");
+        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC");
         $stmt->execute([$category]);
     } else {
-        $stmt = $conn->query("SELECT * FROM posts ORDER BY created_at DESC");
+        $stmt = $conn->query("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC");
     }
     $posts = $stmt->fetchAll();
 }
 
 // Featured posts for SYNDICATED NEXT
-$stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 ORDER BY created_at DESC LIMIT 4");
+$stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
 $syndicatedNext = $stmt_featured->fetchAll();
 if (count($syndicatedNext) < 4) {
     // Fill with latest if not enough featured
     $latest_ids = array_map(function($p) { return $p['id']; }, $syndicatedNext);
     $placeholders = count($latest_ids) ? implode(',', array_fill(0, count($latest_ids), '?')) : '0';
-    $stmt_fill = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) ORDER BY created_at DESC LIMIT " . (4 - count($syndicatedNext)));
+    $stmt_fill = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT " . (4 - count($syndicatedNext)));
     $stmt_fill->execute($latest_ids);
     $syndicatedNext = array_merge($syndicatedNext, $stmt_fill->fetchAll());
 }
