@@ -1,0 +1,153 @@
+<?php
+require_once __DIR__ . '/db.php';
+
+function get_settings() {
+    $conn = get_db_connection();
+    if (!$conn) return [];
+    $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+    return $stmt->fetch() ?: [];
+}
+
+function sanitize($data) {
+    return htmlspecialchars(strip_tags(trim($data)));
+}
+
+function is_admin() {
+    if (session_status() == PHP_SESSION_NONE) session_start();
+    return isset($_SESSION['user_id']) && $_SESSION['role'] == 'admin';
+}
+
+function redirect($url) {
+    header("Location: $url");
+    exit;
+}
+
+function generate_csrf_token() {
+    if (session_status() == PHP_SESSION_NONE) session_start();
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function verify_csrf_token($token) {
+    if (session_status() == PHP_SESSION_NONE) session_start();
+    return isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+}
+
+// SMTP Mail Function
+function send_mail($to, $subject, $message) {
+    $settings = get_settings();
+    if (empty($settings['smtp_host'])) {
+        $headers = "From: " . ($settings['smtp_sender_name'] ?: 'GFW') . " <" . ($settings['smtp_sender_email'] ?: 'noreply@gfw.com') . ">\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        return mail($to, $subject, $message, $headers);
+    }
+
+    $host = $settings['smtp_host'];
+    $port = $settings['smtp_port'];
+    $user = $settings['smtp_user'];
+    $pass = $settings['smtp_pass'];
+    $from = $settings['smtp_sender_email'];
+    $name = $settings['smtp_sender_name'];
+
+    try {
+        $socket = fsockopen($host, $port, $errno, $errstr, 30);
+        if (!$socket) throw new Exception("Could not connect to SMTP host: $errstr ($errno)");
+
+        $getResponse = function($socket) {
+            $response = "";
+            while ($line = fgets($socket, 515)) {
+                $response .= $line;
+                if (substr($line, 3, 1) == " ") break;
+            }
+            return $response;
+        };
+
+        $getResponse($socket);
+        fwrite($socket, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+        $getResponse($socket);
+
+        // Try STARTTLS if on 587
+        if ($port == 587) {
+            fwrite($socket, "STARTTLS\r\n");
+            $getResponse($socket);
+            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            fwrite($socket, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+            $getResponse($socket);
+        }
+
+        if (!empty($user) && !empty($pass)) {
+            fwrite($socket, "AUTH LOGIN\r\n");
+            $getResponse($socket);
+            fwrite($socket, base64_encode($user) . "\r\n");
+            $getResponse($socket);
+            fwrite($socket, base64_encode($pass) . "\r\n");
+            $getResponse($socket);
+        }
+
+        fwrite($socket, "MAIL FROM: <$from>\r\n");
+        $getResponse($socket);
+        fwrite($socket, "RCPT TO: <$to>\r\n");
+        $getResponse($socket);
+        fwrite($socket, "DATA\r\n");
+        $getResponse($socket);
+
+        $headers = "To: $to\r\n";
+        $headers .= "From: $name <$from>\r\n";
+        $headers .= "Subject: $subject\r\n";
+        $headers .= "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= "\r\n";
+
+        fwrite($socket, $headers . $message . "\r\n.\r\n");
+        $getResponse($socket);
+        fwrite($socket, "QUIT\r\n");
+        fclose($socket);
+        return true;
+    } catch (Exception $e) {
+        error_log("SMTP Error: " . $e->getMessage());
+        return false;
+    }
+}
+
+function log_activity($message) {
+    $settings = get_settings();
+    if (!empty($settings['admin_email'])) {
+        send_mail($settings['admin_email'], "GFW System Alert", $message);
+    }
+}
+
+function get_ai_insight($prompt) {
+    $settings = get_settings();
+    $apiKey = $settings['gemini_api_key'];
+    $model = $settings['selected_model'];
+
+    if (empty($apiKey)) return "AI API Key missing.";
+
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey";
+
+    $data = [
+        "contents" => [
+            ["parts" => [["text" => $prompt]]]
+        ]
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, JSON_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+
+    $response = curl_exec($ch);
+    $result = JSON_decode($response, true);
+    curl_close($ch);
+
+    if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+        return $result['candidates'][0]['content']['parts'][0]['text'];
+    }
+
+    return "Intelligence gathering failed.";
+}
+?>

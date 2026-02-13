@@ -1,0 +1,25 @@
+<?php
+include __DIR__ . '/../includes/header.php';
+
+$page_id = $_GET['page_id'] ?? null;
+$conn = get_db_connection();
+$page = null;
+if ($conn && $page_id) {
+    $stmt = $conn->prepare("SELECT * FROM pages WHERE id = ?");
+    $stmt->execute([$page_id]);
+    $page = $stmt->fetch();
+}
+
+if (!$page) {
+    redirect('/migrate/404');
+}
+?>
+<div class="container py-5">
+    <h1 class="font-condensed fw-black italic text-white display-3 mb-5 border-bottom border-white border-opacity-10 pb-3"><?php echo strtoupper($page['title']); ?></h1>
+    <div class="bg-[#0a0e17] p-5 rounded-4 border border-white border-opacity-5 shadow-2xl min-vh-60">
+        <div class="markdown-content text-white opacity-90 fs-5 leading-relaxed">
+            <?php echo nl2br($page['content']); ?>
+        </div>
+    </div>
+</div>
+<?php include __DIR__ . '/../includes/footer.php'; ?>
