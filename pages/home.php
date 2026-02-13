@@ -44,8 +44,8 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
                 <h3 class="font-condensed fw-black text-white italic small mb-0"><span class="text-danger">●</span> LIVE SCORES</h3>
                 <span class="text-white-50 small font-monospace uppercase" style="font-size: 10px;"><?php echo date('D d M Y'); ?></span>
             </div>
-            <div id="scoreaxis-widget-live-scores" style="width:100%;">
-                <script src="https://widgets.scoreaxis.com/api/football/live-scores?lang=en&font=heebo&fontSize=12&rowDensity=100&widgetWidth=100%&widgetHeight=auto&bodyColor=%2305070a&textColor=%23ffffff&linkColor=%23ff3e3e&borderColor=%231e293b&tabColor=%231e293b" async></script>
+            <div id="widget-home-live-scores" class="scoreaxis-widget" style="width: 100%;border: none;overflow: auto;">
+                <script src="https://widgets.scoreaxis.com/api/football/live-scores?widgetId=widget-home-live-scores&lang=en&font=heebo&fontSize=12&rowDensity=100&widgetWidth=100%&widgetHeight=auto&bodyColor=%2305070a&textColor=%23ffffff&linkColor=%23ff3e3e&borderColor=%231e293b&tabColor=%231e293b" async></script>
             </div>
         </div>
     </section>
