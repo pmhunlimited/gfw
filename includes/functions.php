@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/db.php';
+require_once __DIR__ . '/social_poster.php';
 
 function get_settings() {
     $conn = get_db_connection();

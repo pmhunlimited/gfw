@@ -1,7 +1,5 @@
 <?php
-// GFW News Automation Engine
-// Designed for root-level deployment
-
+// GFW News Automation Engine - AI ONLY (NO NewsAPI)
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -9,147 +7,83 @@ require_once __DIR__ . '/../includes/functions.php';
 $conn = get_db_connection();
 $settings = get_settings();
 
-$gemini_key = $settings['gemini_api_key'] ?? '';
-$news_api_key = $settings['news_api_key'] ?? '';
+$apiKey = (strpos($settings['selected_model'], 'gemini') !== false) ? $settings['gemini_api_key'] : $settings['deepseek_api_key'];
 
-if (empty($gemini_key) || empty($news_api_key)) {
-    die("Error: API Keys missing. Configure them in Admin -> Parameters -> AI Core.\n");
+if (empty($apiKey)) {
+    die("Error: AI API Key missing. Configure it in Admin -> Parameters -> AI Core.\n");
 }
+
+echo "Starting AI-Powered News Discovery...\n";
+
+// 1. Ask AI for trending stories
+$today = date('D d M Y');
+$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories.
+For each story, provide a unique 'title', a 'category' (choose from: Premier League, Champions League, La Liga, Serie A, Bundesliga, Transfer News),
+a 'content' (400-word engaging blog post in fan-blogger tone), and an 'image_keyword' (2-3 words for a high-quality sports photo).
+Return the results as a JSON array of objects.";
+
+$raw_ai = get_ai_insight($prompt);
+if (!$raw_ai || strpos($raw_ai, '[') === false) {
+    die("Error: AI failed to discover news.\n");
+}
+
+// Extract JSON
+$json_start = strpos($raw_ai, '[');
+$json_end = strrpos($raw_ai, ']');
+$json_str = substr($raw_ai, $json_start, $json_end - $json_start + 1);
+$news_items = json_decode($json_str, true);
+
+if (!$news_items) die("Error: Could not parse news data.\n");
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
 $web_dir = "/assets/uploads/news/" . $date_path . "/";
-
 if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
-/**
- * Enhanced Gemini Caller with fallback and tone instruction
- */
-function callGeminiForAutomation($prompt, $apiKey) {
-    $models = ["gemini-2.0-flash", "gemini-1.5-flash"]; // Adjusted from 2.5 as it's likely a typo in user prompt or represents future version, 2.0 is current latest flash.
-
-    foreach ($models as $model) {
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}";
-
-        $data = [
-            "contents" => [["parts" => [["text" => $prompt]]]]
-        ];
-
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-        $response = curl_exec($ch);
-        $result = json_decode($response, true);
-        curl_close($ch);
-
-        if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-            return $result['candidates'][0]['content']['parts'][0]['text'];
-        }
-    }
-    return null;
-}
-
-/**
- * Category Mapping Logic
- */
-function mapCategory($title, $categories) {
-    $map = [
-        'Premier League' => ['PL', 'Premier League', 'Arsenal', 'Liverpool', 'Manchester', 'Chelsea', 'Tottenham', 'City', 'United'],
-        'Champions League' => ['UCL', 'Champions League', 'Real Madrid', 'Bayern', 'PSG', 'Dortmund'],
-        'La Liga' => ['La Liga', 'Barcelona', 'Real Madrid', 'Atletico'],
-        'Serie A' => ['Serie A', 'Juventus', 'Milan', 'Inter', 'Napoli', 'Roma'],
-        'Bundesliga' => ['Bundesliga', 'Bayern', 'Bayer', 'Dortmund'],
-        'Transfer News' => ['Transfer', 'Signing', 'Deal', 'Contract', 'Bid', 'Agent']
-    ];
-
-    foreach ($map as $cat_name => $keywords) {
-        foreach ($keywords as $kw) {
-            if (stripos($title, $kw) !== false) {
-                // Check if this category exists in DB
-                foreach ($categories as $db_cat) {
-                    if ($db_cat['name'] == $cat_name) return $cat_name;
-                }
-            }
-        }
-    }
-    return 'Football'; // Default
-}
-
-// 1. Fetch News from NewsAPI.org
-$news_url = "https://newsapi.org/v2/top-headlines?category=sports&q=football&language=en&apiKey=$news_api_key";
-$news_json = file_get_contents($news_url);
-if (!$news_json) die("Error: Failed to fetch news from NewsAPI.\n");
-
-$news_data = json_decode($news_json, true);
-if (empty($news_data['articles'])) die("No articles found.\n");
-
-$categories = $conn->query("SELECT name FROM categories")->fetchAll();
-
 $count = 0;
-foreach ($news_data['articles'] as $article) {
+foreach ($news_items as $item) {
     if ($count >= 5) break;
-    if (empty($article['description']) || empty($article['urlToImage'])) continue;
+    echo "Processing: " . $item['title'] . "\n";
 
-    echo "Processing: " . $article['title'] . "\n";
+    // 2. Fetch Image (using Unsplash Source Redirect if possible, or direct URL generation)
+    // We'll use a reliable keyword-based image fetching strategy
+    $keyword = urlencode($item['image_keyword'] . " football");
+    $img_url = "https://loremflickr.com/1200/800/" . $keyword;
 
-    // 2. Rewrite Content with Gemini
-    $prompt = "Rewrite this football news into a unique 400-word blog post.
-               Write in a first-person 'fan blogger' perspective to ensure the tone is distinct and engaging.
-               Return the response in JSON format with two keys: 'title' and 'content'.
-               Original Content: " . $article['title'] . " - " . $article['description'];
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $filename = $safe_title . "-" . time() . ".jpg";
+    $local_img_path = $upload_dir . $filename;
+    $db_img_path = $web_dir . $filename;
 
-    $raw_ai = callGeminiForAutomation($prompt, $gemini_key);
-    if (!$raw_ai) {
-        echo "AI Failure for this article.\n";
-        continue;
-    }
-
-    // Extract JSON from AI response
-    $json_start = strpos($raw_ai, '{');
-    $json_end = strrpos($raw_ai, '}');
-    if ($json_start === false || $json_end === false) {
-        echo "Invalid AI response format.\n";
-        continue;
-    }
-    $ai_data = json_decode(substr($raw_ai, $json_start, $json_end - $json_start + 1), true);
-
-    if ($ai_data && !empty($ai_data['title']) && !empty($ai_data['content'])) {
-        // 3. Handle Image
-        $img_url = $article['urlToImage'];
-        $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $ai_data['title'])));
-        $filename = $safe_title . ".jpg";
-        $local_img_path = $upload_dir . $filename;
-        $db_img_path = $web_dir . $filename;
-
-        $img_data = @file_get_contents($img_url);
-        if ($img_data) {
-            file_put_contents($local_img_path, $img_data);
-        } else {
-            echo "Failed to download image. Skipping.\n";
-            continue;
-        }
-
-        // 4. Save to Database
-        $title = $ai_data['title'];
-        $slug = $safe_title . '-' . time();
-        $content = $ai_data['content'];
-        $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
-        $category = mapCategory($title, $categories);
-        $author = 'AI FAN BLOG';
-
-        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path])) {
-            echo "Successfully published: $title\n";
-            $count++;
-        } else {
-            echo "Database error.\n";
-        }
+    $img_data = @file_get_contents($img_url);
+    if ($img_data) {
+        file_put_contents($local_img_path, $img_data);
     } else {
-        echo "Failed to parse AI data.\n";
+        echo "Failed to get image for: " . $item['title'] . ". Using fallback.\n";
+        $db_img_path = "/assets/img/default-news.jpg";
+    }
+
+    // 3. Save to Database
+    $title = sanitize($item['title']);
+    $slug = $safe_title . '-' . time();
+    $content = $item['content']; // Markdown supported
+    $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
+    $category = $item['category'];
+    $author = 'GFW INTELLIGENCE';
+
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path])) {
+        $post_id = $conn->lastInsertId();
+        echo "Successfully published: $title\n";
+
+        echo "Broadcasting to social media...\n";
+        broadcast_to_social($post_id);
+
+        $count++;
+    } else {
+        echo "Database error.\n";
     }
 }
 
-echo "\nAutomation complete. $count posts published.\n";
+echo "\nAI Automation complete. $count posts published.\n";
 ?>

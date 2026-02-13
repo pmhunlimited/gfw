@@ -44,11 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, news_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
-        $_POST['news_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -83,14 +82,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_security'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_social'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET tw_url = ?, fb_url = ?, ig_url = ?, yt_url = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET
+        tw_url = ?, fb_url = ?, ig_url = ?, yt_url = ?,
+        fb_page_id = ?, fb_access_token = ?,
+        tw_api_key = ?, tw_api_secret = ?, tw_access_token = ?, tw_access_secret = ?,
+        ig_account_id = ?, ig_access_token = ?,
+        tt_access_token = ?
+        WHERE id = 1");
     $stmt->execute([
-        sanitize($_POST['tw_url']),
-        sanitize($_POST['fb_url']),
-        sanitize($_POST['ig_url']),
-        sanitize($_POST['yt_url'])
+        sanitize($_POST['tw_url']), sanitize($_POST['fb_url']), sanitize($_POST['ig_url']), sanitize($_POST['yt_url']),
+        sanitize($_POST['fb_page_id']), $_POST['fb_access_token'],
+        sanitize($_POST['tw_api_key']), sanitize($_POST['tw_api_secret']), sanitize($_POST['tw_access_token']), sanitize($_POST['tw_access_secret']),
+        sanitize($_POST['ig_account_id']), $_POST['ig_access_token'],
+        $_POST['tt_access_token']
     ]);
-    $success = "Social syndication links updated.";
+    $success = "Social API Hub updated.";
 }
 
 $settings = get_settings();
@@ -110,7 +116,7 @@ $activeTab = $_GET['tab'] ?? 'general';
         <a href="?tab=smtp" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'smtp' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">SMTP</a>
         <a href="?tab=security" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'security' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Security</a>
         <a href="?tab=automation" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'automation' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Automation</a>
-        <a href="?tab=social" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'social' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Syndication</a>
+        <a href="?tab=social" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'social' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Social API Hub</a>
     </div>
 
     <div class="p-5 p-md-5">
@@ -192,12 +198,6 @@ $activeTab = $_GET['tab'] ?? 'general';
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">NewsAPI.org Key</span>
-                            <input type="password" name="news_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['news_api_key'] ?? ''; ?>">
-                        </div>
-                    </div>
                 </div>
                 <div class="mb-4">
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
@@ -272,7 +272,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
                         <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
                     </div>
-                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your Gemini and NewsAPI keys are configured in the "AI Core" tab.</p>
+                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your Gemini or DeepSeek keys are configured in the "AI Core" tab.</p>
                 </div>
             </div>
 
@@ -309,27 +309,82 @@ $activeTab = $_GET['tab'] ?? 'general';
             </form>
 
         <?php elseif ($activeTab == 'social'): ?>
-            <form method="POST" class="space-y-8">
-                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                <div class="row g-4">
+            <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-8 p-4 rounded-3xl">
+                <h5 class="fw-black mb-3">Automatic Link-Up Instructions</h5>
+                <p class="small opacity-75 mb-0">To enable automatic posting, follow these simple steps for each platform:</p>
+                <div class="row g-4 mt-1 small">
                     <div class="col-md-6">
-                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Twitter / X URL</label>
-                        <input type="url" name="tw_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_url'] ?? ''; ?>">
+                        <p class="mb-1 text-white"><strong>Facebook / Instagram:</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://developers.facebook.com" class="text-info">Meta for Developers</a> and create an App.</li>
+                            <li>Add "Facebook Login" and "Instagram Graph API".</li>
+                            <li>In "App Settings", get your <strong>App ID</strong>.</li>
+                            <li>Use the "Graph API Explorer" to generate a <strong>Permanent Page Access Token</strong>. <span class="text-white-50">(Tip: This prevents the link from breaking every 60 days)</span></li>
+                        </ol>
                     </div>
                     <div class="col-md-6">
-                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Facebook URL</label>
-                        <input type="url" name="fb_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_url'] ?? ''; ?>">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Instagram URL</label>
-                        <input type="url" name="ig_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_url'] ?? ''; ?>">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">YouTube URL</label>
-                        <input type="url" name="yt_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['yt_url'] ?? ''; ?>">
+                        <p class="mb-1 text-white"><strong>X (Twitter):</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://developer.x.com" class="text-info">X Developer Portal</a>.</li>
+                            <li>Create a project and app. <strong>IMPORTANT:</strong> Set User Authentication to <strong>Read and Write</strong>.</li>
+                            <li>Copy your API Key, Secret, Access Token, and Secret from the "Keys and Tokens" tab.</li>
+                        </ol>
                     </div>
                 </div>
-                <button type="submit" name="save_social" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Update Syndication</button>
+            </div>
+
+            <form method="POST" class="space-y-12">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+
+                <!-- Public URLs -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">Public Profile Links</h4>
+                    <div class="row g-4">
+                        <div class="col-md-3"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">X URL</label><input type="url" name="tw_url" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_url'] ?? ''; ?>"></div>
+                        <div class="col-md-3"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Facebook URL</label><input type="url" name="fb_url" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_url'] ?? ''; ?>"></div>
+                        <div class="col-md-3"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Instagram URL</label><input type="url" name="ig_url" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_url'] ?? ''; ?>"></div>
+                        <div class="col-md-3"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">YouTube URL</label><input type="url" name="yt_url" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['yt_url'] ?? ''; ?>"></div>
+                    </div>
+                </div>
+
+                <!-- Facebook API -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">Facebook Automation</h4>
+                    <div class="row g-4">
+                        <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Page ID</label><input type="text" name="fb_page_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_page_id'] ?? ''; ?>"></div>
+                        <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Page Access Token</label><input type="password" name="fb_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_access_token'] ?? ''; ?>"></div>
+                    </div>
+                </div>
+
+                <!-- X API -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">X (Twitter) Automation</h4>
+                    <div class="row g-4">
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">API Key</label><input type="text" name="tw_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_api_key'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">API Secret</label><input type="password" name="tw_api_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_api_secret'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="text" name="tw_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_access_token'] ?? ''; ?>"></div>
+                        <div class="col-md-6"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Secret</label><input type="password" name="tw_access_secret" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_access_secret'] ?? ''; ?>"></div>
+                    </div>
+                </div>
+
+                <!-- Instagram API -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">Instagram Automation</h4>
+                    <div class="row g-4">
+                        <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Business Account ID</label><input type="text" name="ig_account_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_account_id'] ?? ''; ?>"></div>
+                        <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="password" name="ig_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_access_token'] ?? ''; ?>"></div>
+                    </div>
+                </div>
+
+                <!-- TikTok API -->
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">TikTok Automation</h4>
+                    <div class="row g-4">
+                        <div class="col-12"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">TikTok Access Token</label><input type="password" name="tt_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tt_access_token'] ?? ''; ?>"></div>
+                    </div>
+                </div>
+
+                <button type="submit" name="save_social" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Synchronize Social API</button>
             </form>
         <?php endif; ?>
     </div>

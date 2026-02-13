@@ -40,7 +40,9 @@ if (isset($_POST['save_manual'])) {
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
     $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
     if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image])) {
-        $success = "Intelligence report deployed successfully.";
+        $post_id = $conn->lastInsertId();
+        broadcast_to_social($post_id);
+        $success = "Intelligence report deployed and broadcasted.";
     } else {
         $error = "Failed to deploy report.";
     }
@@ -66,8 +68,8 @@ if (isset($_POST['generate_ai'])) {
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
 
         // Handle Image
-        $keyword = urlencode($data['image_keyword'] ?? $topic);
-        $image_url = "https://source.unsplash.com/1600x900/?football," . $keyword;
+        $keyword = urlencode(($data['image_keyword'] ?? $topic) . " football");
+        $image_url = "https://loremflickr.com/1600/900/" . $keyword;
         $img_data = @file_get_contents($image_url);
         $db_image = "/assets/uploads/ai_" . time() . ".jpg";
         if ($img_data) {
@@ -78,7 +80,9 @@ if (isset($_POST['generate_ai'])) {
 
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
         if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI ANALYST', $db_image])) {
-            $success = "AI Intelligence generated and deployed locally.";
+            $post_id = $conn->lastInsertId();
+            broadcast_to_social($post_id);
+            $success = "AI Intelligence generated, deployed and broadcasted.";
         } else {
             $error = "Database insertion failed.";
         }

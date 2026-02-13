@@ -1,23 +1,4 @@
-[Fri Feb 13 21:31:21 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
-[Fri Feb 13 21:31:23 2026] [::1]:34188 Accepted
-[Fri Feb 13 21:31:23 2026] [::1]:34188 [200]: HEAD /install/
-[Fri Feb 13 21:31:23 2026] [::1]:34188 Closing
-[Fri Feb 13 21:31:56 2026] [::1]:53858 Accepted
-[Fri Feb 13 21:31:56 2026] [::1]:53858 [200]: GET /install/
-[Fri Feb 13 21:31:56 2026] [::1]:53858 Closing
-[Fri Feb 13 21:32:39 2026] [::1]:38510 Accepted
-[Fri Feb 13 21:32:39 2026] Connection failed: SQLSTATE[HY000] [2002] No such file or directory
-[Fri Feb 13 21:32:39 2026] Connection failed: SQLSTATE[HY000] [2002] No such file or directory
-[Fri Feb 13 21:32:39 2026] Connection failed: SQLSTATE[HY000] [2002] No such file or directory
-[Fri Feb 13 21:32:39 2026] Connection failed: SQLSTATE[HY000] [2002] No such file or directory
-[Fri Feb 13 21:32:39 2026] PHP Fatal error:  Uncaught Error: Call to a member function query() on null in /app/pages/home.php:18
-Stack trace:
-#0 /app/index.php(15): include()
-#1 {main}
-  thrown in /app/pages/home.php on line 18
-[Fri Feb 13 21:32:39 2026] [::1]:38510 [200]: GET / - Uncaught Error: Call to a member function query() on null in /app/pages/home.php:18
-Stack trace:
-#0 /app/index.php(15): include()
-#1 {main}
-  thrown in /app/pages/home.php on line 18
-[Fri Feb 13 21:32:39 2026] [::1]:38510 Closing
+[Fri Feb 13 22:01:38 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
+[Fri Feb 13 22:01:43 2026] [::1]:33838 Accepted
+[Fri Feb 13 22:01:43 2026] [::1]:33838 [200]: GET /install/
+[Fri Feb 13 22:01:43 2026] [::1]:33838 Closing
