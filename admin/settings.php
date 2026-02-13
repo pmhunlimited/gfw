@@ -19,10 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, news_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
+        $_POST['news_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -72,6 +73,7 @@ $activeTab = $_GET['tab'] ?? 'general';
         <a href="?tab=ai" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'ai' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">AI Core</a>
         <a href="?tab=smtp" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'smtp' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">SMTP</a>
         <a href="?tab=security" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'security' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Security</a>
+        <a href="?tab=automation" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'automation' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Automation</a>
         <a href="?tab=social" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'social' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Syndication</a>
     </div>
 
@@ -128,16 +130,22 @@ $activeTab = $_GET['tab'] ?? 'general';
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
                             <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Gemini API Key</span>
                             <input type="password" name="gemini_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['gemini_api_key']; ?>">
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
                             <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">DeepSeek API Key</span>
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">NewsAPI.org Key</span>
+                            <input type="password" name="news_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['news_api_key'] ?? ''; ?>">
                         </div>
                     </div>
                 </div>
@@ -186,6 +194,37 @@ $activeTab = $_GET['tab'] ?? 'general';
                 </div>
                 <button type="submit" name="save_security" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply Security Logic</button>
             </form>
+
+        <?php elseif ($activeTab == 'automation'): ?>
+            <div class="space-y-8">
+                <div class="alert alert-warning bg-orange-900 bg-opacity-10 border-orange-500 border-opacity-20 text-orange-500 font-condensed italic uppercase p-4 rounded-3xl">
+                    <h5 class="fw-black mb-3">Cron Job Configuration</h5>
+                    <p class="small mb-4 opacity-75">To enable daily news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 24 hours.</p>
+
+                    <div class="bg-black/50 p-4 rounded-2xl mb-4 border border-white/10">
+                        <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-2">CRON JOB COMMAND</span>
+                        <code class="text-white small">0 6 * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
+                    </div>
+
+                    <h6 class="fw-black small uppercase mb-2">Instructions for cPanel:</h6>
+                    <ol class="small ps-3 opacity-75">
+                        <li>Log in to your <strong>cPanel</strong> account.</li>
+                        <li>Search for <strong>"Cron Jobs"</strong> in the search bar.</li>
+                        <li>Under "Add New Cron Job", select <strong>"Once Per Day"</strong> from Common Settings.</li>
+                        <li>In the "Command" field, paste the command shown above.</li>
+                        <li>Click <strong>"Add New Cron Job"</strong> to finalize.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-3 small">Operational Status</h4>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
+                        <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
+                    </div>
+                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your Gemini and NewsAPI keys are configured in the "AI Core" tab.</p>
+                </div>
+            </div>
 
         <?php elseif ($activeTab == 'smtp'): ?>
             <form method="POST" class="space-y-8">

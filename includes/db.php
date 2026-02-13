@@ -20,6 +20,12 @@ function get_db_connection() {
             $conn->exec("ALTER TABLE site_settings ADD COLUMN admin_pin VARCHAR(255)");
         }
 
+        try {
+            $conn->query("SELECT news_api_key FROM site_settings LIMIT 1");
+        } catch (Exception $e) {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN news_api_key VARCHAR(255)");
+        }
+
         return $conn;
     } catch (PDOException $e) {
         error_log("Connection failed: " . $e->getMessage());
