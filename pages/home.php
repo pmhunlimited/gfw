@@ -30,109 +30,16 @@ $latestPost = $posts[0] ?? null;
 // ELITE REPORTING - 10 latest posts
 $remainingPosts = array_slice($posts, 1, 10);
 
-// Sports data from Sportmonks or AI
 $activeComp = $_GET['comp'] ?? 'English Premier League';
-$activeType = $_GET['type'] ?? 'LIVESCORE';
-$today = date('Y-m-d');
 
-$league_ids = [
-    'UEFA Champions League' => 2,
-    'English Premier League' => 8,
-    'Spanish La Liga' => 564,
-    'Italian Serie A' => 384
+$leagues = [
+    ['id' => '7', 'name' => 'Premier League'],
+    ['id' => '572', 'name' => 'Champions League'],
+    ['id' => '11', 'name' => 'La Liga'],
+    ['id' => '17', 'name' => 'Serie A'],
+    ['id' => '9', 'name' => 'Bundesliga'],
+    ['id' => '8', 'name' => 'Ligue 1']
 ];
-$league_id = $league_ids[$activeComp] ?? 8;
-
-$sportsData = "";
-$useAI = false;
-
-if ($activeType == 'LIVESCORE') {
-    $data = fetch_sportmonks("livescores/inplay", "participants;scores;events.type");
-    if ($data) {
-        $sportsData .= "### LIVE ACTION: " . strtoupper($activeComp) . " (" . date('H:i') . ")\n\n";
-        $sportsData .= "| Match | Score | Status | Events |\n|---|---|---|---|\n";
-        $found = false;
-        foreach ($data as $f) {
-            if ($f['league_id'] == $league_id) {
-                $home = $f['participants'][0]['name'] ?? 'Home';
-                $away = $f['participants'][1]['name'] ?? 'Away';
-                $score = ($f['scores'][0]['score']['goals'] ?? 0) . " - " . ($f['scores'][1]['score']['goals'] ?? 0);
-                $status = $f['state']['name'] ?? 'Live';
-                $events = "";
-                foreach (array_slice($f['events'] ?? [], -2) as $e) {
-                    $events .= $e['minute'] . "' " . ($e['type']['name'] ?? '') . " (" . ($e['player_name'] ?? '') . ")<br>";
-                }
-                $sportsData .= "| $home vs $away | **$score** | $status | $events |\n";
-                $found = true;
-            }
-        }
-        if (!$found) $sportsData = "### SIGNAL STABLE\nNo live fixtures currently transmitting for this sector. Initializing standby protocols.";
-    } else { $useAI = true; }
-} elseif ($activeType == 'ODDS') {
-    $data = fetch_sportmonks("fixtures/date/$today", "participants;odds");
-    if ($data) {
-        $sportsData .= "### TACTICAL PREDICTIONS: " . strtoupper($activeComp) . "\n\n";
-        $sportsData .= "| Match | 1 (Home) | X (Draw) | 2 (Away) |\n|---|---|---|---|\n";
-        $found = false;
-        foreach ($data as $f) {
-            if ($f['league_id'] == $league_id) {
-                $home = $f['participants'][0]['name'] ?? 'Home';
-                $away = $f['participants'][1]['name'] ?? 'Away';
-                $o1 = $oX = $o2 = "-";
-                foreach ($f['odds'] ?? [] as $o) {
-                    if (($o['market_id'] ?? 0) == 1) { // 1x2 market
-                        if ($o['label'] == '1') $o1 = $o['value'];
-                        if ($o['label'] == 'X') $oX = $o['value'];
-                        if ($o['label'] == '2') $o2 = $o['value'];
-                    }
-                }
-                $sportsData .= "| $home vs $away | $o1 | $oX | $o2 |\n";
-                $found = true;
-            }
-        }
-        if (!$found) $sportsData = "### DATA ARCHIVE\nMarket prices currently restricted for this timeframe.";
-    } else { $useAI = true; }
-} elseif ($activeType == 'FIXTURES') {
-    $data = fetch_sportmonks("fixtures/date/$today", "participants;league");
-    if ($data) {
-        $sportsData .= "### MISSION SCHEDULE: " . strtoupper($activeComp) . "\n\n";
-        $sportsData .= "| Kick-off | Home Team | Away Team | Venue |\n|---|---|---|---|\n";
-        $found = false;
-        foreach ($data as $f) {
-            if ($f['league_id'] == $league_id) {
-                $time = date('H:i', strtotime($f['starting_at']));
-                $home = $f['participants'][0]['name'] ?? 'TBA';
-                $away = $f['participants'][1]['name'] ?? 'TBA';
-                $venue = $f['venue']['name'] ?? 'Field Ops';
-                $sportsData .= "| $time | $home | $away | $venue |\n";
-                $found = true;
-            }
-        }
-        if (!$found) $sportsData = "### CLEAR SKIES\nNo fixtures detected in current radar range.";
-    } else { $useAI = true; }
-} elseif ($activeType == 'TRANSFERS') {
-    $data = fetch_sportmonks("transfers");
-    if ($data) {
-        $sportsData .= "### ASSET LOGISTICS: GLOBAL MOVEMENT\n\n";
-        $sportsData .= "| Player | From | To | Type | Date |\n|---|---|---|---|---|\n";
-        foreach (array_slice($data, 0, 10) as $t) {
-            $player = $t['player']['display_name'] ?? 'Unknown Asset';
-            $from = $t['from_team']['name'] ?? 'Free Agent';
-            $to = $t['to_team']['name'] ?? 'New Base';
-            $type = $t['type']['name'] ?? 'Transfer';
-            $date = $t['date'];
-            $sportsData .= "| $player | $from | $to | $type | $date |\n";
-        }
-    } else { $useAI = true; }
-} else {
-    $useAI = true;
-}
-
-if ($useAI) {
-    $display_today = date('D d M Y');
-    $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp for today, $display_today. Use Markdown tables for data. Ensure information is current.");
-}
-
 ?>
 <div class="container-fluid pt-0 px-0 bg-black overflow-x-hidden">
     <!-- LIVE SCORES WIRE -->
@@ -203,46 +110,99 @@ if ($useAI) {
                 <div class="bg-electric-red me-3" style="width: 6px; height: 40px;"></div>
                 <h2 class="h2 font-condensed fw-black italic text-white mb-0 uppercase">SPORTS UPDATES</h2>
             </div>
-            <div class="d-flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                <?php
-                $comps = ['UEFA Champions League', 'English Premier League', 'Spanish La Liga', 'Italian Serie A'];
-                foreach ($comps as $c):
-                ?>
-                    <a href="?comp=<?php echo urlencode($c); ?>&type=<?php echo $activeType; ?>" class="btn btn-sm px-4 py-2 rounded-0 font-condensed fw-black transition-all text-nowrap italic <?php echo $activeComp == $c ? 'btn-danger shadow-[0_0_15px_rgba(255,62,62,0.3)]' : 'btn-outline-secondary opacity-50'; ?>">
-                        <?php echo strtoupper($c); ?>
-                    </a>
+        </div>
+
+        <div class="elite-tabs-container">
+            <!-- Tabs Header -->
+            <div class="elite-tabs-nav no-scrollbar mb-4">
+                <?php foreach ($leagues as $index => $league): ?>
+                    <button class="elite-tab-btn <?php echo $index === 0 ? 'active' : ''; ?>" data-target="#home-league-<?php echo $league['id']; ?>">
+                        <?php echo $league['name']; ?>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Tabs Content -->
+            <div class="elite-tabs-content">
+                <?php foreach ($leagues as $index => $league): ?>
+                    <div class="elite-tab-pane <?php echo $index === 0 ? 'active' : ''; ?>" id="home-league-<?php echo $league['id']; ?>">
+                        <div class="bg-black bg-opacity-60 p-2 p-md-4 rounded-4 border border-white border-opacity-5 shadow-inner overflow-hidden">
+                            <div data-widget-type="entityScores"
+                                 data-entity-type="league"
+                                 data-entity-id="<?php echo $league['id']; ?>"
+                                 data-lang="en"
+                                 data-widget-id="home-scores-<?php echo $league['id']; ?>"
+                                 data-theme="dark">
+                            </div>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>
-
-        <div class="row g-4">
-            <div class="col-md-4 col-xl-3">
-                <div class="d-flex d-md-block overflow-x-auto no-scrollbar gap-2 mb-4">
-                    <?php
-                    $types = [
-                        ['id' => 'LIVESCORE', 'label' => 'LIVE UPDATES', 'icon' => 'bi-broadcast'],
-                        ['id' => 'ODDS', 'label' => 'ODDS & PREDICTION', 'icon' => 'bi-graph-up-arrow'],
-                        ['id' => 'FIXTURES', 'label' => 'FIXTURES', 'icon' => 'bi-calendar-event'],
-                        ['id' => 'TRANSFERS', 'label' => 'TRANSFERS', 'icon' => 'bi-arrow-left-right']
-                    ];
-                    foreach ($types as $t):
-                    ?>
-                        <a href="?comp=<?php echo urlencode($activeComp); ?>&type=<?php echo $t['id']; ?>" class="nav-link text-start rounded-0 py-3 px-4 font-condensed tracking-widest fw-black d-flex align-items-center justify-content-between transition-all mb-3 w-100 <?php echo $activeType == $t['id'] ? 'active bg-electric-red text-white' : 'text-secondary bg-white bg-opacity-5'; ?>">
-                            <span class="h6 mb-0 italic"><?php echo $t['label']; ?></span>
-                            <i class="bi <?php echo $t['icon']; ?> fs-5 opacity-50"></i>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <div class="col-md-8 col-xl-9">
-                <div class="bg-black bg-opacity-60 p-4 p-md-5 rounded-4 border border-white border-opacity-5 min-vh-60 shadow-inner">
-                    <div class="intelligence-content text-white opacity-90 fs-6">
-                        <?php echo parse_markdown($sportsData); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
     </section>
+
+    <style>
+        .elite-tabs-nav {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .elite-tab-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #64748b;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-family: 'Barlow Condensed', sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-style: italic;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+            font-size: 11px;
+        }
+        .elite-tab-btn:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        .elite-tab-btn.active {
+            background: var(--electric-red);
+            border-color: var(--electric-red);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255,62,62,0.3);
+        }
+        .elite-tab-pane {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .elite-tab-pane.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <script src="https://widgets.365scores.com/main.js"></script>
+    <script>
+        document.querySelectorAll('.elite-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.getAttribute('data-target');
+                const container = btn.closest('.elite-tabs-container');
+
+                // Update buttons in this container
+                container.querySelectorAll('.elite-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update panes in this container
+                container.querySelectorAll('.elite-tab-pane').forEach(p => p.classList.remove('active'));
+                container.querySelector(target).classList.add('active');
+            });
+        });
+    </script>
 
     <!-- GRID -->
     <section class="p-4 p-md-5 bg-black">

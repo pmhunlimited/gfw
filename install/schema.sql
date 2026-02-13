@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
     selected_model VARCHAR(50) DEFAULT 'gemini-3-flash-preview',
     gemini_api_key VARCHAR(255),
     deepseek_api_key VARCHAR(255),
+    news_api_key VARCHAR(255),
     smtp_host VARCHAR(255),
     smtp_port VARCHAR(10),
     smtp_user VARCHAR(255),

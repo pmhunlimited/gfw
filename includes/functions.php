@@ -177,23 +177,6 @@ function get_ai_insight($prompt) {
     return "Intelligence gathering failed.";
 }
 
-function fetch_sportmonks($endpoint, $include = '') {
-    $settings = get_settings();
-    $api_token = $settings['sportmonks_api_key'] ?? '';
-    if (empty($api_token)) return null;
-
-    $url = "https://api.sportmonks.com/v3/football/$endpoint?api_token=$api_token";
-    if (!empty($include)) $url .= "&include=$include";
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    $response = curl_exec($ch);
-    $result = json_decode($response, true);
-    curl_close($ch);
-
-    return $result['data'] ?? null;
-}
 
 // Basic Markdown to HTML
 function parse_markdown($text) {
