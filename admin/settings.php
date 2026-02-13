@@ -41,6 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_smtp'])) {
     $success = "SMTP cluster reconfigured.";
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_security'])) {
+    $pin_enabled = isset($_POST['pin_enabled']) ? 1 : 0;
+    $new_pin = $_POST['admin_pin'];
+
+    if ($pin_enabled && !empty($new_pin)) {
+        $hashed_pin = password_hash($new_pin, PASSWORD_BCRYPT);
+        $stmt = $conn->prepare("UPDATE site_settings SET pin_enabled = ?, admin_pin = ? WHERE id = 1");
+        $stmt->execute([$pin_enabled, $hashed_pin]);
+    } else {
+        $stmt = $conn->prepare("UPDATE site_settings SET pin_enabled = ? WHERE id = 1");
+        $stmt->execute([$pin_enabled]);
+    }
+    $success = "Security protocols updated.";
+}
+
 $settings = get_settings();
 $activeTab = $_GET['tab'] ?? 'general';
 
@@ -56,6 +71,7 @@ $activeTab = $_GET['tab'] ?? 'general';
         <a href="?tab=general" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'general' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">General</a>
         <a href="?tab=ai" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'ai' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">AI Core</a>
         <a href="?tab=smtp" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'smtp' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">SMTP</a>
+        <a href="?tab=security" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'security' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Security</a>
         <a href="?tab=social" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'social' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Syndication</a>
     </div>
 
@@ -121,6 +137,30 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <?php endforeach; ?>
                 </div>
                 <button type="submit" name="save_ai" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Update AI Logic</button>
+            </form>
+
+        <?php elseif ($activeTab == 'security'): ?>
+            <form method="POST" class="space-y-8">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h4 class="text-white font-black uppercase italic mb-1">Security PIN (2FA)</h4>
+                            <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Enhanced biometric-style cipher protection</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" name="pin_enabled" class="sr-only peer" <?php echo ($settings['pin_enabled'] ?? false) ? 'checked' : ''; ?>>
+                            <div class="w-11 h-6 bg-gray-700 rounded-full peer peer-checked:bg-danger after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        </label>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Set New Security PIN</label>
+                        <input type="password" name="admin_pin" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-mono tracking-[1em]" placeholder="••••">
+                        <p class="text-[9px] text-white-50 mt-2 italic opacity-40">Only required if enabling for the first time or changing the PIN.</p>
+                    </div>
+                </div>
+                <button type="submit" name="save_security" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply Security Logic</button>
             </form>
 
         <?php elseif ($activeTab == 'smtp'): ?>

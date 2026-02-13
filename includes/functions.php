@@ -121,31 +121,46 @@ function log_activity($message) {
 
 function get_ai_insight($prompt) {
     $settings = get_settings();
-    $apiKey = $settings['gemini_api_key'];
     $model = $settings['selected_model'];
 
-    if (empty($apiKey)) return "AI API Key missing.";
-
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey";
-
-    $data = [
-        "contents" => [
-            ["parts" => [["text" => $prompt]]]
-        ]
-    ];
+    if (strpos($model, 'gemini') !== false) {
+        $apiKey = $settings['gemini_api_key'];
+        if (empty($apiKey)) return "Gemini API Key missing.";
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey";
+        $data = ["contents" => [["parts" => [["text" => $prompt]]]]];
+        $headers = ['Content-Type: application/json'];
+    } else {
+        $apiKey = $settings['deepseek_api_key'];
+        if (empty($apiKey)) return "DeepSeek API Key missing.";
+        $url = "https://api.deepseek.com/chat/completions";
+        $data = [
+            "model" => $model,
+            "messages" => [["role" => "user", "content" => $prompt]]
+        ];
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $apiKey
+        ];
+    }
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, JSON_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
     $response = curl_exec($ch);
     $result = JSON_decode($response, true);
     curl_close($ch);
 
-    if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-        return $result['candidates'][0]['content']['parts'][0]['text'];
+    if (strpos($model, 'gemini') !== false) {
+        if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+            return $result['candidates'][0]['content']['parts'][0]['text'];
+        }
+    } else {
+        if (isset($result['choices'][0]['message']['content'])) {
+            return $result['choices'][0]['message']['content'];
+        }
     }
 
     return "Intelligence gathering failed.";

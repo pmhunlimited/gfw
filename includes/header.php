@@ -68,11 +68,7 @@ $settings = get_settings();
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto font-condensed fw-bold uppercase tracking-widest small italic">
-                    <li class="nav-item"><a class="nav-link px-3" href="/">Broadcast</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/watch">Live Stream</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/tables">Tables</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/betting">Betting</a></li>
+                <ul class="navbar-nav me-auto font-condensed fw-bold uppercase tracking-widest small italic">
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
@@ -82,6 +78,10 @@ $settings = get_settings();
                         }
                     }
                     ?>
+                    <li class="nav-item"><a class="nav-link px-3" href="/">Broadcast</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/watch">Live Stream</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/tables">Tables</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/betting">Betting</a></li>
                 </ul>
             </div>
         </div>

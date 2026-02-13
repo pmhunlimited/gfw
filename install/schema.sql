@@ -22,7 +22,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
     fb_url VARCHAR(255),
     tw_url VARCHAR(255),
     ig_url VARCHAR(255),
-    yt_url VARCHAR(255)
+    yt_url VARCHAR(255),
+    pin_enabled BOOLEAN DEFAULT FALSE,
+    admin_pin VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS users (

@@ -27,7 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 log_activity("Admin login successful: " . $username . " from " . $_SERVER['REMOTE_ADDR']);
 
-                redirect('/admin/');
+                $settings = get_settings();
+                if (!empty($settings['pin_enabled'])) {
+                    redirect('/admin/pin_verify');
+                } else {
+                    $_SESSION['pin_verified'] = true;
+                    $_SESSION['pin_verified_at'] = time();
+                    redirect('/admin/');
+                }
             } else {
                 $error = "INVALID CREDENTIALS. SYSTEM SECURE.";
                 log_activity("Failed admin login attempt: " . $username);

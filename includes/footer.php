@@ -30,9 +30,6 @@
             </div>
             <div class="border-top border-white border-opacity-5 mt-5 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo $settings['name'] ?? 'GFW'; ?>. SYSTEM SECURE.</p>
-                <div class="d-flex gap-4 small font-black uppercase italic tracking-widest opacity-40">
-                    <a href="/admin/login" class="text-decoration-none text-reset hover:text-white">Access Core</a>
-                </div>
             </div>
         </div>
     </footer>

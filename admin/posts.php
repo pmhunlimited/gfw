@@ -14,6 +14,35 @@ if (isset($_GET['delete'])) {
     $success = "Report decommissioned.";
 }
 
+// Handle Manual Post Submission
+if (isset($_POST['save_manual'])) {
+    $title = sanitize($_POST['title']);
+    $cat = sanitize($_POST['cat']);
+    $excerpt = sanitize($_POST['excerpt']);
+    $content = $_POST['content'];
+    $image = sanitize($_POST['image']);
+    $author = sanitize($_POST['author'] ?: 'STAFF');
+
+    // Handle Image Upload
+    if (!empty($_FILES['image_file']['name'])) {
+        $target_dir = "../assets/uploads/";
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+        $file_ext = strtolower(pathinfo($_FILES["image_file"]["name"], PATHINFO_EXTENSION));
+        $target_file = $target_dir . time() . '.' . $file_ext;
+        if (move_uploaded_file($_FILES["image_file"]["tmp_name"], $target_file)) {
+            $image = "/assets/uploads/" . basename($target_file);
+        }
+    }
+
+    $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image])) {
+        $success = "Intelligence report deployed successfully.";
+    } else {
+        $error = "Failed to deploy report.";
+    }
+}
+
 // Handle Auto-generation from AI
 if (isset($_POST['generate_ai'])) {
     $topic = sanitize($_POST['topic']);
@@ -37,7 +66,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 ?>
 <div class="d-flex justify-content-between align-items-center mb-5">
     <h1 class="font-condensed fw-black italic text-white display-5 mb-0">INTELLIGENCE <span class="text-danger">REPORTS</span></h1>
-    <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#generateModal">GENERATE FROM AI</button>
+    <div class="d-flex gap-3">
+        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
+        <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#generateModal">GENERATE FROM AI</button>
+    </div>
 </div>
 
 <?php if (isset($success)): ?>
@@ -87,7 +119,57 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Manual Entry Modal -->
+<div class="modal fade" id="manualModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary rounded-4">
+            <div class="modal-header border-white border-opacity-10">
+                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Manual Intelligence Entry</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <label class="form-label text-white-50 small uppercase font-black">Title</label>
+                            <input type="text" name="title" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-white-50 small uppercase font-black">Category</label>
+                            <select name="cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
+                                <?php foreach ($categories as $c): ?>
+                                    <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Image URL</label>
+                            <input type="text" name="image" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://unsplash.com/...">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
+                            <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Excerpt</label>
+                            <textarea name="excerpt" rows="2" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
+                            <textarea name="content" rows="10" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-white border-opacity-10">
+                    <button type="submit" name="save_manual" class="btn btn-danger w-100 py-3 rounded-xl font-condensed italic fw-black">DEPLOY REPORT</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- AI Modal -->
 <div class="modal fade" id="generateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary rounded-4">
