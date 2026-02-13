@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
 if (is_admin()) {
-    redirect('/migrate/admin/');
+    redirect('/admin/');
 }
 
 $error = '';
@@ -15,21 +15,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $password = $_POST['password'];
 
         $conn = get_db_connection();
-    $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = 'admin'");
-    $stmt->execute([$username]);
-    $user = $stmt->fetch();
+        if ($conn) {
+            $stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND role = 'admin'");
+            $stmt->execute([$username]);
+            $user = $stmt->fetch();
 
-    if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['role'] = $user['role'];
+            if ($user && password_verify($password, $user['password'])) {
+                $_SESSION['user_id'] = $user['id'];
+                $_SESSION['username'] = $user['username'];
+                $_SESSION['role'] = $user['role'];
 
-        log_activity("Admin login successful: " . $username . " from " . $_SERVER['REMOTE_ADDR']);
+                log_activity("Admin login successful: " . $username . " from " . $_SERVER['REMOTE_ADDR']);
 
-        redirect('/migrate/admin/');
-    } else {
-        $error = "INVALID CREDENTIALS. SYSTEM SECURE.";
-        log_activity("Failed admin login attempt: " . $username);
+                redirect('/admin/');
+            } else {
+                $error = "INVALID CREDENTIALS. SYSTEM SECURE.";
+                log_activity("Failed admin login attempt: " . $username);
+            }
+        } else {
+            $error = "DATABASE CONNECTION ERROR.";
+        }
     }
 }
 
@@ -70,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="submit" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic">AUTHORIZE ACCESS</button>
         </form>
         <div class="mt-4 text-center">
-            <a href="/migrate/" class="text-white-50 small text-decoration-none hover:text-white transition-all uppercase font-black italic tracking-widest">Back to Broadcast</a>
+            <a href="/" class="text-white-50 small text-decoration-none hover:text-white transition-all uppercase font-black italic tracking-widest">Back to Broadcast</a>
         </div>
     </div>
 </body>

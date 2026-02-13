@@ -22,16 +22,16 @@
         <!-- Sidebar -->
         <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block fixed-top h-100">
             <div class="p-4 mb-4">
-                <a href="/migrate/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">GFW <span class="text-danger">CORE</span></a>
+                <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">GFW <span class="text-danger">CORE</span></a>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link <?php echo $path == '' ? 'active' : ''; ?>" href="/migrate/admin/"><i class="bi bi-grid-fill me-3"></i> Intelligence</a>
-                <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/migrate/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
-                <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/migrate/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
-                <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/migrate/admin/settings"><i class="bi bi-sliders me-3"></i> Parameters</a>
-                <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/migrate/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
+                <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> Intelligence</a>
+                <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
+                <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
+                <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> Parameters</a>
+                <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
                 <hr class="border-white border-opacity-5 mx-4 my-4">
-                <a class="nav-link text-danger" href="/migrate/admin/logout"><i class="bi bi-power me-3"></i> Deauthorize</a>
+                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> Deauthorize</a>
             </nav>
         </div>
 

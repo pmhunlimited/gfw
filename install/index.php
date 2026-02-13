@@ -8,7 +8,7 @@ $success = '';
 if (file_exists(__DIR__ . '/../includes/config.php')) {
     include __DIR__ . '/../includes/config.php';
     if (defined('INSTALLED') && INSTALLED && $stage != 4) {
-        header('Location: /migrate/');
+        header('Location: /');
         exit;
     }
 }
@@ -71,7 +71,7 @@ define('DB_HOST', '".$db['host']."');
 define('DB_USER', '".$db['user']."');
 define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
-define('SITE_URL', 'http://' . \$_SERVER['HTTP_HOST'] . '/migrate');
+define('SITE_URL', (isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . \$_SERVER['HTTP_HOST']);
 define('INSTALLED', true);
 ?>";
         file_put_contents(__DIR__ . '/../includes/config.php', $config_content);
@@ -181,13 +181,13 @@ define('INSTALLED', true);
                         <div class="text-start small text-white-50">
                             <p><strong>Next steps:</strong></p>
                             <ul>
-                                <li>Delete the <code>migrate/install</code> directory for security.</li>
-                                <li>Login to the admin panel at <code>/migrate/admin/login</code>.</li>
+                                <li>Delete the <code>install</code> directory for security.</li>
+                                <li>Login to the admin panel at <code>/admin/login</code>.</li>
                                 <li>Configure your AI API keys in System Settings.</li>
                                 <li>Set up your SMTP credentials for notifications.</li>
                             </ul>
                         </div>
-                        <a href="/migrate/" class="btn btn-primary w-100 mt-4">Go to Website</a>
+                        <a href="/" class="btn btn-primary w-100 mt-4">Go to Website</a>
                     </div>
                 <?php endif; ?>
             </div>

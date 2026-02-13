@@ -11,7 +11,7 @@ if ($conn && $page_id) {
 }
 
 if (!$page) {
-    redirect('/migrate/404');
+    redirect('/404');
 }
 ?>
 <div class="container py-5">

@@ -11,7 +11,7 @@ if ($conn && $slug) {
 }
 
 if (!$post) {
-    echo '<div class="container py-5 text-center"><h1>Post Not Found</h1><a href="/migrate/" class="btn btn-primary mt-4">Back to Broadcast</a></div>';
+    echo '<div class="container py-5 text-center"><h1>Post Not Found</h1><a href="/" class="btn btn-primary mt-4">Back to Broadcast</a></div>';
     include __DIR__ . '/../includes/footer.php';
     exit;
 }
@@ -103,7 +103,7 @@ $comments = $stmt->fetchAll();
                     <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
                         <h4 class="font-condensed fw-black italic text-electric-red text-xl mb-4 uppercase">Newsletter Syndication</h4>
                         <p class="text-white-50 small mb-6">Receive real-time intelligence directly to your secure inbox.</p>
-                        <form action="/migrate/subscribe" method="POST">
+                        <form action="/subscribe" method="POST">
                             <input type="email" name="email" placeholder="SECURE EMAIL ADDRESS" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-monospace text-xs mb-4" required>
                             <button type="submit" class="w-full bg-white text-black px-6 py-3 rounded-xl font-black uppercase italic tracking-widest hover:bg-electric-red hover:text-white transition-all">Secure Subscription</button>
                         </form>

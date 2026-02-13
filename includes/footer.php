@@ -11,9 +11,9 @@
                         <div class="col-md-4">
                             <h4 class="font-condensed fw-black text-electric-red mb-3 small tracking-widest">CHANNELS</h4>
                             <ul class="list-unstyled small font-bold text-white-50 uppercase">
-                                <li class="mb-2"><a href="/migrate/" class="text-decoration-none text-reset hover:text-white transition-all">Latest Reports</a></li>
-                                <li class="mb-2"><a href="/migrate/watch" class="text-decoration-none text-reset hover:text-white transition-all">Live Feed</a></li>
-                                <li class="mb-2"><a href="/migrate/tables" class="text-decoration-none text-reset hover:text-white transition-all">Standings</a></li>
+                                <li class="mb-2"><a href="/" class="text-decoration-none text-reset hover:text-white transition-all">Latest Reports</a></li>
+                                <li class="mb-2"><a href="/watch" class="text-decoration-none text-reset hover:text-white transition-all">Live Feed</a></li>
+                                <li class="mb-2"><a href="/tables" class="text-decoration-none text-reset hover:text-white transition-all">Standings</a></li>
                             </ul>
                         </div>
                         <div class="col-md-4">
@@ -31,7 +31,7 @@
             <div class="border-top border-white border-opacity-5 mt-5 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
                 <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo $settings['name'] ?? 'GFW'; ?>. SYSTEM SECURE.</p>
                 <div class="d-flex gap-4 small font-black uppercase italic tracking-widest opacity-40">
-                    <a href="/migrate/admin/login" class="text-decoration-none text-reset hover:text-white">Access Core</a>
+                    <a href="/admin/login" class="text-decoration-none text-reset hover:text-white">Access Core</a>
                 </div>
             </div>
         </div>

@@ -3,7 +3,7 @@ session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
 if (!is_admin()) {
-    redirect('/migrate/admin/login');
+    redirect('/admin/login');
 }
 
 $conn = get_db_connection();
@@ -11,9 +11,10 @@ $settings = get_settings();
 
 // Admin Routing
 $request = $_SERVER['REQUEST_URI'];
-$base_path = '/migrate/admin';
-$path = str_replace($base_path, '', $request);
-$path = strtok($path, '?');
+$path = strtok($request, '?');
+if (strpos($path, '/admin') === 0) {
+    $path = substr($path, 6);
+}
 
 // Layout helper
 function admin_header($title = "Dashboard") {
@@ -37,8 +38,8 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/profile.php';
 } elseif ($path == '/logout') {
     session_destroy();
-    redirect('/migrate/admin/login');
+    redirect('/admin/login');
 } else {
-    redirect('/migrate/admin/');
+    redirect('/admin/');
 }
 ?>

@@ -70,7 +70,7 @@ function parse_markdown($text) {
     <section class="row g-0 mb-5 border-bottom border-white border-opacity-10 bg-[#05070a]">
         <div class="col-lg-8 border-end border-white border-opacity-10 position-relative" style="min-height: 600px;">
             <?php if ($latestPost): ?>
-                <a href="/migrate/post/<?php echo $latestPost['slug']; ?>" class="text-decoration-none d-block h-100 position-relative overflow-hidden group">
+                <a href="/post/<?php echo $latestPost['slug']; ?>" class="text-decoration-none d-block h-100 position-relative overflow-hidden group">
                     <img src="<?php echo $latestPost['image']; ?>" loading="lazy" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-60 grayscale transition-all duration-1000" style="transition: transform 1s, filter 1s;" onmouseover="this.style.transform='scale(1.05)';this.style.filter='grayscale(0)';" onmouseout="this.style.transform='scale(1)';this.style.filter='grayscale(1)';" alt="">
                     <div class="position-absolute bottom-0 start-0 w-100 p-4 p-md-5 bg-gradient-to-t from-black via-black/70 to-transparent z-20">
                         <div class="mb-4">
@@ -98,7 +98,7 @@ function parse_markdown($text) {
                 </h3>
                 <div class="d-flex flex-column flex-grow-1 gap-4">
                     <?php foreach ($syndicatedNext as $post): ?>
-                        <a href="/migrate/post/<?php echo $post['slug']; ?>" class="text-decoration-none d-flex gap-4 border-bottom border-white border-opacity-5 pb-4 transition-all hover:translate-x-1">
+                        <a href="/post/<?php echo $post['slug']; ?>" class="text-decoration-none d-flex gap-4 border-bottom border-white border-opacity-5 pb-4 transition-all hover:translate-x-1">
                             <div class="flex-shrink-0 w-24 h-24 overflow-hidden border border-white border-opacity-10 rounded-2" style="width: 100px; height: 100px;">
                                 <img src="<?php echo $post['image']; ?>" loading="lazy" class="w-100 h-100 object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
                             </div>
@@ -168,7 +168,7 @@ function parse_markdown($text) {
         <div class="row g-5">
             <?php foreach ($remainingPosts as $post): ?>
                 <div class="col-sm-6 col-md-4 col-lg-3">
-                    <a href="/migrate/post/<?php echo $post['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
+                    <a href="/post/<?php echo $post['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
                         <div class="ratio ratio-1x1 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
                             <img src="<?php echo $post['image']; ?>" loading="lazy" class="object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
                             <div class="position-absolute top-0 start-0 m-3">

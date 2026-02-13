@@ -6,7 +6,7 @@ define('DB_PASS', '');
 define('DB_NAME', '');
 
 // Site settings
-define('SITE_URL', 'http://localhost/migrate');
+define('SITE_URL', 'http://localhost');
 
 // Version
 define('APP_VERSION', '1.0.0');

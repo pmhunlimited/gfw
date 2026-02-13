@@ -61,7 +61,7 @@ $settings = get_settings();
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/migrate/">
+            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
                 <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -69,16 +69,16 @@ $settings = get_settings();
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto font-condensed fw-bold uppercase tracking-widest small italic">
-                    <li class="nav-item"><a class="nav-link px-3" href="/migrate/">Broadcast</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/migrate/watch">Live Stream</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/migrate/tables">Tables</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/migrate/betting">Betting</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/">Broadcast</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/watch">Live Stream</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/tables">Tables</a></li>
+                    <li class="nav-item"><a class="nav-link px-3" href="/betting">Betting</a></li>
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
                         $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1")->fetchAll();
                         foreach ($pages as $p) {
-                            echo '<li class="nav-item"><a class="nav-link px-3" href="/migrate/'.$p['slug'].'">'.$p['title'].'</a></li>';
+                            echo '<li class="nav-item"><a class="nav-link px-3" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
