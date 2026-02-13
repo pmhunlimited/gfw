@@ -8,6 +8,17 @@ function get_settings() {
     return $stmt->fetch() ?: [];
 }
 
+function get_categories_with_counts() {
+    $conn = get_db_connection();
+    if (!$conn) return [];
+    $stmt = $conn->query("SELECT c.name, COUNT(p.id) as post_count
+                          FROM categories c
+                          LEFT JOIN posts p ON c.name = p.category
+                          GROUP BY c.name
+                          ORDER BY c.name ASC");
+    return $stmt->fetchAll();
+}
+
 function sanitize($data) {
     return htmlspecialchars(strip_tags(trim($data)));
 }

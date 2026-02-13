@@ -58,14 +58,41 @@ $settings = get_settings();
 
       /* Improved Readability & Sharpness */
       body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
-      .bg-white .text-white, .alert-light .text-white { color: #000 !important; }
+      .bg-white, .bg-white *, .alert-light, .alert-light *, .scoreaxis-widget, .scoreaxis-widget * { color: initial !important; }
+      .bg-white, .bg-white p, .bg-white h1, .bg-white h2, .bg-white h3, .bg-white span { color: #000 !important; }
       .alert { border-radius: 15px; border-opacity: 0.2; }
       .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
       ::placeholder { color: rgba(255,255,255,0.3) !important; }
+
+      .top-menu { background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 10px; }
+      .top-menu .nav-link { color: #64748b; font-weight: 700; text-transform: uppercase; padding: 8px 15px; letter-spacing: 1px; }
+      .top-menu .nav-link:hover, .top-menu .nav-link.active { color: var(--electric-red); }
+      .top-menu .post-count { background: rgba(255,62,62,0.1); color: var(--electric-red); padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-size: 9px; }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
+    <!-- Top Menu (Categories) -->
+    <div class="top-menu d-none d-lg-block">
+        <div class="container-fluid px-4">
+            <ul class="nav">
+                <?php
+                $current_path = $_SERVER['REQUEST_URI'];
+                $categories = get_categories_with_counts();
+                foreach ($categories as $c) {
+                    $cat_url = '/category/' . urlencode($c['name']);
+                    $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active' : '';
+                    echo '<li class="nav-item">
+                            <a class="nav-link '.$active.'" href="'.$cat_url.'">
+                                '.$c['name'].' <span class="post-count">'.$c['post_count'].'</span>
+                            </a>
+                          </li>';
+                }
+                ?>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4">
             <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
@@ -78,7 +105,6 @@ $settings = get_settings();
                 <ul class="navbar-nav me-auto font-condensed fw-bold uppercase tracking-widest small italic">
                     <?php
                     $conn = get_db_connection();
-                    $current_path = $_SERVER['REQUEST_URI'];
                     if ($conn) {
                         // Dynamic Pages
                         $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1")->fetchAll();
@@ -89,25 +115,25 @@ $settings = get_settings();
                     }
                     ?>
 
-                    <!-- Home -->
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
-
-                    <?php
-                    if ($conn) {
-                        // Categories as menu items
-                        $cats = $conn->query("SELECT name FROM categories ORDER BY name ASC")->fetchAll();
-                        foreach ($cats as $c) {
-                            $cat_url = '/category/' . urlencode($c['name']);
-                            $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="'.$cat_url.'">'.$c['name'].'</a></li>';
-                        }
-                    }
-                    ?>
-
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Stream</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables') ? 'active text-electric-red' : ''; ?>" href="/tables">Tables</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Feed</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables">Standings</a></li>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/betting') ? 'active text-electric-red' : ''; ?>" href="/betting">Betting</a></li>
                 </ul>
+
+                <!-- Mobile Categories -->
+                <div class="d-lg-none mt-3 border-top border-white border-opacity-10 pt-3">
+                    <h6 class="text-white-50 small uppercase font-black px-3 mb-2">Categories</h6>
+                    <ul class="navbar-nav">
+                        <?php
+                        foreach ($categories as $c) {
+                            $cat_url = '/category/' . urlencode($c['name']);
+                            $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
+                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="'.$cat_url.'">'.$c['name'].' ('.$c['post_count'].')</a></li>';
+                        }
+                        ?>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>

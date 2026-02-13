@@ -20,7 +20,7 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/pages/watch.php';
 } elseif ($path == '/betting') {
     include __DIR__ . '/pages/betting.php';
-} elseif ($path == '/tables') {
+} elseif ($path == '/tables' || $path == '/standings') {
     include __DIR__ . '/pages/tables.php';
 } elseif (preg_match('/^\/category\/([^\/]+)$/', $path, $matches)) {
     $_GET['category'] = $matches[1];
