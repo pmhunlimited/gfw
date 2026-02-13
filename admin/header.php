@@ -14,6 +14,12 @@
         .nav-link { color: #64748b; font-weight: 900; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 15px 25px; border-left: 3px solid transparent; }
         .nav-link.active { color: #ff3e3e; border-left-color: #ff3e3e; background: rgba(255,62,62,0.05); }
         .nav-link:hover { color: #fff; }
+
+        /* Improved Readability & Sharpness */
+        body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+        .bg-white, .modal-content, .alert-light { color: #000 !important; }
+        .bg-white h1, .bg-white h2, .bg-white h3, .bg-white p { color: #000 !important; }
+        .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
@@ -28,6 +34,7 @@
                 <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> Intelligence</a>
                 <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
                 <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
+                <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> Taxonomy</a>
                 <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> Parameters</a>
                 <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
                 <hr class="border-white border-opacity-5 mx-4 my-4">

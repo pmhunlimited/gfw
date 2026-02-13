@@ -55,6 +55,13 @@ $settings = get_settings();
       .markdown-content table { width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; background: rgba(255,255,255,0.02); }
       .markdown-content th { background: rgba(255,62,62,0.15); color: #ff3e3e; padding: 14px 18px; border-bottom: 2px solid rgba(255,62,62,0.3); text-align: left; }
       .markdown-content td { padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.9); }
+
+      /* Improved Readability & Sharpness */
+      body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+      .bg-white .text-white, .alert-light .text-white { color: #000 !important; }
+      .alert { border-radius: 15px; border-opacity: 0.2; }
+      .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
+      ::placeholder { color: rgba(255,255,255,0.3) !important; }
     </style>
 </head>
 <body>
@@ -71,17 +78,35 @@ $settings = get_settings();
                 <ul class="navbar-nav me-auto font-condensed fw-bold uppercase tracking-widest small italic">
                     <?php
                     $conn = get_db_connection();
+                    $current_path = $_SERVER['REQUEST_URI'];
                     if ($conn) {
+                        // Dynamic Pages
                         $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1")->fetchAll();
                         foreach ($pages as $p) {
-                            echo '<li class="nav-item"><a class="nav-link px-3" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
+                            $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
+                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
-                    <li class="nav-item"><a class="nav-link px-3" href="/">Broadcast</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/watch">Live Stream</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/tables">Tables</a></li>
-                    <li class="nav-item"><a class="nav-link px-3" href="/betting">Betting</a></li>
+
+                    <!-- Home -->
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
+
+                    <?php
+                    if ($conn) {
+                        // Categories as menu items
+                        $cats = $conn->query("SELECT name FROM categories ORDER BY name ASC")->fetchAll();
+                        foreach ($cats as $c) {
+                            $cat_url = '/category/' . urlencode($c['name']);
+                            $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
+                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="'.$cat_url.'">'.$c['name'].'</a></li>';
+                        }
+                    }
+                    ?>
+
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Stream</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables') ? 'active text-electric-red' : ''; ?>" href="/tables">Tables</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/betting') ? 'active text-electric-red' : ''; ?>" href="/betting">Betting</a></li>
                 </ul>
             </div>
         </div>

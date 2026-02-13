@@ -18,10 +18,13 @@ if (isset($_GET['delete'])) {
 if (isset($_POST['save_manual'])) {
     $title = sanitize($_POST['title']);
     $cat = sanitize($_POST['cat']);
-    $excerpt = sanitize($_POST['excerpt']);
     $content = $_POST['content'];
+
+    // Auto-generate excerpt: first 150 chars
+    $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
+
     $image = sanitize($_POST['image']);
-    $author = sanitize($_POST['author'] ?: 'STAFF');
+    $author = sanitize($_POST['author'] ?? 'STAFF');
 
     // Handle Image Upload
     if (!empty($_FILES['image_file']['name'])) {
@@ -143,6 +146,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Operator/Author</label>
+                            <input type="text" name="author" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="STAFF">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Image URL</label>
                             <input type="text" name="image" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://unsplash.com/...">
@@ -150,10 +157,6 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label text-white-50 small uppercase font-black">Excerpt</label>
-                            <textarea name="excerpt" rows="2" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
                         </div>
                         <div class="col-12">
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>

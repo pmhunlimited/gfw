@@ -101,6 +101,30 @@ $activeTab = $_GET['tab'] ?? 'general';
             </form>
 
         <?php elseif ($activeTab == 'ai'): ?>
+            <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-5 p-4 rounded-3xl">
+                <h5 class="fw-black mb-3">Intelligence Acquisition Guide</h5>
+                <div class="row g-4 small">
+                    <div class="col-md-6 border-end border-white border-opacity-10">
+                        <p class="mb-2"><strong>Google Gemini API:</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-info">Google AI Studio</a>.</li>
+                            <li>Sign in with your Google Account.</li>
+                            <li>Click "Create API key" and copy the value.</li>
+                            <li>Ensure billing is active if you expect high traffic.</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>DeepSeek API:</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://platform.deepseek.com/" target="_blank" class="text-info">DeepSeek Platform</a>.</li>
+                            <li>Navigate to the "API Keys" section.</li>
+                            <li>Generate a new key and add balance to your account.</li>
+                            <li>Copy and secure the key.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4 mb-4">

@@ -14,11 +14,21 @@ if ($conn) {
     $posts = $stmt->fetchAll();
 }
 
-// If no posts, we can try to fetch from AI if the user wants auto-generation,
-// but for now let's just show what's in DB.
+// Featured posts for SYNDICATED NEXT
+$stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 ORDER BY created_at DESC LIMIT 4");
+$syndicatedNext = $stmt_featured->fetchAll();
+if (count($syndicatedNext) < 4) {
+    // Fill with latest if not enough featured
+    $latest_ids = array_map(function($p) { return $p['id']; }, $syndicatedNext);
+    $placeholders = count($latest_ids) ? implode(',', array_fill(0, count($latest_ids), '?')) : '0';
+    $stmt_fill = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) ORDER BY created_at DESC LIMIT " . (4 - count($syndicatedNext)));
+    $stmt_fill->execute($latest_ids);
+    $syndicatedNext = array_merge($syndicatedNext, $stmt_fill->fetchAll());
+}
+
 $latestPost = $posts[0] ?? null;
-$syndicatedNext = array_slice($posts, 1, 3);
-$remainingPosts = array_slice($posts, 4);
+// ELITE REPORTING - 6 latest posts (excluding the hero post if desired, but user said 6 latest)
+$remainingPosts = array_slice($posts, 1, 6);
 
 // Sports data from AI
 $activeComp = $_GET['comp'] ?? 'English Premier League';
@@ -99,7 +109,7 @@ function parse_markdown($text) {
                 <div class="d-flex flex-column flex-grow-1 gap-4">
                     <?php foreach ($syndicatedNext as $post): ?>
                         <a href="/post/<?php echo $post['slug']; ?>" class="text-decoration-none d-flex gap-4 border-bottom border-white border-opacity-5 pb-4 transition-all hover:translate-x-1">
-                            <div class="flex-shrink-0 w-24 h-24 overflow-hidden border border-white border-opacity-10 rounded-2" style="width: 100px; height: 100px;">
+                            <div class="flex-shrink-0 overflow-hidden border border-white border-opacity-10 rounded-2" style="width: 80px; height: 80px;">
                                 <img src="<?php echo $post['image']; ?>" loading="lazy" class="w-100 h-100 object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
@@ -165,11 +175,11 @@ function parse_markdown($text) {
     <!-- GRID -->
     <section class="p-4 p-md-5 bg-black">
         <h2 class="display-5 font-condensed fw-black italic text-white mb-5 border-bottom border-white border-opacity-5 pb-3">ELITE REPORTING</h2>
-        <div class="row g-5">
+        <div class="row g-4">
             <?php foreach ($remainingPosts as $post): ?>
-                <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="col-sm-6 col-md-4">
                     <a href="/post/<?php echo $post['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
-                        <div class="ratio ratio-1x1 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
+                        <div class="ratio ratio-16x9 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
                             <img src="<?php echo $post['image']; ?>" loading="lazy" class="object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
                             <div class="position-absolute top-0 start-0 m-3">
                                 <span class="badge bg-electric-red font-condensed italic fw-black px-3 py-2 uppercase shadow-lg" style="font-size: 9px;"><?php echo $post['category']; ?></span>

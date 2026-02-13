@@ -47,6 +47,8 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/comments.php';
 } elseif ($path == '/subscribers') {
     include __DIR__ . '/subscribers.php';
+} elseif ($path == '/categories') {
+    include __DIR__ . '/categories.php';
 } elseif ($path == '/profile') {
     include __DIR__ . '/profile.php';
 } elseif ($path == '/pin_verify') {
