@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_category'])) {
     }
 }
 
-$categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
+$categories = get_categories_with_counts();
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-5">
@@ -42,6 +42,7 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchA
                 <tr>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">ID</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Taxonomy Name</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-center">Posts</th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-end">Actions</th>
                 </tr>
             </thead>
@@ -49,10 +50,13 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY name ASC")->fetchA
                 <?php foreach ($categories as $cat): ?>
                 <tr>
                     <td class="px-5 py-4 border-white border-opacity-5">
-                        <span class="text-white-50 font-monospace small">#<?php echo $cat['id']; ?></span>
+                        <span class="text-white-50 font-monospace small">#<?php echo ($cat['id'] ?? '?'); ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
                         <div class="text-white font-bold small uppercase italic"><?php echo $cat['name']; ?></div>
+                    </td>
+                    <td class="px-4 py-4 border-white border-opacity-5 text-center">
+                        <span class="badge bg-danger bg-opacity-10 text-danger font-condensed px-3 py-1"><?php echo $cat['post_count']; ?></span>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
                         <button class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal"><i class="bi bi-pencil-square fs-5"></i></button>

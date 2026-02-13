@@ -19,11 +19,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, news_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, news_api_key = ?, sportmonks_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
         $_POST['news_api_key'],
+        $_POST['sportmonks_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -146,6 +147,12 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
                             <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">NewsAPI.org Key</span>
                             <input type="password" name="news_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['news_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Sportmonks.com API Key</span>
+                            <input type="password" name="sportmonks_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['sportmonks_api_key'] ?? ''; ?>">
                         </div>
                     </div>
                 </div>

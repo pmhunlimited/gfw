@@ -30,11 +30,108 @@ $latestPost = $posts[0] ?? null;
 // ELITE REPORTING - 10 latest posts
 $remainingPosts = array_slice($posts, 1, 10);
 
-// Sports data from AI
+// Sports data from Sportmonks or AI
 $activeComp = $_GET['comp'] ?? 'English Premier League';
 $activeType = $_GET['type'] ?? 'LIVESCORE';
-$today = date('D d M Y');
-$sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp for today, $today. Use Markdown tables for data. Ensure information is current.");
+$today = date('Y-m-d');
+
+$league_ids = [
+    'UEFA Champions League' => 2,
+    'English Premier League' => 8,
+    'Spanish La Liga' => 564,
+    'Italian Serie A' => 384
+];
+$league_id = $league_ids[$activeComp] ?? 8;
+
+$sportsData = "";
+$useAI = false;
+
+if ($activeType == 'LIVESCORE') {
+    $data = fetch_sportmonks("livescores/inplay", "participants;scores;events.type");
+    if ($data) {
+        $sportsData .= "### LIVE ACTION: " . strtoupper($activeComp) . " (" . date('H:i') . ")\n\n";
+        $sportsData .= "| Match | Score | Status | Events |\n|---|---|---|---|\n";
+        $found = false;
+        foreach ($data as $f) {
+            if ($f['league_id'] == $league_id) {
+                $home = $f['participants'][0]['name'] ?? 'Home';
+                $away = $f['participants'][1]['name'] ?? 'Away';
+                $score = ($f['scores'][0]['score']['goals'] ?? 0) . " - " . ($f['scores'][1]['score']['goals'] ?? 0);
+                $status = $f['state']['name'] ?? 'Live';
+                $events = "";
+                foreach (array_slice($f['events'] ?? [], -2) as $e) {
+                    $events .= $e['minute'] . "' " . ($e['type']['name'] ?? '') . " (" . ($e['player_name'] ?? '') . ")<br>";
+                }
+                $sportsData .= "| $home vs $away | **$score** | $status | $events |\n";
+                $found = true;
+            }
+        }
+        if (!$found) $sportsData = "### SIGNAL STABLE\nNo live fixtures currently transmitting for this sector. Initializing standby protocols.";
+    } else { $useAI = true; }
+} elseif ($activeType == 'ODDS') {
+    $data = fetch_sportmonks("fixtures/date/$today", "participants;odds");
+    if ($data) {
+        $sportsData .= "### TACTICAL PREDICTIONS: " . strtoupper($activeComp) . "\n\n";
+        $sportsData .= "| Match | 1 (Home) | X (Draw) | 2 (Away) |\n|---|---|---|---|\n";
+        $found = false;
+        foreach ($data as $f) {
+            if ($f['league_id'] == $league_id) {
+                $home = $f['participants'][0]['name'] ?? 'Home';
+                $away = $f['participants'][1]['name'] ?? 'Away';
+                $o1 = $oX = $o2 = "-";
+                foreach ($f['odds'] ?? [] as $o) {
+                    if (($o['market_id'] ?? 0) == 1) { // 1x2 market
+                        if ($o['label'] == '1') $o1 = $o['value'];
+                        if ($o['label'] == 'X') $oX = $o['value'];
+                        if ($o['label'] == '2') $o2 = $o['value'];
+                    }
+                }
+                $sportsData .= "| $home vs $away | $o1 | $oX | $o2 |\n";
+                $found = true;
+            }
+        }
+        if (!$found) $sportsData = "### DATA ARCHIVE\nMarket prices currently restricted for this timeframe.";
+    } else { $useAI = true; }
+} elseif ($activeType == 'FIXTURES') {
+    $data = fetch_sportmonks("fixtures/date/$today", "participants;league");
+    if ($data) {
+        $sportsData .= "### MISSION SCHEDULE: " . strtoupper($activeComp) . "\n\n";
+        $sportsData .= "| Kick-off | Home Team | Away Team | Venue |\n|---|---|---|---|\n";
+        $found = false;
+        foreach ($data as $f) {
+            if ($f['league_id'] == $league_id) {
+                $time = date('H:i', strtotime($f['starting_at']));
+                $home = $f['participants'][0]['name'] ?? 'TBA';
+                $away = $f['participants'][1]['name'] ?? 'TBA';
+                $venue = $f['venue']['name'] ?? 'Field Ops';
+                $sportsData .= "| $time | $home | $away | $venue |\n";
+                $found = true;
+            }
+        }
+        if (!$found) $sportsData = "### CLEAR SKIES\nNo fixtures detected in current radar range.";
+    } else { $useAI = true; }
+} elseif ($activeType == 'TRANSFERS') {
+    $data = fetch_sportmonks("transfers");
+    if ($data) {
+        $sportsData .= "### ASSET LOGISTICS: GLOBAL MOVEMENT\n\n";
+        $sportsData .= "| Player | From | To | Type | Date |\n|---|---|---|---|---|\n";
+        foreach (array_slice($data, 0, 10) as $t) {
+            $player = $t['player']['display_name'] ?? 'Unknown Asset';
+            $from = $t['from_team']['name'] ?? 'Free Agent';
+            $to = $t['to_team']['name'] ?? 'New Base';
+            $type = $t['type']['name'] ?? 'Transfer';
+            $date = $t['date'];
+            $sportsData .= "| $player | $from | $to | $type | $date |\n";
+        }
+    } else { $useAI = true; }
+} else {
+    $useAI = true;
+}
+
+if ($useAI) {
+    $display_today = date('D d M Y');
+    $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp for today, $display_today. Use Markdown tables for data. Ensure information is current.");
+}
 
 ?>
 <div class="container-fluid pt-0 px-0 bg-black overflow-x-hidden">
@@ -99,12 +196,12 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
         </div>
     </section>
 
-    <!-- AI INTELLIGENCE HUB -->
+    <!-- SPORTS UPDATES HUB -->
     <section class="mb-5 bg-[#0a0e17] p-4 p-md-5 rounded-4 border border-white border-opacity-5 mx-2 shadow-2xl">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-5 gap-4">
             <div class="d-flex align-items-center">
                 <div class="bg-electric-red me-3" style="width: 6px; height: 40px;"></div>
-                <h2 class="h2 font-condensed fw-black italic text-white mb-0 uppercase">AI INTELLIGENCE WIRE</h2>
+                <h2 class="h2 font-condensed fw-black italic text-white mb-0 uppercase">SPORTS UPDATES</h2>
             </div>
             <div class="d-flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 <?php
@@ -124,9 +221,9 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
                     <?php
                     $types = [
                         ['id' => 'LIVESCORE', 'label' => 'LIVE UPDATES', 'icon' => 'bi-broadcast'],
-                        ['id' => 'RESULTS', 'label' => 'FULL TIME', 'icon' => 'bi-check-circle'],
-                        ['id' => 'STATS', 'label' => 'PERFORMANCE', 'icon' => 'bi-graph-up'],
-                        ['id' => 'ODDS', 'label' => 'MARKET PRICES', 'icon' => 'bi-coin']
+                        ['id' => 'ODDS', 'label' => 'ODDS & PREDICTION', 'icon' => 'bi-graph-up-arrow'],
+                        ['id' => 'FIXTURES', 'label' => 'FIXTURES', 'icon' => 'bi-calendar-event'],
+                        ['id' => 'TRANSFERS', 'label' => 'TRANSFERS', 'icon' => 'bi-arrow-left-right']
                     ];
                     foreach ($types as $t):
                     ?>
