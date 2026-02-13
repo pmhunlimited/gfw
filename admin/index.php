@@ -49,6 +49,8 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/subscribers.php';
 } elseif ($path == '/categories') {
     include __DIR__ . '/categories.php';
+} elseif ($path == '/pages') {
+    include __DIR__ . '/pages.php';
 } elseif ($path == '/profile') {
     include __DIR__ . '/profile.php';
 } elseif ($path == '/pin_verify') {

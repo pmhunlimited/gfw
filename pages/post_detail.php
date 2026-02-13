@@ -1,5 +1,5 @@
 <?php
-include __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 $slug = $_GET['slug'] ?? null;
 $conn = get_db_connection();
@@ -11,10 +11,17 @@ if ($conn && $slug) {
 }
 
 if (!$post) {
+    include __DIR__ . '/../includes/header.php';
     echo '<div class="container py-5 text-center"><h1>Post Not Found</h1><a href="/" class="btn btn-primary mt-4">Back to Broadcast</a></div>';
     include __DIR__ . '/../includes/footer.php';
     exit;
 }
+
+// Set dynamic meta tags for header
+$custom_meta_title = $post['title'];
+$custom_meta_description = $post['excerpt'];
+
+include __DIR__ . '/../includes/header.php';
 
 // Handle Comment Submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['comment_text'])) {

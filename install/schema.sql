@@ -25,7 +25,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
     ig_url VARCHAR(255),
     yt_url VARCHAR(255),
     pin_enabled BOOLEAN DEFAULT FALSE,
-    admin_pin VARCHAR(255)
+    admin_pin VARCHAR(255),
+    favicon VARCHAR(255)
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -80,6 +81,10 @@ CREATE TABLE IF NOT EXISTS pages (
     slug VARCHAR(255) UNIQUE NOT NULL,
     content LONGTEXT,
     is_visible BOOLEAN DEFAULT TRUE,
+    position ENUM('top', 'main', 'footer') DEFAULT 'main',
+    meta_title VARCHAR(255),
+    meta_description TEXT,
+    meta_keywords TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

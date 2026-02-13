@@ -1,5 +1,5 @@
 <?php
-admin_header("Parameters");
+admin_header("Settings");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'])) {
@@ -8,14 +8,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
+    $name = sanitize($_POST['name']);
+    $tagline = sanitize($_POST['tagline']);
+    $admin_email = sanitize($_POST['admin_email']);
+    $whatsapp = sanitize($_POST['whatsapp_number']);
+
     $stmt = $conn->prepare("UPDATE site_settings SET name = ?, tagline = ?, admin_email = ?, whatsapp_number = ? WHERE id = 1");
-    $stmt->execute([
-        sanitize($_POST['name']),
-        sanitize($_POST['tagline']),
-        sanitize($_POST['admin_email']),
-        sanitize($_POST['whatsapp_number'])
-    ]);
-    $success = "General parameters synchronized.";
+    $stmt->execute([$name, $tagline, $admin_email, $whatsapp]);
+
+    // Handle Logo Upload
+    if (!empty($_FILES['logo']['name'])) {
+        $target_dir = "../assets/uploads/";
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+        $file_ext = strtolower(pathinfo($_FILES["logo"]["name"], PATHINFO_EXTENSION));
+        $target_file = $target_dir . "logo_" . time() . '.' . $file_ext;
+        if (move_uploaded_file($_FILES["logo"]["tmp_name"], $target_file)) {
+            $logo_path = "/assets/uploads/" . basename($target_file);
+            $conn->prepare("UPDATE site_settings SET logo = ? WHERE id = 1")->execute([$logo_path]);
+        }
+    }
+
+    // Handle Favicon Upload
+    if (!empty($_FILES['favicon']['name'])) {
+        $target_dir = "../assets/uploads/";
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+        $file_ext = strtolower(pathinfo($_FILES["favicon"]["name"], PATHINFO_EXTENSION));
+        $target_file = $target_dir . "favicon_" . time() . '.' . $file_ext;
+        if (move_uploaded_file($_FILES["favicon"]["tmp_name"], $target_file)) {
+            $favicon_path = "/assets/uploads/" . basename($target_file);
+            $conn->prepare("UPDATE site_settings SET favicon = ? WHERE id = 1")->execute([$favicon_path]);
+        }
+    }
+
+    $success = "General settings synchronized.";
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
@@ -57,11 +82,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_security'])) {
     $success = "Security protocols updated.";
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_social'])) {
+    $stmt = $conn->prepare("UPDATE site_settings SET tw_url = ?, fb_url = ?, ig_url = ?, yt_url = ? WHERE id = 1");
+    $stmt->execute([
+        sanitize($_POST['tw_url']),
+        sanitize($_POST['fb_url']),
+        sanitize($_POST['ig_url']),
+        sanitize($_POST['yt_url'])
+    ]);
+    $success = "Social syndication links updated.";
+}
+
 $settings = get_settings();
 $activeTab = $_GET['tab'] ?? 'general';
 
 ?>
-<h1 class="font-condensed fw-black italic text-white display-5 mb-5">SYSTEM <span class="text-danger">CONTROL</span></h1>
+<h1 class="font-condensed fw-black italic text-white display-5 mb-5">SITE <span class="text-danger">SETTINGS</span></h1>
 
 <?php if (isset($success)): ?>
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
@@ -79,7 +115,7 @@ $activeTab = $_GET['tab'] ?? 'general';
 
     <div class="p-5 p-md-5">
         <?php if ($activeTab == 'general'): ?>
-            <form method="POST" class="space-y-6">
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4">
                     <div class="col-md-6">
@@ -98,8 +134,22 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">WhatsApp Number</label>
                         <input type="text" name="whatsapp_number" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value="<?php echo $settings['whatsapp_number']; ?>">
                     </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Site Logo (Any format)</label>
+                        <input type="file" name="logo" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white">
+                        <?php if (!empty($settings['logo'])): ?>
+                            <img src="<?php echo $settings['logo']; ?>" class="mt-2 rounded" style="max-height: 50px;">
+                        <?php endif; ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Favicon (Any format)</label>
+                        <input type="file" name="favicon" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white">
+                        <?php if (!empty($settings['favicon'])): ?>
+                            <img src="<?php echo $settings['favicon']; ?>" class="mt-2 rounded" style="max-height: 30px;">
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <button type="submit" name="save_general" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Commit Identity</button>
+                <button type="submit" name="save_general" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Commit Settings</button>
             </form>
 
         <?php elseif ($activeTab == 'ai'): ?>
@@ -256,6 +306,30 @@ $activeTab = $_GET['tab'] ?? 'general';
                     </div>
                 </div>
                 <button type="submit" name="save_smtp" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply SMTP Config</button>
+            </form>
+
+        <?php elseif ($activeTab == 'social'): ?>
+            <form method="POST" class="space-y-8">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Twitter / X URL</label>
+                        <input type="url" name="tw_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['tw_url'] ?? ''; ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Facebook URL</label>
+                        <input type="url" name="fb_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['fb_url'] ?? ''; ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Instagram URL</label>
+                        <input type="url" name="ig_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_url'] ?? ''; ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">YouTube URL</label>
+                        <input type="url" name="yt_url" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['yt_url'] ?? ''; ?>">
+                    </div>
+                </div>
+                <button type="submit" name="save_social" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Update Syndication</button>
             </form>
         <?php endif; ?>
     </div>

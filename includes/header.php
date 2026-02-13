@@ -7,7 +7,16 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo $settings['name'] ?? 'GFW'; ?> | Elite Coverage</title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | Elite Coverage'; ?></title>
+    <?php if (isset($custom_meta_description)): ?>
+    <meta name="description" content="<?php echo $custom_meta_description; ?>">
+    <?php endif; ?>
+    <?php if (isset($custom_meta_keywords)): ?>
+    <meta name="keywords" content="<?php echo $custom_meta_keywords; ?>">
+    <?php endif; ?>
+    <?php if (!empty($settings['favicon'])): ?>
+    <link rel="icon" href="<?php echo $settings['favicon']; ?>" type="image/any">
+    <?php endif; ?>
     <!-- Bootstrap 5.3.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -73,12 +82,23 @@ $settings = get_settings();
     </style>
 </head>
 <body>
-    <!-- Top Menu (Categories) -->
+    <!-- Top Menu (Categories + Top Pages) -->
     <div class="top-menu">
         <div class="container-fluid px-4">
             <ul class="nav">
                 <?php
                 $current_path = $_SERVER['REQUEST_URI'];
+                $conn = get_db_connection();
+
+                // Top Pages
+                if ($conn) {
+                    $top_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'top'")->fetchAll();
+                    foreach ($top_pages as $tp) {
+                        $active = ($current_path == '/'.$tp['slug']) ? 'active' : '';
+                        echo '<li class="nav-item"><a class="nav-link '.$active.'" href="/'.$tp['slug'].'">'.$tp['title'].'</a></li>';
+                    }
+                }
+
                 $categories = get_categories_with_counts();
                 foreach ($categories as $c) {
                     $cat_url = '/category/' . urlencode($c['name']);
@@ -98,26 +118,29 @@ $settings = get_settings();
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4">
             <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
-                <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                <?php if (!empty($settings['logo'])): ?>
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;" class="d-inline-block align-top">
+                <?php else: ?>
+                    <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                <?php endif; ?>
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto font-condensed fw-bold uppercase tracking-widest small italic">
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
+
                     <?php
-                    $conn = get_db_connection();
                     if ($conn) {
-                        // Dynamic Pages
-                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1")->fetchAll();
+                        // Dynamic Main Pages
+                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
                             $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
                             echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
-
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Feed</a></li>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables">Standings</a></li>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/betting') ? 'active text-electric-red' : ''; ?>" href="/betting">Betting</a></li>

@@ -40,6 +40,10 @@ $leagues = [
     ['id' => '9', 'name' => 'Bundesliga'],
     ['id' => '8', 'name' => 'Ligue 1']
 ];
+
+if ($category) {
+    $custom_meta_title = "Category: $category | GFW";
+}
 ?>
 <div class="container-fluid pt-0 px-0 bg-black overflow-x-hidden">
     <!-- LIVE SCORES WIRE -->
@@ -205,6 +209,7 @@ $leagues = [
     </script>
 
     <!-- GRID -->
+    <?php if (count($remainingPosts) > 0): ?>
     <section class="p-4 p-md-5 bg-black">
         <h2 class="display-5 font-condensed fw-black italic text-white mb-5 border-bottom border-white border-opacity-5 pb-3">ELITE REPORTING</h2>
         <div class="row g-4">
@@ -224,6 +229,7 @@ $leagues = [
             <?php endforeach; ?>
         </div>
     </section>
+    <?php endif; ?>
 </div>
 <style>
     .hero-height { min-height: 400px; }

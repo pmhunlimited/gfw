@@ -1,5 +1,5 @@
 <?php
-admin_header("Intelligence");
+admin_header("Post");
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!verify_csrf_token($_POST['csrf_token'])) {
@@ -92,7 +92,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
 ?>
 <div class="d-flex justify-content-between align-items-center mb-5">
-    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">INTELLIGENCE <span class="text-danger">REPORTS</span></h1>
+    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
     <div class="d-flex gap-3">
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
         <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#generateModal">GENERATE FROM AI</button>
@@ -201,7 +201,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary rounded-4">
             <div class="modal-header border-white border-opacity-10">
-                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">AI Intelligence Generator</h5>
+                    <h5 class="modal-title font-condensed fw-black italic text-white uppercase">AI Post Generator</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" id="aiForm">

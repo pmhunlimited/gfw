@@ -17,6 +17,20 @@
                             </ul>
                         </div>
                         <div class="col-md-4">
+                            <h4 class="font-condensed fw-black text-electric-red mb-3 small tracking-widest">RESOURCES</h4>
+                            <ul class="list-unstyled small font-bold text-white-50 uppercase">
+                                <?php
+                                $conn = get_db_connection();
+                                if ($conn) {
+                                    $footer_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'footer'")->fetchAll();
+                                    foreach ($footer_pages as $fp) {
+                                        echo '<li class="mb-2"><a href="/'.$fp['slug'].'" class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
+                                    }
+                                }
+                                ?>
+                            </ul>
+                        </div>
+                        <div class="col-md-4">
                             <h4 class="font-condensed fw-black text-electric-red mb-3 small tracking-widest">NETWORK</h4>
                             <div class="d-flex gap-3">
                                 <a href="<?php echo $settings['tw_url'] ?? '#'; ?>" class="text-white-50 hover:text-[#ff3e3e] transition-all fs-5"><i class="bi bi-twitter-x"></i></a>

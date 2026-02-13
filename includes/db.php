@@ -26,6 +26,21 @@ function get_db_connection() {
             $conn->exec("ALTER TABLE site_settings ADD COLUMN news_api_key VARCHAR(255)");
         }
 
+        try {
+            $conn->query("SELECT favicon FROM site_settings LIMIT 1");
+        } catch (Exception $e) {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN favicon VARCHAR(255)");
+        }
+
+        try {
+            $conn->query("SELECT position FROM pages LIMIT 1");
+        } catch (Exception $e) {
+            $conn->exec("ALTER TABLE pages ADD COLUMN position ENUM('top', 'main', 'footer') DEFAULT 'main'");
+            $conn->exec("ALTER TABLE pages ADD COLUMN meta_title VARCHAR(255)");
+            $conn->exec("ALTER TABLE pages ADD COLUMN meta_description TEXT");
+            $conn->exec("ALTER TABLE pages ADD COLUMN meta_keywords TEXT");
+        }
+
 
         return $conn;
     } catch (PDOException $e) {

@@ -1,6 +1,5 @@
 <?php
-include __DIR__ . '/../includes/header.php';
-
+require_once __DIR__ . '/../includes/functions.php';
 $page_id = $_GET['page_id'] ?? null;
 $conn = get_db_connection();
 $page = null;
@@ -13,12 +12,19 @@ if ($conn && $page_id) {
 if (!$page) {
     redirect('/404');
 }
+
+// Set dynamic meta tags for header
+$custom_meta_title = !empty($page['meta_title']) ? $page['meta_title'] : $page['title'];
+$custom_meta_description = !empty($page['meta_description']) ? $page['meta_description'] : '';
+$custom_meta_keywords = !empty($page['meta_keywords']) ? $page['meta_keywords'] : '';
+
+include __DIR__ . '/../includes/header.php';
 ?>
 <div class="container py-5">
     <h1 class="font-condensed fw-black italic text-white display-3 mb-5 border-bottom border-white border-opacity-10 pb-3"><?php echo strtoupper($page['title']); ?></h1>
     <div class="bg-[#0a0e17] p-5 rounded-4 border border-white border-opacity-5 shadow-2xl min-vh-60">
         <div class="markdown-content text-white opacity-90 fs-5 leading-relaxed">
-            <?php echo nl2br($page['content']); ?>
+            <?php echo parse_markdown($page['content']); ?>
         </div>
     </div>
 </div>

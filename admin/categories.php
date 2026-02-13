@@ -27,7 +27,7 @@ $categories = get_categories_with_counts();
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-5">
-    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">TAXONOMY <span class="text-danger">REGISTRY</span></h1>
+    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CATEGORIES <span class="text-danger">REGISTRY</span></h1>
     <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#categoryModal">NEW CATEGORY</button>
 </div>
 
@@ -41,7 +41,7 @@ $categories = get_categories_with_counts();
             <thead class="bg-black">
                 <tr>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">ID</th>
-                    <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Taxonomy Name</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Category Name</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-center">Posts</th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-end">Actions</th>
                 </tr>
@@ -59,8 +59,14 @@ $categories = get_categories_with_counts();
                         <span class="badge bg-danger bg-opacity-10 text-danger font-condensed px-3 py-1"><?php echo $cat['post_count']; ?></span>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
-                        <button class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal"><i class="bi bi-pencil-square fs-5"></i></button>
-                        <a href="?delete=<?php echo $cat['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this taxonomy permanently?')"><i class="bi bi-trash fs-5"></i></a>
+                        <div class="d-flex justify-content-end gap-3">
+                            <button class="btn btn-sm btn-outline-light border-0 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <a href="/admin/categories?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
