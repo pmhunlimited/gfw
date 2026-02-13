@@ -111,26 +111,35 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       )}
 
       <div className="flex-grow flex flex-col min-w-0">
-        {/* TOP BAR WITH SEARCH */}
+        {/* TOP BAR WITH SEARCH AND QUICK ACTIONS */}
         <header className="hidden md:flex h-20 items-center justify-between px-12 border-b border-white/5 bg-[#0a0e17] sticky top-0 z-[100]">
-          <div className="relative w-full max-w-xl">
+          <div className="relative w-full max-w-lg">
             <span className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-gray-500">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
             </span>
             <input 
               type="text" 
-              placeholder="Quick search posts, comments, or fans..." 
+              placeholder="Search data nodes..." 
               className="w-full bg-white/5 border border-white/10 rounded-2xl py-2.5 pl-12 pr-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#ff3e3e]/30 transition-all font-bold placeholder:text-gray-600"
               value={searchQuery}
               onChange={handleSearch}
             />
           </div>
-          <div className="flex items-center gap-6 ml-4">
-            <div className="text-right">
-              <p className="text-[10px] font-black text-white uppercase tracking-widest mb-0">ADMIN ROOT</p>
-              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0">SESSION SECURE</p>
+          
+          <div className="flex items-center gap-4 ml-8">
+            {/* QUICK ACTIONS AT TOP MENU */}
+            <div className="flex gap-2">
+               <button onClick={() => navigate('/admin/posts?create=true')} className="bg-white/5 border border-white/10 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-[#ff3e3e] hover:border-[#ff3e3e] transition-all">New Post</button>
+               <button onClick={() => navigate('/admin/settings?tab=pages&create=true')} className="bg-white/5 border border-white/10 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">New Page</button>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-[#ff3e3e] flex items-center justify-center text-white font-black italic">AR</div>
+
+            <div className="flex items-center gap-6 ml-4">
+              <div className="text-right">
+                <p className="text-[10px] font-black text-white uppercase tracking-widest mb-0 leading-tight">ADMIN ROOT</p>
+                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-0">SESSION SECURE</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#ff3e3e] flex items-center justify-center text-white font-black italic shadow-[0_0_15px_rgba(255,62,62,0.2)]">AR</div>
+            </div>
           </div>
         </header>
 

@@ -60,7 +60,10 @@ async function callDeepSeek(modelName: string, prompt: string): Promise<string> 
     })
   });
 
-  if (!response.ok) throw new Error(`DeepSeek API Error: ${response.status}`);
+  if (!response.ok) {
+    if (response.status === 429) throw new Error("DeepSeek Quota Exceeded (429). Check your billing.");
+    throw new Error(`DeepSeek API Error: ${response.status}`);
+  }
   const data = await response.json();
   return data.choices[0].message.content;
 }
@@ -112,6 +115,10 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
         return text;
       }
     } catch (error: any) {
+      if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
+        console.warn("AI Quota Exceeded. Please check your API billing or key limits.");
+        return "### QUOTA EXCEEDED (429)\nIntelligence stream throttled by provider. Please update your API Key or check billing in Systems tab.";
+      }
       console.error("AI execution failed:", error);
       throw error;
     }
@@ -124,13 +131,13 @@ async function executeAI(modelName: AIModel, prompt: string, isImage = false): P
 export function renderMarkdown(text: string): string {
   if (!text) return "";
   
-  // Clean up code blocks and technical wrappers
+  // Clean up code blocks and technical wrappers (common in AI outputs)
   let cleanText = text
-    .replace(/```[a-z]*\n?/gi, '')
+    .replace(/```json\n?|```markdown\n?|```[a-z]*\n?/gi, '')
     .replace(/```/g, '')
     .trim();
 
-  // Convert headers
+  // Convert headers with high contrast styling
   let html = cleanText
     .replace(/^# (.*$)/gm, '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 border-bottom border-danger border-opacity-25 pb-2 uppercase italic">$1</h2>')
     .replace(/^## (.*$)/gm, '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>')
@@ -138,7 +145,7 @@ export function renderMarkdown(text: string): string {
     .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white fw-bold">$1</strong>')
     .replace(/\*(.*?)\*/g, '<em class="italic text-white-50">$1</em>');
 
-  // Table handling
+  // Advanced Table handling with Bootstrap classes for better visual display
   if (html.includes('|')) {
     const lines = html.split('\n');
     let tableHtml = '';

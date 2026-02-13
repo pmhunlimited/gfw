@@ -208,10 +208,10 @@ const AdminSettings: React.FC = () => {
             <div className="space-y-8">
                <div className="flex justify-between items-center">
                   <h3 className="text-xl font-condensed font-black text-white uppercase italic">CMS Infrastructure</h3>
-                  {/* FIXED: hover:text-[#0a0e17] ensures visibility on white background hover */}
+                  {/* FIXED: hover:text-[#0a0e17] and explicit text color classes ensure readability on hover */}
                   <button 
                     onClick={() => { setIsEditingPage(true); setCurrentPage({ title: '', slug: '', content: '', isVisible: true }); }} 
-                    className="bg-white/10 border border-white/10 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all hover:bg-white hover:text-[#0a0e17] focus:outline-none"
+                    className="bg-white/10 border border-white/10 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all hover:bg-white hover:text-[#0a0e17] focus:outline-none shadow-sm active:scale-95"
                   >
                     Deploy New Node
                   </button>
