@@ -165,4 +165,43 @@ function get_ai_insight($prompt) {
 
     return "Intelligence gathering failed.";
 }
+
+// Basic Markdown to HTML
+function parse_markdown($text) {
+    $text = htmlspecialchars($text);
+    $text = preg_replace('/^# (.*$)/m', '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 uppercase italic">$1</h2>', $text);
+    $text = preg_replace('/^## (.*$)/m', '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>', $text);
+    $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+
+    // Simple table parser
+    if (strpos($text, '|') !== false) {
+        $lines = explode("\n", $text);
+        $html = '';
+        $inTable = false;
+        foreach ($lines as $line) {
+            if (trim($line) && strpos($line, '|') !== false) {
+                $cells = array_filter(array_map('trim', explode('|', $line)));
+                if (!$inTable) {
+                    $html .= '<div class="table-responsive my-4"><table class="table table-dark table-hover mb-0">';
+                    $html .= '<thead><tr>';
+                    foreach ($cells as $c) $html .= "<th>$c</th>";
+                    $html .= '</tr></thead><tbody>';
+                    $inTable = true;
+                } else {
+                    if (strpos($line, '---') === false) {
+                        $html .= '<tr>';
+                        foreach ($cells as $c) $html .= "<td>$c</td>";
+                        $html .= '</tr>';
+                    }
+                }
+            } else {
+                if ($inTable) { $html .= '</tbody></table></div>'; $inTable = false; }
+                if (trim($line)) $html .= "<p>$line</p>";
+            }
+        }
+        if ($inTable) $html .= '</tbody></table></div>';
+        return $html;
+    }
+    return nl2br($text);
+}
 ?>

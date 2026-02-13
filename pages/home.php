@@ -35,47 +35,21 @@ $activeComp = $_GET['comp'] ?? 'English Premier League';
 $activeType = $_GET['type'] ?? 'LIVESCORE';
 $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp. Use Markdown tables for data.");
 
-// Basic Markdown to HTML (simplified version of the one in geminiService)
-function parse_markdown($text) {
-    $text = htmlspecialchars($text);
-    $text = preg_replace('/^# (.*$)/m', '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 uppercase italic">$1</h2>', $text);
-    $text = preg_replace('/^## (.*$)/m', '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>', $text);
-    $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
-
-    // Simple table parser
-    if (strpos($text, '|') !== false) {
-        $lines = explode("\n", $text);
-        $html = '';
-        $inTable = false;
-        foreach ($lines as $line) {
-            if (trim($line) && strpos($line, '|') !== false) {
-                $cells = array_filter(array_map('trim', explode('|', $line)));
-                if (!$inTable) {
-                    $html .= '<div class="table-responsive my-4"><table class="table table-dark table-hover mb-0">';
-                    $html .= '<thead><tr>';
-                    foreach ($cells as $c) $html .= "<th>$c</th>";
-                    $html .= '</tr></thead><tbody>';
-                    $inTable = true;
-                } else {
-                    if (strpos($line, '---') === false) {
-                        $html .= '<tr>';
-                        foreach ($cells as $c) $html .= "<td>$c</td>";
-                        $html .= '</tr>';
-                    }
-                }
-            } else {
-                if ($inTable) { $html .= '</tbody></table></div>'; $inTable = false; }
-                if (trim($line)) $html .= "<p>$line</p>";
-            }
-        }
-        if ($inTable) $html .= '</tbody></table></div>';
-        return $html;
-    }
-    return nl2br($text);
-}
-
 ?>
 <div class="container-fluid pt-0 px-0 bg-black overflow-x-hidden">
+    <!-- LIVE SCORES WIRE -->
+    <section class="bg-[#05070a] border-bottom border-white border-opacity-10 py-3">
+        <div class="container-fluid px-4">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h3 class="font-condensed fw-black text-white italic small mb-0"><span class="text-danger">●</span> LIVE SCORES</h3>
+                <span class="text-white-50 small font-monospace uppercase" style="font-size: 10px;"><?php echo date('D d M Y'); ?></span>
+            </div>
+            <div id="scoreaxis-widget-live-scores" style="width:100%;">
+                <script src="https://widgets.scoreaxis.com/api/football/live-scores?lang=en&font=heebo&fontSize=12&rowDensity=100&widgetWidth=100%&widgetHeight=auto&bodyColor=%2305070a&textColor=%23ffffff&linkColor=%23ff3e3e&borderColor=%231e293b&tabColor=%231e293b" async></script>
+            </div>
+        </div>
+    </section>
+
     <!-- HERO -->
     <section class="row g-0 mb-5 border-bottom border-white border-opacity-10 bg-[#05070a]">
         <div class="col-lg-8 border-end border-white border-opacity-10 position-relative" style="min-height: 600px;">
