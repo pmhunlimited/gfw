@@ -23,6 +23,28 @@
     </style>
 </head>
 <body>
+<!-- Mobile Header -->
+<div class="d-md-none bg-black border-bottom border-white border-opacity-10 p-3 sticky-top">
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">GFW <span class="text-danger">CORE</span></a>
+        <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminSidebar">
+            <i class="bi bi-list fs-3"></i>
+        </button>
+    </div>
+    <div class="collapse mt-3" id="adminSidebar">
+        <nav class="nav flex-column bg-[#0a0e17] rounded-3 border border-white border-opacity-5">
+            <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> Intelligence</a>
+            <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
+            <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
+            <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> Taxonomy</a>
+            <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> Parameters</a>
+            <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
+            <hr class="border-white border-opacity-5 mx-4 my-2">
+            <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> Deauthorize</a>
+        </nav>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->

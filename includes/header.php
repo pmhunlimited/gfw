@@ -64,15 +64,17 @@ $settings = get_settings();
       .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
       ::placeholder { color: rgba(255,255,255,0.3) !important; }
 
-      .top-menu { background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 10px; }
-      .top-menu .nav-link { color: #64748b; font-weight: 700; text-transform: uppercase; padding: 8px 15px; letter-spacing: 1px; }
+      .top-menu { background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 10px; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+      .top-menu::-webkit-scrollbar { display: none; }
+      .top-menu .nav { flex-wrap: nowrap; }
+      .top-menu .nav-link { color: #64748b; font-weight: 700; text-transform: uppercase; padding: 10px 15px; letter-spacing: 1px; display: inline-block; }
       .top-menu .nav-link:hover, .top-menu .nav-link.active { color: var(--electric-red); }
       .top-menu .post-count { background: rgba(255,62,62,0.1); color: var(--electric-red); padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-size: 9px; }
     </style>
 </head>
 <body>
     <!-- Top Menu (Categories) -->
-    <div class="top-menu d-none d-lg-block">
+    <div class="top-menu">
         <div class="container-fluid px-4">
             <ul class="nav">
                 <?php
@@ -120,20 +122,6 @@ $settings = get_settings();
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables">Standings</a></li>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/betting') ? 'active text-electric-red' : ''; ?>" href="/betting">Betting</a></li>
                 </ul>
-
-                <!-- Mobile Categories -->
-                <div class="d-lg-none mt-3 border-top border-white border-opacity-10 pt-3">
-                    <h6 class="text-white-50 small uppercase font-black px-3 mb-2">Categories</h6>
-                    <ul class="navbar-nav">
-                        <?php
-                        foreach ($categories as $c) {
-                            $cat_url = '/category/' . urlencode($c['name']);
-                            $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="'.$cat_url.'">'.$c['name'].' ('.$c['post_count'].')</a></li>';
-                        }
-                        ?>
-                    </ul>
-                </div>
             </div>
         </div>
     </nav>

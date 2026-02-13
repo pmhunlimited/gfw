@@ -27,13 +27,14 @@ if (count($syndicatedNext) < 4) {
 }
 
 $latestPost = $posts[0] ?? null;
-// ELITE REPORTING - 6 latest posts (excluding the hero post if desired, but user said 6 latest)
-$remainingPosts = array_slice($posts, 1, 6);
+// ELITE REPORTING - 10 latest posts
+$remainingPosts = array_slice($posts, 1, 10);
 
 // Sports data from AI
 $activeComp = $_GET['comp'] ?? 'English Premier League';
 $activeType = $_GET['type'] ?? 'LIVESCORE';
-$sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp. Use Markdown tables for data.");
+$today = date('D d M Y');
+$sportsData = get_ai_insight("Provide a detailed $activeType report for $activeComp for today, $today. Use Markdown tables for data. Ensure information is current.");
 
 ?>
 <div class="container-fluid pt-0 px-0 bg-black overflow-x-hidden">
@@ -52,7 +53,7 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
 
     <!-- HERO -->
     <section class="row g-0 mb-5 border-bottom border-white border-opacity-10 bg-[#05070a]">
-        <div class="col-lg-8 border-end border-white border-opacity-10 position-relative" style="min-height: 600px;">
+        <div class="col-lg-8 border-end border-white border-opacity-10 position-relative hero-height">
             <?php if ($latestPost): ?>
                 <a href="/post/<?php echo $latestPost['slug']; ?>" class="text-decoration-none d-block h-100 position-relative overflow-hidden group">
                     <img src="<?php echo $latestPost['image']; ?>" loading="lazy" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-60 grayscale transition-all duration-1000" style="transition: transform 1s, filter 1s;" onmouseover="this.style.transform='scale(1.05)';this.style.filter='grayscale(0)';" onmouseout="this.style.transform='scale(1)';this.style.filter='grayscale(1)';" alt="">
@@ -151,9 +152,9 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
         <h2 class="display-5 font-condensed fw-black italic text-white mb-5 border-bottom border-white border-opacity-5 pb-3">ELITE REPORTING</h2>
         <div class="row g-4">
             <?php foreach ($remainingPosts as $post): ?>
-                <div class="col-sm-6 col-md-4">
+                <div class="col-6 col-md-4 col-lg-3">
                     <a href="/post/<?php echo $post['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
-                        <div class="ratio ratio-16x9 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
+                        <div class="ratio ratio-1x1 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
                             <img src="<?php echo $post['image']; ?>" loading="lazy" class="object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
                             <div class="position-absolute top-0 start-0 m-3">
                                 <span class="badge bg-electric-red font-condensed italic fw-black px-3 py-2 uppercase shadow-lg" style="font-size: 9px;"><?php echo $post['category']; ?></span>
@@ -167,4 +168,10 @@ $sportsData = get_ai_insight("Provide a detailed $activeType report for $activeC
         </div>
     </section>
 </div>
+<style>
+    .hero-height { min-height: 400px; }
+    @media (min-width: 992px) {
+        .hero-height { min-height: 600px; }
+    }
+</style>
 <?php include __DIR__ . '/../includes/footer.php'; ?>
