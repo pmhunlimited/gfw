@@ -50,16 +50,40 @@ if (isset($_POST['save_manual'])) {
 if (isset($_POST['generate_ai'])) {
     $topic = sanitize($_POST['topic']);
     $cat = sanitize($_POST['cat']);
-    $prompt = "Generate a professional football news article about '$topic' in the category '$cat'. Return JSON with 'title', 'excerpt', 'content', 'image' (use a valid Unsplash URL).";
+    $prompt = "Generate a professional football news article about '$topic' in the category '$cat'.
+               Write in a first-person 'fan blogger' perspective.
+               Return JSON with 'title', 'content', 'image_keyword' (a specific search term for a football photo).";
     $raw = get_ai_insight($prompt);
-    $data = JSON_decode($raw, true);
-    if ($data) {
+
+    $json_start = strpos($raw, '{');
+    $json_end = strrpos($raw, '}');
+    $data = ($json_start !== false) ? json_decode(substr($raw, $json_start, $json_end - $json_start + 1), true) : null;
+
+    if ($data && !empty($data['title']) && !empty($data['content'])) {
+        $title = $data['title'];
+        $content = $data['content'];
+        $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
+
+        // Handle Image
+        $keyword = urlencode($data['image_keyword'] ?? $topic);
+        $image_url = "https://source.unsplash.com/1600x900/?football," . $keyword;
+        $img_data = @file_get_contents($image_url);
+        $db_image = "/assets/uploads/ai_" . time() . ".jpg";
+        if ($img_data) {
+            file_put_contents(".." . $db_image, $img_data);
+        } else {
+            $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
+        }
+
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $slug = strtolower(str_replace(' ', '-', $data['title'])) . '-' . time();
-        $stmt->execute([$data['title'], $slug, $data['excerpt'], $data['content'], $cat, 'AI ANALYST', $data['image']]);
-        $success = "AI Intelligence generated and deployed.";
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI ANALYST', $db_image])) {
+            $success = "AI Intelligence generated and deployed locally.";
+        } else {
+            $error = "Database insertion failed.";
+        }
     } else {
-        $error = "AI extraction failed.";
+        $error = "AI extraction failed or returned invalid format.";
     }
 }
 
@@ -180,12 +204,22 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                 <h5 class="modal-title font-condensed fw-black italic text-white uppercase">AI Intelligence Generator</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST">
+            <form method="POST" id="aiForm">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="modal-body p-4">
+                    <div class="mb-4">
+                        <label class="form-label text-white-50 small uppercase font-black d-flex justify-content-between">
+                            Trending Subjects
+                            <button type="button" id="refreshTopics" class="btn btn-link p-0 text-danger small text-decoration-none">REFRESH</button>
+                        </label>
+                        <div id="suggestedTopics" class="d-flex flex-wrap gap-2">
+                            <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label text-white-50 small uppercase font-black">Intelligence Subject</label>
-                        <input type="text" name="topic" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="e.g. Manchester City tactical analysis" required>
+                        <input type="text" name="topic" id="topicInput" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="Select a topic above or type here..." required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label text-white-50 small uppercase font-black">Taxonomy Classification</label>
@@ -203,5 +237,35 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
         </div>
     </div>
 </div>
+
+<script>
+async function loadTopics() {
+    const container = document.getElementById('suggestedTopics');
+    container.innerHTML = '<div class="spinner-border spinner-border-sm text-danger"></div>';
+    try {
+        const response = await fetch('/admin/ajax_suggest.php');
+        const topics = await response.json();
+        container.innerHTML = '';
+        topics.forEach(topic => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn btn-sm btn-outline-secondary text-[10px] uppercase font-bold py-1 px-2 rounded-lg text-start';
+            btn.innerText = topic;
+            btn.onclick = () => document.getElementById('topicInput').value = topic;
+            container.appendChild(btn);
+        });
+    } catch (e) {
+        container.innerHTML = '<span class="text-danger small">Failed to load subjects.</span>';
+    }
+}
+
+document.getElementById('refreshTopics').onclick = loadTopics;
+document.getElementById('generateModal').addEventListener('shown.bs.modal', loadTopics);
+
+document.getElementById('aiForm').onsubmit = function() {
+    this.querySelector('button[type="submit"]').disabled = true;
+    this.querySelector('button[type="submit"]').innerHTML = '<span class="spinner-grow spinner-grow-sm me-2"></span>DECRYPTING...';
+};
+</script>
 
 <?php admin_footer(); ?>

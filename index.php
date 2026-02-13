@@ -31,9 +31,11 @@ if ($path == '/' || $path == '') {
         $conn = get_db_connection();
         $stmt = $conn->prepare("INSERT IGNORE INTO subscribers (email) VALUES (?)");
         $stmt->execute([$email]);
-        echo "Subscription successful.";
+        header('Location: /?subscribed=true');
+        exit;
     } else {
-        echo "Invalid email.";
+        header('Location: /?error=invalid_email');
+        exit;
     }
 } elseif ($path == '/admin/login') {
     include __DIR__ . '/admin/login.php';

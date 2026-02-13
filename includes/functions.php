@@ -11,10 +11,10 @@ function get_settings() {
 function get_categories_with_counts() {
     $conn = get_db_connection();
     if (!$conn) return [];
-    $stmt = $conn->query("SELECT c.name, COUNT(p.id) as post_count
+    $stmt = $conn->query("SELECT c.id, c.name, COUNT(p.id) as post_count
                           FROM categories c
                           LEFT JOIN posts p ON c.name = p.category
-                          GROUP BY c.name
+                          GROUP BY c.id, c.name
                           ORDER BY c.name ASC");
     return $stmt->fetchAll();
 }
@@ -177,6 +177,20 @@ function get_ai_insight($prompt) {
     return "Intelligence gathering failed.";
 }
 
+function get_suggested_topics() {
+    $today = date('D d M Y');
+    $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings only. Be specific about teams and players.";
+    $raw = get_ai_insight($prompt);
+
+    // Clean JSON from potential AI markdown
+    $json_start = strpos($raw, '[');
+    $json_end = strrpos($raw, ']');
+    if ($json_start !== false && $json_end !== false) {
+        $json_str = substr($raw, $json_start, $json_end - $json_start + 1);
+        return json_decode($json_str, true) ?: [];
+    }
+    return [];
+}
 
 // Basic Markdown to HTML
 function parse_markdown($text) {

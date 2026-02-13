@@ -55,7 +55,7 @@ $comments = $stmt->fetchAll();
                 <article class="prose prose-invert prose-red max-w-none">
                     <p class="lead text-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-6"><?php echo $post['excerpt']; ?></p>
                     <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90">
-                        <?php echo nl2br($post['content']); ?>
+                        <?php echo parse_markdown($post['content']); ?>
                     </div>
                 </article>
 
