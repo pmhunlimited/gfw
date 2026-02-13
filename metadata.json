@@ -1,0 +1,7 @@
+{
+  "name": "Copy of The Global Football Watch",
+  "description": "An elite sports news portal featuring real-time football fixtures, AI tactical insights, betting intelligence, and high-impact editorial coverage.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
