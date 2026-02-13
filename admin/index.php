@@ -55,6 +55,8 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/profile.php';
 } elseif ($path == '/pin_verify') {
     include __DIR__ . '/pin_verify.php';
+} elseif ($path == '/ajax_suggest.php' || $path == '/ajax_suggest') {
+    include __DIR__ . '/ajax_suggest.php';
 } elseif ($path == '/logout') {
     session_destroy();
     redirect('/admin/login');

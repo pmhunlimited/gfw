@@ -124,6 +124,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
 <?php endif; ?>
 
+<?php if (isset($error)): ?>
+    <div class="alert alert-danger bg-red-900 bg-opacity-10 border-red-500 border-opacity-20 text-red-500 font-condensed italic uppercase mb-5"><?php echo $error; ?></div>
+<?php endif; ?>
+
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
     <div class="table-responsive">
         <table class="table table-dark table-hover mb-0 align-middle">

@@ -169,13 +169,19 @@ function get_ai_insight($prompt) {
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             return $result['candidates'][0]['content']['parts'][0]['text'];
         }
+        if (isset($result['error'])) {
+            return "Gemini Error: " . ($result['error']['message'] ?? 'Unknown');
+        }
     } else {
         if (isset($result['choices'][0]['message']['content'])) {
             return $result['choices'][0]['message']['content'];
         }
+        if (isset($result['error'])) {
+            return "DeepSeek Error: " . ($result['error']['message'] ?? 'Unknown');
+        }
     }
 
-    return "Intelligence gathering failed.";
+    return "Intelligence gathering failed. Response: " . substr($response, 0, 100);
 }
 
 function get_suggested_topics() {

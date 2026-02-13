@@ -59,6 +59,13 @@ function get_db_connection() {
             $conn->exec("ALTER TABLE pages ADD COLUMN meta_keywords TEXT");
         }
 
+        try {
+            $conn->query("SELECT is_scheduled FROM posts LIMIT 1");
+        } catch (Exception $e) {
+            $conn->exec("ALTER TABLE posts ADD COLUMN is_scheduled BOOLEAN DEFAULT FALSE");
+            $conn->exec("ALTER TABLE posts ADD COLUMN publish_date DATETIME");
+        }
+
 
         return $conn;
     } catch (PDOException $e) {

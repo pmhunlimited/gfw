@@ -79,6 +79,14 @@ $settings = get_settings();
       .top-menu .nav-link { color: #64748b; font-weight: 700; text-transform: uppercase; padding: 10px 15px; letter-spacing: 1px; display: inline-block; }
       .top-menu .nav-link:hover, .top-menu .nav-link.active { color: var(--electric-red); }
       .top-menu .post-count { background: rgba(255,62,62,0.1); color: var(--electric-red); padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-size: 9px; }
+
+      /* Fix Tailwind/Bootstrap Collapse Conflict */
+      .collapse:not(.show) { display: none !important; }
+      .navbar-collapse.collapse { visibility: visible !important; display: none; }
+      .navbar-collapse.collapse.show { display: block !important; }
+      @media (min-width: 992px) {
+        .navbar-expand-lg .navbar-collapse { display: flex !important; visibility: visible !important; }
+      }
     </style>
 </head>
 <body>
@@ -117,9 +125,9 @@ $settings = get_settings();
     <!-- Main Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
+            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-lg-5" href="/">
                 <?php if (!empty($settings['logo'])): ?>
-                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;" class="d-inline-block align-top">
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;" class="d-inline-block align-middle">
                 <?php else: ?>
                     <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
                 <?php endif; ?>
@@ -128,7 +136,7 @@ $settings = get_settings();
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto font-condensed fw-bold uppercase tracking-widest small italic">
+                <ul class="navbar-nav font-condensed fw-bold uppercase tracking-widest small italic">
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
 
                     <?php
