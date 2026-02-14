@@ -17,10 +17,13 @@ echo "Starting AI-Powered News Discovery...\n";
 
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories.
-For each story, provide a unique 'title', a 'category' (choose from: Premier League, Champions League, La Liga, Serie A, Bundesliga, Transfer News),
-a 'content' (400-word engaging blog post in fan-blogger tone), and an 'image_keyword' (2-3 words for a high-quality sports photo).
-Return the results as a JSON array of objects.";
+$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories from different leagues (Premier League, La Liga, Serie A, Bundesliga, Champions League).
+For each story, provide:
+1. 'title': Engaging headline.
+2. 'category': One of (Premier League, Champions League, La Liga, Serie A, Bundesliga, Transfer News).
+3. 'content': A professional 400-word sports report in an engaging fan-blogger tone. Use Markdown.
+4. 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g., 'Erling Haaland Manchester City' instead of just 'football').
+Return the results as a JSON array of objects ONLY.";
 
 $raw_ai = get_ai_insight($prompt);
 if (!$raw_ai || strpos($raw_ai, '[') === false) {
@@ -45,10 +48,9 @@ foreach ($news_items as $item) {
     if ($count >= 5) break;
     echo "Processing: " . $item['title'] . "\n";
 
-    // 2. Fetch Image (using Unsplash Source Redirect if possible, or direct URL generation)
-    // We'll use a reliable keyword-based image fetching strategy
-    $keyword = urlencode($item['image_keyword'] . " football");
-    $img_url = "https://loremflickr.com/1200/800/" . $keyword;
+    // 2. Fetch Image - Using highly specific keywords for exact match
+    $keyword = urlencode(str_replace(' ', ',', $item['image_keyword']) . ",football,soccer");
+    $img_url = "https://loremflickr.com/1200/800/" . $keyword . "/all";
 
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $filename = $safe_title . "-" . time() . ".jpg";
@@ -69,7 +71,7 @@ foreach ($news_items as $item) {
     $content = $item['content']; // Markdown supported
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $item['category'];
-    $author = 'GFW INTELLIGENCE';
+    $author = 'GFW';
 
     $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
     if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path])) {

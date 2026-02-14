@@ -37,6 +37,11 @@ $stmt = $conn->prepare("SELECT * FROM comments WHERE post_id = ? AND status = 'a
 $stmt->execute([$post['id']]);
 $comments = $stmt->fetchAll();
 
+// Read Also - Similar News
+$stmt_related = $conn->prepare("SELECT * FROM posts WHERE category = ? AND id != ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
+$stmt_related->execute([$post['category'], $post['id']]);
+$relatedPosts = $stmt_related->fetchAll();
+
 ?>
 <div class="bg-black text-white min-h-screen">
     <!-- Hero Header -->
@@ -68,7 +73,7 @@ $comments = $stmt->fetchAll();
 
                 <!-- Comments Section -->
                 <div class="mt-16 border-t border-white/10 pt-12">
-                    <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Intelligence Feedback</h3>
+                    <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Comments</h3>
 
                     <?php if (isset($comment_msg)): ?>
                         <div class="alert alert-success bg-green-900/20 border-green-500/50 text-green-500 rounded-0 font-condensed italic uppercase"><?php echo $comment_msg; ?></div>
@@ -119,5 +124,24 @@ $comments = $stmt->fetchAll();
             </div>
         </div>
     </div>
+
+    <!-- Read Also Section -->
+    <?php if (count($relatedPosts) > 0): ?>
+    <div class="container mx-auto px-6 py-12 border-t border-white/10">
+        <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Read Also</h3>
+        <div class="row g-4">
+            <?php foreach ($relatedPosts as $rp): ?>
+                <div class="col-md-3">
+                    <a href="/post/<?php echo $rp['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
+                        <div class="ratio ratio-16x9 mb-3 overflow-hidden rounded-3 border border-white/10">
+                            <img src="<?php echo $rp['image']; ?>" class="object-fit-cover transition-all duration-500 group-hover:scale-110" alt="">
+                        </div>
+                        <h4 class="text-white font-condensed fw-black italic uppercase fs-5 leading-tight group-hover:text-electric-red transition-all"><?php echo $rp['title']; ?></h4>
+                    </a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 <?php include __DIR__ . '/../includes/footer.php'; ?>

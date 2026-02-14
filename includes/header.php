@@ -82,10 +82,10 @@ $settings = get_settings();
 
       /* Fix Tailwind/Bootstrap Collapse Conflict */
       .collapse:not(.show) { display: none !important; }
-      .navbar-collapse.collapse { visibility: visible !important; display: none; }
+      .navbar-collapse.collapse { display: none; }
       .navbar-collapse.collapse.show { display: block !important; }
       @media (min-width: 992px) {
-        .navbar-expand-lg .navbar-collapse { display: flex !important; visibility: visible !important; }
+        .navbar-expand-lg .navbar-collapse { display: flex !important; }
       }
     </style>
 </head>

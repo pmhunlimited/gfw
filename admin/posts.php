@@ -55,6 +55,36 @@ if (isset($_POST['save_manual'])) {
     }
 }
 
+// Handle Manual Update
+if (isset($_POST['update_manual'])) {
+    $id = (int)$_POST['post_id'];
+    $title = sanitize($_POST['title']);
+    $cat = sanitize($_POST['cat']);
+    $content = $_POST['content'];
+    $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
+    $author = sanitize($_POST['author'] ?? 'STAFF');
+    $image = sanitize($_POST['image']);
+    $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
+    $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
+
+    if (!empty($_FILES['image_file']['name'])) {
+        $target_dir = __DIR__ . "/../assets/uploads/";
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+        $file_ext = strtolower(pathinfo($_FILES["image_file"]["name"], PATHINFO_EXTENSION));
+        $target_file = $target_dir . time() . '.' . $file_ext;
+        if (move_uploaded_file($_FILES["image_file"]["tmp_name"], $target_file)) {
+            $image = "/assets/uploads/" . basename($target_file);
+        }
+    }
+
+    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ? WHERE id = ?");
+    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $id])) {
+        $success = "Report updated successfully.";
+    } else {
+        $error = "Failed to update report.";
+    }
+}
+
 // Handle Auto-generation from AI
 if (isset($_POST['generate_ai'])) {
     $topic = sanitize($_POST['topic']);
@@ -62,9 +92,12 @@ if (isset($_POST['generate_ai'])) {
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
 
-    $prompt = "Generate a professional football news article about '$topic' in the category '$cat'.
-               Write in a first-person 'fan blogger' perspective.
-               Return JSON with 'title', 'content', 'image_keyword' (a specific search term for a football photo).";
+    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
+               Write in an engaging first-person 'fan blogger' perspective.
+               Return JSON with:
+               - 'title': Catchy headline.
+               - 'content': Detailed report in Markdown.
+               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).";
     $raw = get_ai_insight($prompt);
 
     // Improved JSON extraction
@@ -79,9 +112,9 @@ if (isset($_POST['generate_ai'])) {
         $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
 
-        // Handle Image
-        $keyword = urlencode(($data['image_keyword'] ?? $topic) . " football");
-        $image_url = "https://loremflickr.com/1600/900/" . $keyword;
+        // Handle Image - Highly specific search
+        $keyword = urlencode(str_replace(' ', ',', ($data['image_keyword'] ?? $topic)) . ",football,soccer");
+        $image_url = "https://loremflickr.com/1200/800/" . $keyword . "/all";
         $img_data = @file_get_contents($image_url);
         $image_filename = "ai_" . time() . ".jpg";
         $db_image = "/assets/uploads/" . $image_filename;
@@ -92,7 +125,7 @@ if (isset($_POST['generate_ai'])) {
         }
 
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI ANALYST', $db_image, $is_scheduled, $publish_date])) {
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
@@ -165,6 +198,17 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <?php endif; ?>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
+                        <button class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-post"
+                            data-id="<?php echo $post['id']; ?>"
+                            data-title="<?php echo htmlspecialchars($post['title']); ?>"
+                            data-cat="<?php echo htmlspecialchars($post['category']); ?>"
+                            data-author="<?php echo htmlspecialchars($post['author']); ?>"
+                            data-image="<?php echo htmlspecialchars($post['image']); ?>"
+                            data-content="<?php echo htmlspecialchars($post['content']); ?>"
+                            data-date="<?php echo $post['publish_date'] ? date('Y-m-d\TH:i', strtotime($post['publish_date'])) : ''; ?>"
+                            data-bs-toggle="modal" data-bs-target="#editModal">
+                            <i class="bi bi-pencil-square fs-5"></i>
+                        </button>
                         <a href="?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
@@ -179,7 +223,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary rounded-4">
             <div class="modal-header border-white border-opacity-10">
-                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Manual Intelligence Entry</h5>
+                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Manual Post Entry</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" enctype="multipart/form-data">
@@ -228,6 +272,61 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary rounded-4">
+            <div class="modal-header border-white border-opacity-10">
+                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Edit Post Registry</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                <input type="hidden" name="post_id" id="edit_id">
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <label class="form-label text-white-50 small uppercase font-black">Title</label>
+                            <input type="text" name="title" id="edit_title" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-white-50 small uppercase font-black">Category</label>
+                            <select name="cat" id="edit_cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
+                                <?php foreach ($categories as $c): ?>
+                                    <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Operator/Author</label>
+                            <input type="text" name="author" id="edit_author" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Image URL</label>
+                            <input type="text" name="image" id="edit_image" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Update Image File</label>
+                            <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment</label>
+                            <input type="datetime-local" name="publish_date" id="edit_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
+                            <textarea name="content" id="edit_content" rows="10" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-white border-opacity-10">
+                    <button type="submit" name="update_manual" class="btn btn-danger w-100 py-3 rounded-xl font-condensed italic fw-black">SAVE CHANGES</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <!-- AI Modal -->
 <div class="modal fade" id="generateModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
@@ -250,11 +349,11 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small uppercase font-black">Intelligence Subject</label>
+                        <label class="form-label text-white-50 small uppercase font-black">Post Subject</label>
                         <input type="text" name="topic" id="topicInput" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="Select a topic above or type here..." required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-white-50 small uppercase font-black">Taxonomy Classification</label>
+                        <label class="form-label text-white-50 small uppercase font-black">Category</label>
                         <select name="cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
                             <?php foreach ($categories as $c): ?>
                                 <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
@@ -302,6 +401,18 @@ document.getElementById('aiForm').onsubmit = function() {
     this.querySelector('button[type="submit"]').disabled = true;
     this.querySelector('button[type="submit"]').innerHTML = '<span class="spinner-grow spinner-grow-sm me-2"></span>DECRYPTING...';
 };
+
+document.querySelectorAll('.edit-post').forEach(btn => {
+    btn.onclick = function() {
+        document.getElementById('edit_id').value = this.dataset.id;
+        document.getElementById('edit_title').value = this.dataset.title;
+        document.getElementById('edit_cat').value = this.dataset.cat;
+        document.getElementById('edit_author').value = this.dataset.author;
+        document.getElementById('edit_image').value = this.dataset.image;
+        document.getElementById('edit_content').value = this.dataset.content;
+        document.getElementById('edit_date').value = this.dataset.date;
+    };
+});
 </script>
 
 <?php admin_footer(); ?>

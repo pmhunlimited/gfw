@@ -87,7 +87,7 @@ if ($category) {
             <div class="p-4 p-md-5 h-100 d-flex flex-column">
                 <h3 class="h6 font-condensed tracking-widest text-electric-red mb-5 d-flex align-items-center fw-black uppercase">
                     <span class="bg-electric-red me-3" style="width: 6px; height: 24px;"></span>
-                    SYNDICATED NEXT
+                    LATEST UPDATE
                 </h3>
                 <div class="d-flex flex-column flex-grow-1 gap-4">
                     <?php foreach ($syndicatedNext as $post): ?>
