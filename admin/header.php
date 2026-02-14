@@ -39,15 +39,15 @@
     </div>
     <div class="collapse mt-3" id="adminSidebar">
         <nav class="nav flex-column bg-[#0a0e17] rounded-3 border border-white border-opacity-5">
-            <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> Intelligence</a>
-            <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
-            <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
-            <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> Taxonomy</a>
-            <a class="nav-link <?php echo $path == '/pages' ? 'active' : ''; ?>" href="/admin/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS Pages</a>
-            <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> Parameters</a>
-            <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
+            <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
+            <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
+            <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
+            <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>
+            <a class="nav-link <?php echo $path == '/pages' ? 'active' : ''; ?>" href="/admin/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS PAGES</a>
+            <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
+            <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
             <hr class="border-white border-opacity-5 mx-4 my-2">
-            <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> Deauthorize</a>
+            <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> DEAUTHORIZE</a>
         </nav>
     </div>
 </div>
@@ -66,15 +66,15 @@
                 </a>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> Post</a>
-                <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> Feedback</a>
-                <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> Network</a>
-                <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> Categories</a>
-                <a class="nav-link <?php echo $path == '/pages' ? 'active' : ''; ?>" href="/admin/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS Pages</a>
-                <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> Settings</a>
-                <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> Operator</a>
+                <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
+                <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
+                <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
+                <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>
+                <a class="nav-link <?php echo $path == '/pages' ? 'active' : ''; ?>" href="/admin/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS PAGES</a>
+                <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
+                <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
                 <hr class="border-white border-opacity-5 mx-4 my-4">
-                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> Deauthorize</a>
+                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> DEAUTHORIZE</a>
             </nav>
         </div>
 

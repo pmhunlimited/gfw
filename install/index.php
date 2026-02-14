@@ -15,31 +15,48 @@ if (file_exists(__DIR__ . '/../includes/config.php')) {
 
 // Stage 2: Database installation
 if ($stage == 2 && $_SERVER['REQUEST_METHOD'] == 'POST') {
-    $host = $_POST['host'];
-    $user = $_POST['user'];
-    $pass = $_POST['pass'];
-    $name = $_POST['name'];
+    $db_type = $_POST['db_type'] ?? 'mysql';
+    $host = $_POST['host'] ?? 'localhost';
+    $user = $_POST['user'] ?? '';
+    $pass = $_POST['pass'] ?? '';
+    $name = $_POST['name'] ?? 'gfw_db';
 
     try {
-        $pdo = new PDO("mysql:host=$host", $user, $pass);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-        $pdo->exec("USE `$name` ");
+        if ($db_type == 'sqlite') {
+            $pdo = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $schema = file_get_contents(__DIR__ . '/schema_sqlite.sql');
+            $pdo->exec($schema);
 
-        // Execute schema
-        $schema = file_get_contents(__DIR__ . '/schema.sql');
-        $pdo->exec($schema);
+            $_SESSION['db_config'] = [
+                'type' => 'sqlite',
+                'host' => 'localhost',
+                'user' => '',
+                'pass' => '',
+                'name' => 'database.sqlite'
+            ];
+        } else {
+            $pdo = new PDO("mysql:host=$host", $user, $pass);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+            $pdo->exec("USE `$name` ");
 
-        // Execute initial data
-        $data = file_get_contents(__DIR__ . '/data.sql');
-        $pdo->exec($data);
+            // Execute schema
+            $schema = file_get_contents(__DIR__ . '/schema.sql');
+            $pdo->exec($schema);
 
-        $_SESSION['db_config'] = [
-            'host' => $host,
-            'user' => $user,
-            'pass' => $pass,
-            'name' => $name
-        ];
+            // Execute initial data
+            $data = file_get_contents(__DIR__ . '/data.sql');
+            $pdo->exec($data);
+
+            $_SESSION['db_config'] = [
+                'type' => 'mysql',
+                'host' => $host,
+                'user' => $user,
+                'pass' => $pass,
+                'name' => $name
+            ];
+        }
 
         header('Location: ?stage=3');
         exit;
@@ -57,7 +74,11 @@ if ($stage == 3 && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $db = $_SESSION['db_config'];
 
     try {
-        $pdo = new PDO("mysql:host=".$db['host'].";dbname=".$db['name'], $db['user'], $db['pass']);
+        if ($db['type'] == 'sqlite') {
+            $pdo = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
+        } else {
+            $pdo = new PDO("mysql:host=".$db['host'].";dbname=".$db['name'], $db['user'], $db['pass']);
+        }
         $stmt = $pdo->prepare("INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, 'admin')");
         $stmt->execute([$admin_user, $admin_email, $admin_pass]);
 
@@ -71,8 +92,9 @@ if ($stage == 3 && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $base_url .= '/migrate';
         }
 
+        $db_type_const = $db['type'] == 'sqlite' ? "define('DB_TYPE', 'sqlite');\n" : "";
         $config_content = "<?php
-define('DB_HOST', '".$db['host']."');
+{$db_type_const}define('DB_HOST', '".$db['host']."');
 define('DB_USER', '".$db['user']."');
 define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
@@ -141,23 +163,38 @@ define('INSTALLED', true);
                     <h3 class="font-condensed h5 mb-3 text-white-50">Stage 2: Database Configuration</h3>
                     <form method="POST">
                         <div class="mb-3">
-                            <label class="form-label text-white-50 small uppercase font-black">Database Host</label>
-                            <input type="text" name="host" class="form-control bg-dark text-white border-secondary" value="localhost" required>
+                            <label class="form-label text-white-50 small uppercase font-black">Database Engine</label>
+                            <select name="db_type" id="db_type" class="form-select bg-dark text-white border-secondary" onchange="toggleDBFields()">
+                                <option value="mysql">MySQL (Recommended for cPanel)</option>
+                                <option value="sqlite">SQLite (No configuration required)</option>
+                            </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50 small uppercase font-black">Database User</label>
-                            <input type="text" name="user" class="form-control bg-dark text-white border-secondary" required>
+                        <div id="mysql_fields">
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small uppercase font-black">Database Host</label>
+                                <input type="text" name="host" class="form-control bg-dark text-white border-secondary" value="localhost">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small uppercase font-black">Database User</label>
+                                <input type="text" name="user" class="form-control bg-dark text-white border-secondary">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small uppercase font-black">Database Password</label>
+                                <input type="password" name="pass" class="form-control bg-dark text-white border-secondary">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-white-50 small uppercase font-black">Database Name</label>
+                                <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="gfw_db">
+                            </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50 small uppercase font-black">Database Password</label>
-                            <input type="password" name="pass" class="form-control bg-dark text-white border-secondary">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label text-white-50 small uppercase font-black">Database Name</label>
-                            <input type="text" name="name" class="form-control bg-dark text-white border-secondary" value="gfw_db" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Install Schema</button>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Install Schema</button>
                     </form>
+                    <script>
+                    function toggleDBFields() {
+                        const type = document.getElementById('db_type').value;
+                        document.getElementById('mysql_fields').style.display = type === 'sqlite' ? 'none' : 'block';
+                    }
+                    </script>
 
                 <?php elseif ($stage == 3): ?>
                     <h3 class="font-condensed h5 mb-3 text-white-50">Stage 3: Admin Account</h3>

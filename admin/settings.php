@@ -379,8 +379,11 @@ $activeTab = $_GET['tab'] ?? 'general';
 
                 <!-- Instagram API -->
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
-                    <h4 class="text-white font-black uppercase italic mb-6 small">Instagram Automation</h4>
-                    <p class="text-[10px] text-white-50 mb-4 italic uppercase">Linked automatically when you connect Facebook and select a page with an associated Instagram account.</p>
+                    <div class="d-flex justify-content-between align-items-center mb-6">
+                        <h4 class="text-white font-black uppercase italic mb-0 small">Instagram Automation</h4>
+                        <a href="social_connect.php?platform=facebook" class="btn btn-sm btn-primary font-condensed fw-black italic uppercase px-4">Link Instagram</a>
+                    </div>
+                    <p class="text-[10px] text-white-50 mb-4 italic uppercase">Linked via Facebook. Ensure your Instagram Business account is connected to your Facebook Page.</p>
                     <div class="row g-4">
                         <div class="col-md-4"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Business Account ID</label><input type="text" name="ig_account_id" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_account_id'] ?? ''; ?>"></div>
                         <div class="col-md-8"><label class="text-[9px] uppercase font-black text-gray-500 block mb-2">Access Token</label><input type="password" name="ig_access_token" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" value="<?php echo $settings['ig_access_token'] ?? ''; ?>"></div>

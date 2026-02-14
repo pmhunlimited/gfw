@@ -47,7 +47,7 @@ $relatedPosts = $stmt_related->fetchAll();
 <div class="bg-black text-white min-h-screen">
     <!-- Hero Header -->
     <div class="relative h-[60vh] md:h-[80vh] overflow-hidden">
-        <img src="<?php echo $post['image']; ?>" class="absolute inset-0 w-full h-full object-cover opacity-50" alt="">
+        <img src="<?php echo $post['image']; ?>" class="absolute inset-0 w-full h-full object-cover opacity-70" alt="">
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
         <div class="absolute bottom-0 left-0 w-full p-6 md:p-12">
             <div class="container mx-auto">

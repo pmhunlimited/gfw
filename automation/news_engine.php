@@ -34,17 +34,14 @@ For each story, provide:
 Return the results as a JSON array of objects ONLY.";
 
 $raw_ai = get_ai_insight($prompt);
-if (!$raw_ai || strpos($raw_ai, '[') === false) {
+if (!$raw_ai) {
     die("Error: AI failed to discover news.\n");
 }
 
 // Extract JSON
-$json_start = strpos($raw_ai, '[');
-$json_end = strrpos($raw_ai, ']');
-$json_str = substr($raw_ai, $json_start, $json_end - $json_start + 1);
-$news_items = json_decode($json_str, true);
+$news_items = extract_json($raw_ai, true);
 
-if (!$news_items) die("Error: Could not parse news data.\n");
+if (!$news_items) die("Error: Could not parse news data. Raw: " . substr($raw_ai, 0, 100) . "...\n");
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
@@ -65,7 +62,8 @@ foreach ($news_items as $item) {
     $local_img_path = $upload_dir . $filename;
     $db_img_path = $web_dir . $filename;
 
-    $img_data = @file_get_contents($img_url);
+    $img_data = fetch_image($img_url);
+
     if ($img_data) {
         file_put_contents($local_img_path, $img_data);
     } else {

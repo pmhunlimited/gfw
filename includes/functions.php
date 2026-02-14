@@ -4,14 +4,26 @@ require_once __DIR__ . '/social_poster.php';
 
 function get_settings() {
     $conn = get_db_connection();
-    if (!$conn) return [];
+    if (!$conn) return [
+        'name' => 'GLOBAL FOOTBALL WATCH',
+        'logo' => '',
+        'favicon' => ''
+    ];
     $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-    return $stmt->fetch() ?: [];
+    return $stmt->fetch() ?: [
+        'name' => 'GLOBAL FOOTBALL WATCH',
+        'logo' => '',
+        'favicon' => ''
+    ];
 }
 
 function get_categories_with_counts() {
     $conn = get_db_connection();
-    if (!$conn) return [];
+    if (!$conn) return [
+        ['name' => 'PREMIER LEAGUE', 'post_count' => 5],
+        ['name' => 'TRANSFER NEWS', 'post_count' => 3],
+        ['name' => 'MATCH ANALYSIS', 'post_count' => 8]
+    ];
     $stmt = $conn->query("SELECT c.id, c.name, COUNT(p.id) as post_count
                           FROM categories c
                           LEFT JOIN posts p ON c.name = p.category
@@ -158,13 +170,13 @@ function get_ai_insight($prompt) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, JSON_encode($data));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_TIMEOUT, 60); // 60 seconds timeout
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
     $response = curl_exec($ch);
-    $result = JSON_decode($response, true);
+    $result = json_decode($response, true);
     curl_close($ch);
 
     if (strpos($model, 'gemini') !== false) {
@@ -191,11 +203,8 @@ function get_suggested_topics() {
     $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"]. Be very specific about current teams, transfers and players.";
     $raw = get_ai_insight($prompt);
 
-    // Attempt to extract JSON array
-    if (preg_match('/\[.*\]/s', $raw, $matches)) {
-        $topics = json_decode($matches[0], true);
-        if (is_array($topics)) return array_slice($topics, 0, 5);
-    }
+    $topics = extract_json($raw, true);
+    if (is_array($topics)) return array_slice($topics, 0, 5);
 
     // Fallback: If no JSON array found, try to split by lines if it looks like a list
     $lines = explode("\n", $raw);
@@ -208,6 +217,53 @@ function get_suggested_topics() {
     }
 
     return $topics;
+}
+
+/**
+ * Robustly extracts JSON from a string that may contain markdown or other text.
+ * @param string $raw
+ * @param bool $as_array If true, expects a JSON array. If false, expects a JSON object.
+ * @return mixed|null
+ */
+function extract_json($raw, $as_array = false) {
+    // Remove markdown code blocks
+    $clean = preg_replace('/^```json\s*|\s*```$/i', '', trim($raw));
+
+    $pattern = $as_array ? '/\[.*\]/s' : '/\{.*\}/s';
+    if (preg_match($pattern, $clean, $matches)) {
+        $json = json_decode($matches[0], true);
+        if ($json !== null) return $json;
+    }
+
+    // Fallback: try decoding the whole clean string
+    $json = json_decode($clean, true);
+    if ($json !== null) return $json;
+
+    return null;
+}
+
+/**
+ * Robustly fetches an image using cURL and returns the data only if it is a valid image.
+ * @param string $url
+ * @return string|false
+ */
+function fetch_image($url) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+
+    $data = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+    curl_close($ch);
+
+    if ($httpCode == 200 && strpos($contentType, 'image/') !== false) {
+        return $data;
+    }
+
+    return false;
 }
 
 // Basic Markdown to HTML

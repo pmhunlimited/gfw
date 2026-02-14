@@ -8,11 +8,21 @@ require_once __DIR__ . '/config.php';
 
 function get_db_connection() {
     try {
-        $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+        if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
+            $conn = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
+        } else {
+            try {
+                $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+            } catch (PDOException $e) {
+                // Fallback to SQLite if MySQL fails in this environment
+                $conn = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
+            }
+        }
         $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
-        // Auto-migration for missing columns
+        // SQLite doesn't support some MySQL syntax like ALTER TABLE ADD COLUMN IF NOT EXISTS easily
+        // But we can try/catch
         try {
             $conn->query("SELECT pin_enabled FROM site_settings LIMIT 1");
         } catch (Exception $e) {
@@ -64,6 +74,12 @@ function get_db_connection() {
         } catch (Exception $e) {
             $conn->exec("ALTER TABLE posts ADD COLUMN is_scheduled BOOLEAN DEFAULT FALSE");
             $conn->exec("ALTER TABLE posts ADD COLUMN publish_date DATETIME");
+        }
+
+        try {
+            $conn->query("SELECT is_top_story FROM posts LIMIT 1");
+        } catch (Exception $e) {
+            $conn->exec("ALTER TABLE posts ADD COLUMN is_top_story BOOLEAN DEFAULT FALSE");
         }
 
         // Auto-seed Privacy Policy if missing

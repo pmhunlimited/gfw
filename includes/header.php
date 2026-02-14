@@ -105,6 +105,8 @@ $settings = get_settings();
                         $active = ($current_path == '/'.$tp['slug']) ? 'active' : '';
                         echo '<li class="nav-item"><a class="nav-link '.$active.'" href="/'.$tp['slug'].'">'.$tp['title'].'</a></li>';
                     }
+                } else {
+                    echo '<li class="nav-item"><a class="nav-link" href="/privacy-policy">PRIVACY POLICY</a></li>';
                 }
 
                 $categories = get_categories_with_counts();
@@ -125,18 +127,20 @@ $settings = get_settings();
     <!-- Main Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4">
-            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-lg-5" href="/">
+            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;" class="d-inline-block align-middle">
                 <?php else: ?>
                     <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
                 <?php endif; ?>
             </a>
+
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav font-condensed fw-bold uppercase tracking-widest small italic">
+                <ul class="navbar-nav font-condensed fw-bold uppercase tracking-widest small italic ms-lg-4">
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
 
                     <?php
@@ -147,6 +151,8 @@ $settings = get_settings();
                             $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
                             echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
                         }
+                    } else {
+                        echo '<li class="nav-item"><a class="nav-link px-3" href="/about">About</a></li>';
                     }
                     ?>
                     <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Feed</a></li>

@@ -36,13 +36,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_page'])) {
     }
 }
 
-$stmt = $conn->query("SELECT * FROM pages ORDER BY position, title");
+// Search logic
+$search = sanitize($_GET['search'] ?? '');
+$where = "1=1";
+$params = [];
+if (!empty($search)) {
+    $where .= " AND (title LIKE ? OR content LIKE ? OR slug LIKE ?)";
+    $params = ["%$search%", "%$search%", "%$search%"];
+}
+
+$stmt = $conn->prepare("SELECT * FROM pages WHERE $where ORDER BY position, title");
+$stmt->execute($params);
 $pages = $stmt->fetchAll();
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-5">
-    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CMS <span class="text-danger">PAGES</span></h1>
-    <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#pageModal">NEW PAGE</button>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
+    <div>
+        <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CMS <span class="text-danger">PAGES</span></h1>
+        <p class="text-white-50 small font-condensed italic uppercase mb-0"><?php echo count($pages); ?> Sections Identified</p>
+    </div>
+    <div class="d-flex flex-wrap gap-3">
+        <form method="GET" class="position-relative">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="SEARCH PAGES..." class="bg-black border border-white/10 rounded-xl px-4 py-2 text-white font-condensed italic small w-64 focus:border-danger outline-none transition-all">
+            <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
+        </form>
+        <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#pageModal">NEW PAGE</button>
+    </div>
 </div>
 
 <?php if (isset($success)): ?>

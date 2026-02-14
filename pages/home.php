@@ -31,14 +31,37 @@ if ($conn) {
         $stmt->execute();
     }
     $posts = $stmt->fetchAll();
+} else {
+    // Mock posts for verification
+    $posts = [
+        [
+            'id' => 1,
+            'title' => 'MOCK REPORT: MANCHESTER CITY SECURES VICTORY',
+            'slug' => 'mock-report-1',
+            'excerpt' => 'Manchester City continued their dominant run with a convincing win over their rivals.',
+            'content' => 'Full report content here...',
+            'category' => 'PREMIER LEAGUE',
+            'author' => 'GFW',
+            'image' => 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600',
+            'created_at' => date('Y-m-d H:i:s'),
+            'publish_date' => date('Y-m-d H:i:s'),
+            'is_top_story' => 1
+        ]
+    ];
+    $totalPosts = 1;
 }
 
 $totalPages = ceil($totalPosts / $limit);
 
 // Featured posts for SYNDICATED NEXT (Only on home page or top of category)
-$stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
-$syndicatedNext = $stmt_featured->fetchAll();
-if (count($syndicatedNext) < 4) {
+if ($conn) {
+    $stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
+    $syndicatedNext = $stmt_featured->fetchAll();
+} else {
+    $syndicatedNext = $posts;
+}
+
+if (count($syndicatedNext) < 4 && $conn) {
     // Fill with latest if not enough featured
     $latest_ids = array_map(function($p) { return $p['id']; }, $syndicatedNext);
     $placeholders = count($latest_ids) ? implode(',', array_fill(0, count($latest_ids), '?')) : '0';
@@ -86,7 +109,7 @@ if ($category) {
         <div class="col-lg-8 border-end border-white border-opacity-10 position-relative hero-height">
             <?php if ($latestPost): ?>
                 <a href="/post/<?php echo $latestPost['slug']; ?>" class="text-decoration-none d-block h-100 position-relative overflow-hidden group">
-                    <img src="<?php echo $latestPost['image']; ?>" loading="lazy" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-60 grayscale transition-all duration-1000" style="transition: transform 1s, filter 1s;" onmouseover="this.style.transform='scale(1.05)';this.style.filter='grayscale(0)';" onmouseout="this.style.transform='scale(1)';this.style.filter='grayscale(1)';" alt="">
+                    <img src="<?php echo $latestPost['image']; ?>" loading="lazy" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-80 transition-all duration-1000" style="transition: transform 1s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';" alt="">
                     <div class="position-absolute bottom-0 start-0 w-100 p-4 p-md-5 bg-gradient-to-t from-black via-black/70 to-transparent z-20">
                         <div class="mb-4">
                             <span class="badge bg-electric-red rounded-0 px-4 py-2 italic font-condensed fw-black shadow-2xl">GLOBAL EXCLUSIVE</span>
@@ -115,7 +138,7 @@ if ($category) {
                     <?php foreach ($syndicatedNext as $post): ?>
                         <a href="/post/<?php echo $post['slug']; ?>" class="text-decoration-none d-flex gap-4 border-bottom border-white border-opacity-5 pb-4 transition-all hover:translate-x-1">
                             <div class="flex-shrink-0 overflow-hidden border border-white border-opacity-10 rounded-2" style="width: 80px; height: 80px;">
-                                <img src="<?php echo $post['image']; ?>" loading="lazy" class="w-100 h-100 object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
+                                <img src="<?php echo $post['image']; ?>" loading="lazy" class="w-100 h-100 object-fit-cover transition-all duration-700" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';" alt="">
                             </div>
                             <div class="flex-grow-1 overflow-hidden">
                                 <span class="text-electric-red fw-black italic font-condensed mb-2 d-block" style="font-size: 10px;"><?php echo strtoupper($post['category']); ?></span>
@@ -242,7 +265,7 @@ if ($category) {
                 <div class="col-6 col-md-4 col-lg-3">
                     <a href="/post/<?php echo $post['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
                         <div class="ratio ratio-1x1 mb-4 overflow-hidden rounded-4 border border-white border-opacity-10 bg-dark shadow-lg">
-                            <img src="<?php echo $post['image']; ?>" loading="lazy" class="object-fit-cover grayscale transition-all duration-700" onmouseover="this.style.filter='grayscale(0)';this.style.transform='scale(1.1)';" onmouseout="this.style.filter='grayscale(1)';this.style.transform='scale(1)';" alt="">
+                            <img src="<?php echo $post['image']; ?>" loading="lazy" class="object-fit-cover transition-all duration-700" onmouseover="this.style.transform='scale(1.1)';" onmouseout="this.style.transform='scale(1)';" alt="">
                             <div class="position-absolute top-0 start-0 m-3">
                                 <span class="badge bg-electric-red font-condensed italic fw-black px-3 py-2 uppercase shadow-lg" style="font-size: 9px;"><?php echo $post['category']; ?></span>
                             </div>

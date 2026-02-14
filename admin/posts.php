@@ -30,6 +30,7 @@ if (isset($_POST['save_manual'])) {
     $meta_title = sanitize($_POST['meta_title'] ?? '');
     $meta_desc = sanitize($_POST['meta_description'] ?? '');
     $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
+    $is_top = isset($_POST['is_top_story']) ? 1 : 0;
 
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
@@ -46,8 +47,8 @@ if (isset($_POST['save_manual'])) {
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
@@ -74,6 +75,7 @@ if (isset($_POST['update_manual'])) {
     $meta_title = sanitize($_POST['meta_title'] ?? '');
     $meta_desc = sanitize($_POST['meta_description'] ?? '');
     $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
+    $is_top = isset($_POST['is_top_story']) ? 1 : 0;
 
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
@@ -88,8 +90,8 @@ if (isset($_POST['update_manual'])) {
         }
     }
 
-    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ? WHERE id = ?");
-    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $id])) {
+    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
+    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top, $id])) {
         $success = "Report updated successfully.";
     } else {
         $error = "Failed to update report.";
@@ -102,6 +104,7 @@ if (isset($_POST['generate_ai'])) {
     $cat = sanitize($_POST['cat']);
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
+    $is_top = 1; // AI generated posts are promoted by default
 
     $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
                Write in an engaging first-person 'fan blogger' perspective.
@@ -112,14 +115,11 @@ if (isset($_POST['generate_ai'])) {
                - 'tags': 5-8 relevant SEO tags (comma separated).
                - 'meta_title': SEO optimized title (max 60 chars).
                - 'meta_description': Compelling SEO description (max 160 chars).
-               - 'meta_keywords': High ranking keywords for this specific news.";
+               - 'meta_keywords': High ranking keywords for this specific news.
+               Ensure the response is a valid JSON object.";
     $raw = get_ai_insight($prompt);
 
-    // Improved JSON extraction
-    $data = null;
-    if (preg_match('/\{.*\}/s', $raw, $matches)) {
-        $data = json_decode($matches[0], true);
-    }
+    $data = extract_json($raw, false);
 
     if ($data && !empty($data['title']) && !empty($data['content'])) {
         $title = sanitize($data['title']);
@@ -139,7 +139,8 @@ if (isset($_POST['generate_ai'])) {
         $target_dir = __DIR__ . "/../assets/uploads/";
         if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
 
-        $img_data = @file_get_contents($image_url);
+        $img_data = fetch_image($image_url);
+
         $image_filename = "ai_" . time() . ".jpg";
         $db_image = "/assets/uploads/" . $image_filename;
         if ($img_data) {
@@ -148,30 +149,58 @@ if (isset($_POST['generate_ai'])) {
             $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
         }
 
-        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
+        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
-                $success = "AI Intelligence generated, deployed and broadcasted.";
+                $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
-                $success = "AI Intelligence generated and scheduled for $publish_date.";
+                $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;
             }
         } else {
-            $error = "Database insertion failed.";
+            $error = "Database insertion failed: " . implode(":", $stmt->errorInfo());
         }
     } else {
-        $error = "AI extraction failed or returned invalid format. Raw: " . htmlspecialchars(substr($raw, 0, 100)) . "...";
+        $error = "AI extraction failed. Raw Response: " . htmlspecialchars($raw);
     }
 }
 
-$posts = $conn->query("SELECT * FROM posts ORDER BY created_at DESC")->fetchAll();
+// Pagination & Search Logic
+$search = sanitize($_GET['search'] ?? '');
+$page = (int)($_GET['page'] ?? 1);
+$perPage = 10;
+$offset = ($page - 1) * $perPage;
+
+$where = "1=1";
+$params = [];
+if (!empty($search)) {
+    $where .= " AND (title LIKE ? OR content LIKE ? OR author LIKE ? OR category LIKE ?)";
+    $params = ["%$search%", "%$search%", "%$search%", "%$search%"];
+}
+
+$total_stmt = $conn->prepare("SELECT COUNT(*) FROM posts WHERE $where");
+$total_stmt->execute($params);
+$total_posts = $total_stmt->fetchColumn();
+$total_pages = ceil($total_posts / $perPage);
+
+$stmt = $conn->prepare("SELECT * FROM posts WHERE $where ORDER BY created_at DESC LIMIT $perPage OFFSET $offset");
+$stmt->execute($params);
+$posts = $stmt->fetchAll();
+
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
 ?>
-<div class="d-flex justify-content-between align-items-center mb-5">
-    <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
-    <div class="d-flex gap-3">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
+    <div>
+        <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
+        <p class="text-white-50 small font-condensed italic uppercase mb-0"><?php echo $total_posts; ?> Reports Discovered</p>
+    </div>
+    <div class="d-flex flex-wrap gap-3">
+        <form method="GET" class="position-relative">
+            <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="SEARCH REPORTS..." class="bg-black border border-white/10 rounded-xl px-4 py-2 text-white font-condensed italic small w-64 focus:border-danger outline-none transition-all">
+            <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
+        </form>
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
         <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#generateModal">GENERATE FROM AI</button>
     </div>
@@ -234,6 +263,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-mtitle="<?php echo htmlspecialchars($post['meta_title'] ?? ''); ?>"
                             data-mdesc="<?php echo htmlspecialchars($post['meta_description'] ?? ''); ?>"
                             data-mkeys="<?php echo htmlspecialchars($post['meta_keywords'] ?? ''); ?>"
+                            data-top="<?php echo $post['is_top_story']; ?>"
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
@@ -244,7 +274,46 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    <?php if ($total_pages > 1): ?>
+    <div class="px-5 py-4 border-top border-white/5 bg-black/20">
+        <nav>
+            <ul class="pagination pagination-sm mb-0 gap-2 justify-content-center">
+                <?php if ($page > 1): ?>
+                    <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>">PREV</a></li>
+                <?php endif; ?>
+
+                <?php
+                $start = max(1, $page - 2);
+                $end = min($total_pages, $page + 2);
+                for ($i = $start; $i <= $end; $i++):
+                ?>
+                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                        <a class="page-link <?php echo $i == $page ? 'bg-danger border-danger' : 'bg-black border-white/10'; ?> text-white rounded-lg px-3" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>"><?php echo $i; ?></a>
+                    </li>
+                <?php endfor; ?>
+
+                <?php if ($page < $total_pages): ?>
+                    <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>">NEXT</a></li>
+                <?php endif; ?>
+            </ul>
+        </nav>
+    </div>
+    <?php endif; ?>
 </div>
+
+<style>
+.pagination .page-link:hover {
+    background-color: #ff3e3e;
+    border-color: #ff3e3e;
+    color: white;
+}
+.pagination .page-item.active .page-link {
+    background-color: #ff3e3e;
+    border-color: #ff3e3e;
+}
+</style>
 
 <!-- Manual Entry Modal -->
 <div class="modal fade" id="manualModal" tabindex="-1">
@@ -282,9 +351,15 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
-                        <div class="col-md-12">
-                            <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Leave blank for immediate broadcast)</label>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Optional)</label>
                             <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="is_top_story" class="form-check-input bg-black border-white border-opacity-10" id="isTopManual">
+                                <label class="form-check-label text-white-50 small uppercase font-black" for="isTopManual">Promote to Top Story</label>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
@@ -356,9 +431,15 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">Update Image File</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
-                        <div class="col-md-12">
+                        <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment</label>
                             <input type="datetime-local" name="publish_date" id="edit_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check mb-2">
+                                <input type="checkbox" name="is_top_story" class="form-check-input bg-black border-white border-opacity-10" id="edit_top">
+                                <label class="form-check-label text-white-50 small uppercase font-black" for="edit_top">Promote to Top Story</label>
+                            </div>
                         </div>
                         <div class="col-12">
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
@@ -481,6 +562,7 @@ document.querySelectorAll('.edit-post').forEach(btn => {
         document.getElementById('edit_mtitle').value = this.dataset.mtitle;
         document.getElementById('edit_mdesc').value = this.dataset.mdesc;
         document.getElementById('edit_mkeys').value = this.dataset.mkeys;
+        document.getElementById('edit_top').checked = this.dataset.top == "1";
     };
 });
 </script>
