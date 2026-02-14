@@ -96,7 +96,7 @@ if (isset($_POST['generate_ai'])) {
                Write in an engaging first-person 'fan blogger' perspective.
                Return JSON with:
                - 'title': Catchy headline.
-               - 'content': Detailed report in Markdown.
+               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
                - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).";
     $raw = get_ai_insight($prompt);
 

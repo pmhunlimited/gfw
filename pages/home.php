@@ -2,19 +2,40 @@
 include __DIR__ . '/../includes/header.php';
 
 $category = $_GET['category'] ?? null;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
 $conn = get_db_connection();
 $posts = [];
+$totalPosts = 0;
+
 if ($conn) {
     if ($category) {
-        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC");
-        $stmt->execute([$category]);
+        $stmt_count = $conn->prepare("SELECT COUNT(*) FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW())");
+        $stmt_count->execute([$category]);
+        $totalPosts = $stmt_count->fetchColumn();
+
+        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
+        $stmt->bindValue(1, $category, PDO::PARAM_STR);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+        $stmt->execute();
     } else {
-        $stmt = $conn->query("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC");
+        $stmt_count = $conn->query("SELECT COUNT(*) FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW())");
+        $totalPosts = $stmt_count->fetchColumn();
+
+        $stmt = $conn->prepare("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
+        $stmt->bindValue(1, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(2, $offset, PDO::PARAM_INT);
+        $stmt->execute();
     }
     $posts = $stmt->fetchAll();
 }
 
-// Featured posts for SYNDICATED NEXT
+$totalPages = ceil($totalPosts / $limit);
+
+// Featured posts for SYNDICATED NEXT (Only on home page or top of category)
 $stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
 $syndicatedNext = $stmt_featured->fetchAll();
 if (count($syndicatedNext) < 4) {
@@ -26,9 +47,9 @@ if (count($syndicatedNext) < 4) {
     $syndicatedNext = array_merge($syndicatedNext, $stmt_fill->fetchAll());
 }
 
-$latestPost = $posts[0] ?? null;
-// ELITE REPORTING - 10 latest posts
-$remainingPosts = array_slice($posts, 1, 10);
+$latestPost = ($page == 1) ? ($posts[0] ?? null) : null;
+// ELITE REPORTING - posts for current page
+$remainingPosts = ($page == 1) ? array_slice($posts, 1) : $posts;
 
 $activeComp = $_GET['comp'] ?? 'English Premier League';
 
@@ -59,7 +80,8 @@ if ($category) {
         </div>
     </section>
 
-    <!-- HERO -->
+    <!-- HERO (Only on Page 1) -->
+    <?php if ($page == 1): ?>
     <section class="row g-0 mb-5 border-bottom border-white border-opacity-10 bg-[#05070a]">
         <div class="col-lg-8 border-end border-white border-opacity-10 position-relative hero-height">
             <?php if ($latestPost): ?>
@@ -78,7 +100,7 @@ if ($category) {
                 </a>
             <?php else: ?>
                 <div class="h-100 d-flex align-items-center justify-content-center bg-black/40">
-                    <p class="font-condensed italic uppercase tracking-widest">NO REPORTS AVAILABLE</p>
+                    <p class="font-condensed italic uppercase tracking-widest">NO REPORTS AVAILABLE IN THIS CATEGORY</p>
                 </div>
             <?php endif; ?>
         </div>
@@ -106,6 +128,7 @@ if ($category) {
             </div>
         </div>
     </section>
+    <?php endif; ?>
 
     <!-- SPORTS UPDATES HUB -->
     <section class="mb-5 bg-[#0a0e17] p-4 p-md-5 rounded-4 border border-white border-opacity-5 mx-2 shadow-2xl">
@@ -211,7 +234,9 @@ if ($category) {
     <!-- GRID -->
     <?php if (count($remainingPosts) > 0): ?>
     <section class="p-4 p-md-5 bg-black">
-        <h2 class="display-5 font-condensed fw-black italic text-white mb-5 border-bottom border-white border-opacity-5 pb-3">ELITE REPORTING</h2>
+        <h2 class="display-5 font-condensed fw-black italic text-white mb-5 border-bottom border-white border-opacity-5 pb-3">
+            <?php echo $category ? strtoupper($category) : 'ELITE REPORTING'; ?>
+        </h2>
         <div class="row g-4">
             <?php foreach ($remainingPosts as $post): ?>
                 <div class="col-6 col-md-4 col-lg-3">
@@ -228,6 +253,26 @@ if ($category) {
                 </div>
             <?php endforeach; ?>
         </div>
+
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+        <div class="mt-12 flex justify-center gap-2">
+            <?php
+            $base_url = $category ? "/category/" . urlencode($category) . "?" : "/?";
+            ?>
+            <?php if ($page > 1): ?>
+                <a href="<?php echo $base_url; ?>page=<?php echo $page - 1; ?>" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black">PREV</a>
+            <?php endif; ?>
+
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="<?php echo $base_url; ?>page=<?php echo $i; ?>" class="px-4 py-2 <?php echo $page == $i ? 'bg-electric-red border-electric-red' : 'bg-white/5 border-white/10'; ?> border rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black"><?php echo $i; ?></a>
+            <?php endfor; ?>
+
+            <?php if ($page < $totalPages): ?>
+                <a href="<?php echo $base_url; ?>page=<?php echo $page + 1; ?>" class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black">NEXT</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </section>
     <?php endif; ?>
 </div>

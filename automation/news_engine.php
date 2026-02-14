@@ -15,13 +15,17 @@ if (empty($apiKey)) {
 
 echo "Starting AI-Powered News Discovery...\n";
 
+// Fetch current categories from DB
+$available_categories = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
+$cat_list = implode(', ', $available_categories);
+
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories from different leagues (Premier League, La Liga, Serie A, Bundesliga, Champions League).
+$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories.
 For each story, provide:
 1. 'title': Engaging headline.
-2. 'category': One of (Premier League, Champions League, La Liga, Serie A, Bundesliga, Transfer News).
-3. 'content': A professional 400-word sports report in an engaging fan-blogger tone. Use Markdown.
+2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
+3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
 4. 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g., 'Erling Haaland Manchester City' instead of just 'football').
 Return the results as a JSON array of objects ONLY.";
 
