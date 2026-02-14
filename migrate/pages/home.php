@@ -3,7 +3,7 @@ include __DIR__ . '/../includes/header.php';
 
 $category = $_GET['category'] ?? null;
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = 10;
+$limit = 8;
 $offset = ($page - 1) * $limit;
 
 $conn = get_db_connection();

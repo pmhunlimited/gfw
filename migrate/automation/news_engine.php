@@ -27,6 +27,10 @@ For each story, provide:
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
 3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
 4. 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g., 'Erling Haaland Manchester City' instead of just 'football').
+5. 'tags': 5-8 relevant SEO tags (comma separated).
+6. 'meta_title': SEO optimized title (max 60 chars).
+7. 'meta_description': Compelling SEO description (max 160 chars).
+8. 'meta_keywords': High ranking keywords for this specific news.
 Return the results as a JSON array of objects ONLY.";
 
 $raw_ai = get_ai_insight($prompt);
@@ -77,8 +81,13 @@ foreach ($news_items as $item) {
     $category = $item['category'];
     $author = 'GFW';
 
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, 1)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path])) {
+    $tags = sanitize($item['tags'] ?? '');
+    $meta_title = sanitize($item['meta_title'] ?? $title);
+    $meta_desc = sanitize($item['meta_description'] ?? $excerpt);
+    $meta_keys = sanitize($item['meta_keywords'] ?? '');
+
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path, $tags, $meta_title, $meta_desc, $meta_keys])) {
         $post_id = $conn->lastInsertId();
         echo "Successfully published: $title\n";
 

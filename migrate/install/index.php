@@ -66,12 +66,17 @@ if ($stage == 3 && $_SERVER['REQUEST_METHOD'] == 'POST') {
         $stmt->execute([$admin_email]);
 
         // Generate config.php
+        $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
+        if (strpos($_SERVER['REQUEST_URI'], '/migrate') !== false) {
+            $base_url .= '/migrate';
+        }
+
         $config_content = "<?php
 define('DB_HOST', '".$db['host']."');
 define('DB_USER', '".$db['user']."');
 define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
-define('SITE_URL', (isset(\$_SERVER['HTTPS']) && \$_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . \$_SERVER['HTTP_HOST']);
+define('SITE_URL', '".$base_url."');
 define('INSTALLED', true);
 ?>";
         file_put_contents(__DIR__ . '/../includes/config.php', $config_content);

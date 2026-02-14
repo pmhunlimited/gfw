@@ -18,8 +18,9 @@ if (!$post) {
 }
 
 // Set dynamic meta tags for header
-$custom_meta_title = $post['title'];
-$custom_meta_description = $post['excerpt'];
+$custom_meta_title = !empty($post['meta_title']) ? $post['meta_title'] : $post['title'];
+$custom_meta_description = !empty($post['meta_description']) ? $post['meta_description'] : $post['excerpt'];
+$custom_meta_keywords = $post['meta_keywords'] ?? '';
 
 include __DIR__ . '/../includes/header.php';
 
@@ -69,6 +70,14 @@ $relatedPosts = $stmt_related->fetchAll();
                     <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90">
                         <?php echo parse_markdown($post['content']); ?>
                     </div>
+
+                    <?php if (!empty($post['tags'])): ?>
+                    <div class="mt-10 flex flex-wrap gap-2">
+                        <?php foreach (explode(',', $post['tags']) as $tag): ?>
+                            <span class="bg-white/5 border border-white/10 text-white-50 px-3 py-1 rounded-full text-[10px] uppercase font-bold italic">#<?php echo trim($tag); ?></span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </article>
 
                 <!-- Comments Section -->

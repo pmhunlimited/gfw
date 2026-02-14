@@ -70,7 +70,7 @@ function get_db_connection() {
         $check = $conn->query("SELECT id FROM pages WHERE slug = 'privacy-policy' LIMIT 1")->fetch();
         if (!$check) {
             $stmt = $conn->prepare("INSERT INTO pages (title, slug, content, is_visible, position) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute(['Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main']);
+            $stmt->execute(['Privacy Policy', 'privacy-policy', "# Privacy Policy\n\nYour privacy is important to us. This privacy policy explains how we collect, use, and protect your personal information.", 1, 'main']);
         }
 
 

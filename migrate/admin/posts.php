@@ -26,6 +26,11 @@ if (isset($_POST['save_manual'])) {
     $image = sanitize($_POST['image']);
     $author = sanitize($_POST['author'] ?? 'STAFF');
 
+    $tags = sanitize($_POST['tags'] ?? '');
+    $meta_title = sanitize($_POST['meta_title'] ?? '');
+    $meta_desc = sanitize($_POST['meta_description'] ?? '');
+    $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
+
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
 
@@ -41,8 +46,8 @@ if (isset($_POST['save_manual'])) {
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
@@ -64,6 +69,12 @@ if (isset($_POST['update_manual'])) {
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $author = sanitize($_POST['author'] ?? 'STAFF');
     $image = sanitize($_POST['image']);
+
+    $tags = sanitize($_POST['tags'] ?? '');
+    $meta_title = sanitize($_POST['meta_title'] ?? '');
+    $meta_desc = sanitize($_POST['meta_description'] ?? '');
+    $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
+
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
 
@@ -77,8 +88,8 @@ if (isset($_POST['update_manual'])) {
         }
     }
 
-    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ? WHERE id = ?");
-    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $id])) {
+    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ? WHERE id = ?");
+    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $id])) {
         $success = "Report updated successfully.";
     } else {
         $error = "Failed to update report.";
@@ -97,7 +108,11 @@ if (isset($_POST['generate_ai'])) {
                Return JSON with:
                - 'title': Catchy headline.
                - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).";
+               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
+               - 'tags': 5-8 relevant SEO tags (comma separated).
+               - 'meta_title': SEO optimized title (max 60 chars).
+               - 'meta_description': Compelling SEO description (max 160 chars).
+               - 'meta_keywords': High ranking keywords for this specific news.";
     $raw = get_ai_insight($prompt);
 
     // Improved JSON extraction
@@ -110,22 +125,31 @@ if (isset($_POST['generate_ai'])) {
         $title = sanitize($data['title']);
         $content = $data['content'];
         $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
+
+        $tags = sanitize($data['tags'] ?? '');
+        $meta_title = sanitize($data['meta_title'] ?? $title);
+        $meta_desc = sanitize($data['meta_description'] ?? $excerpt);
+        $meta_keys = sanitize($data['meta_keywords'] ?? '');
         $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
 
         // Handle Image - Highly specific search
         $keyword = urlencode(str_replace(' ', ',', ($data['image_keyword'] ?? $topic)) . ",football,soccer");
         $image_url = "https://loremflickr.com/1200/800/" . $keyword . "/all";
+
+        $target_dir = __DIR__ . "/../assets/uploads/";
+        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+
         $img_data = @file_get_contents($image_url);
         $image_filename = "ai_" . time() . ".jpg";
         $db_image = "/assets/uploads/" . $image_filename;
         if ($img_data) {
-            file_put_contents(__DIR__ . "/../assets/uploads/" . $image_filename, $img_data);
+            file_put_contents($target_dir . $image_filename, $img_data);
         } else {
             $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
         }
 
-        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date])) {
+        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
@@ -206,6 +230,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-image="<?php echo htmlspecialchars($post['image']); ?>"
                             data-content="<?php echo htmlspecialchars($post['content']); ?>"
                             data-date="<?php echo $post['publish_date'] ? date('Y-m-d\TH:i', strtotime($post['publish_date'])) : ''; ?>"
+                            data-tags="<?php echo htmlspecialchars($post['tags'] ?? ''); ?>"
+                            data-mtitle="<?php echo htmlspecialchars($post['meta_title'] ?? ''); ?>"
+                            data-mdesc="<?php echo htmlspecialchars($post['meta_description'] ?? ''); ?>"
+                            data-mkeys="<?php echo htmlspecialchars($post['meta_keywords'] ?? ''); ?>"
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
@@ -262,6 +290,25 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
                             <textarea name="content" rows="10" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
                         </div>
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger font-condensed italic fw-black border-bottom border-white border-opacity-10 pb-2 mb-3">SEO METADATA & TAGS</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Tags (Comma separated)</label>
+                            <input type="text" name="tags" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Title</label>
+                            <input type="text" name="meta_title" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Description</label>
+                            <textarea name="meta_description" rows="3" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Keywords</label>
+                            <textarea name="meta_keywords" rows="3" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl"></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-white border-opacity-10">
@@ -316,6 +363,25 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <div class="col-12">
                             <label class="form-label text-white-50 small uppercase font-black">Content (Markdown supported)</label>
                             <textarea name="content" id="edit_content" rows="10" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" required></textarea>
+                        </div>
+                        <div class="col-12 mt-4">
+                            <h6 class="text-danger font-condensed italic fw-black border-bottom border-white border-opacity-10 pb-2 mb-3">SEO METADATA & TAGS</h6>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Tags (Comma separated)</label>
+                            <input type="text" name="tags" id="edit_tags" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Title</label>
+                            <input type="text" name="meta_title" id="edit_mtitle" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Description</label>
+                            <textarea name="meta_description" id="edit_mdesc" rows="3" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Meta Keywords</label>
+                            <textarea name="meta_keywords" id="edit_mkeys" rows="3" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl"></textarea>
                         </div>
                     </div>
                 </div>
@@ -411,6 +477,10 @@ document.querySelectorAll('.edit-post').forEach(btn => {
         document.getElementById('edit_image').value = this.dataset.image;
         document.getElementById('edit_content').value = this.dataset.content;
         document.getElementById('edit_date').value = this.dataset.date;
+        document.getElementById('edit_tags').value = this.dataset.tags;
+        document.getElementById('edit_mtitle').value = this.dataset.mtitle;
+        document.getElementById('edit_mdesc').value = this.dataset.mdesc;
+        document.getElementById('edit_mkeys').value = this.dataset.mkeys;
     };
 });
 </script>

@@ -1,18 +1,11 @@
 RewriteEngine On
 RewriteBase /
 
-# Redirect index.php to /
-RewriteCond %{THE_REQUEST} ^[A-Z]{3,}\s/index\.php [NC]
-RewriteRule ^index\.php$ / [R=301,L]
+# Check if config exists to decide if we should go to installer
+# However, .htaccess can't easily check for file existence of another directory and redirect based on that logic easily for PHP flow.
+# We'll let root index.php handle the initial redirection if someone hits /
 
-# Hide .php extension (excluding admin and install)
-RewriteCond %{REQUEST_URI} !^/admin/
-RewriteCond %{REQUEST_URI} !^/install/
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME}\.php -f
-RewriteRule ^(.*)$ $1.php [L]
+RewriteRule ^$ migrate/index.php [L]
 
-# Handle routing through index.php
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteCond %{REQUEST_URI} !^/migrate/
+RewriteRule ^(.*)$ migrate/$1 [L]
