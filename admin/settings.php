@@ -17,27 +17,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
     $stmt->execute([$name, $tagline, $admin_email, $whatsapp]);
 
     // Handle Logo Upload
-    if (!empty($_FILES['logo']['name'])) {
-        $target_dir = __DIR__ . "/../assets/uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-        $file_ext = strtolower(pathinfo($_FILES["logo"]["name"], PATHINFO_EXTENSION));
-        $target_file = $target_dir . "logo_" . time() . '.' . $file_ext;
-        if (move_uploaded_file($_FILES["logo"]["tmp_name"], $target_file)) {
-            $logo_path = "/assets/uploads/" . basename($target_file);
-            $conn->prepare("UPDATE site_settings SET logo = ? WHERE id = 1")->execute([$logo_path]);
-        }
+    $logo_path = upload_image($_FILES['logo']);
+    if ($logo_path) {
+        $conn->prepare("UPDATE site_settings SET logo = ? WHERE id = 1")->execute([$logo_path]);
     }
 
     // Handle Favicon Upload
-    if (!empty($_FILES['favicon']['name'])) {
-        $target_dir = __DIR__ . "/../assets/uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-        $file_ext = strtolower(pathinfo($_FILES["favicon"]["name"], PATHINFO_EXTENSION));
-        $target_file = $target_dir . "favicon_" . time() . '.' . $file_ext;
-        if (move_uploaded_file($_FILES["favicon"]["tmp_name"], $target_file)) {
-            $favicon_path = "/assets/uploads/" . basename($target_file);
-            $conn->prepare("UPDATE site_settings SET favicon = ? WHERE id = 1")->execute([$favicon_path]);
-        }
+    $favicon_path = upload_image($_FILES['favicon']);
+    if ($favicon_path) {
+        $conn->prepare("UPDATE site_settings SET favicon = ? WHERE id = 1")->execute([$favicon_path]);
     }
 
     $success = "General settings synchronized.";

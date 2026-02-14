@@ -16,10 +16,6 @@ CREATE TABLE IF NOT EXISTS site_settings (
     smtp_pass VARCHAR(255),
     smtp_sender_email VARCHAR(255),
     smtp_sender_name VARCHAR(255),
-    social_twitter_token VARCHAR(255),
-    social_facebook_token VARCHAR(255),
-    social_instagram_token VARCHAR(255),
-    social_enabled BOOLEAN DEFAULT FALSE,
     fb_url VARCHAR(255),
     tw_url VARCHAR(255),
     ig_url VARCHAR(255),
@@ -108,5 +104,6 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(100) UNIQUE NOT NULL
 );
 
-INSERT INTO site_settings (id, name, tagline) VALUES (1, 'GLOBAL FOOTBALL WATCH', 'Intelligence in Football');
+INSERT INTO site_settings (name, tagline, selected_model) VALUES ('GLOBAL FOOTBALL WATCH', 'Intelligence in Football', 'gemini-1.5-flash');
 INSERT INTO categories (name) VALUES ('PREMIER LEAGUE'), ('TRANSFER NEWS'), ('MATCH ANALYSIS'), ('LA LIGA'), ('CHAMPIONS LEAGUE');
+INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main');

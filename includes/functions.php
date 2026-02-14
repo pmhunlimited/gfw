@@ -76,46 +76,60 @@ function send_mail($to, $subject, $message) {
     $from = $settings['smtp_sender_email'];
     $name = $settings['smtp_sender_name'];
 
+    // Prepend ssl:// for port 465 if no scheme is provided
+    if ($port == 465 && strpos($host, '://') === false) {
+        $host = "ssl://" . $host;
+    }
+
     try {
-        $socket = fsockopen($host, $port, $errno, $errstr, 30);
+        $socket = @fsockopen($host, $port, $errno, $errstr, 10);
         if (!$socket) throw new Exception("Could not connect to SMTP host: $errstr ($errno)");
 
         $getResponse = function($socket) {
             $response = "";
-            while ($line = fgets($socket, 515)) {
+            stream_set_timeout($socket, 5);
+            while ($line = @fgets($socket, 515)) {
                 $response .= $line;
                 if (substr($line, 3, 1) == " ") break;
+                $info = stream_get_meta_data($socket);
+                if ($info['timed_out']) throw new Exception("SMTP Response Timeout");
             }
             return $response;
         };
 
+        $write = function($socket, $cmd) {
+            if (@fwrite($socket, $cmd) === false) throw new Exception("Failed to write to SMTP socket");
+        };
+
         $getResponse($socket);
-        fwrite($socket, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
-        $getResponse($socket);
+        $write($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
+        $ehlo_resp = $getResponse($socket);
 
         // Try STARTTLS if on 587
-        if ($port == 587) {
-            fwrite($socket, "STARTTLS\r\n");
+        if ($port == 587 && strpos($ehlo_resp, 'STARTTLS') !== false) {
+            $write($socket, "STARTTLS\r\n");
             $getResponse($socket);
-            stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-            fwrite($socket, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+            if (!@stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                throw new Exception("STARTTLS failed");
+            }
+            $write($socket, "EHLO " . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "\r\n");
             $getResponse($socket);
         }
 
         if (!empty($user) && !empty($pass)) {
-            fwrite($socket, "AUTH LOGIN\r\n");
+            $write($socket, "AUTH LOGIN\r\n");
             $getResponse($socket);
-            fwrite($socket, base64_encode($user) . "\r\n");
+            $write($socket, base64_encode($user) . "\r\n");
             $getResponse($socket);
-            fwrite($socket, base64_encode($pass) . "\r\n");
+            $write($socket, base64_encode($pass) . "\r\n");
             $getResponse($socket);
         }
 
-        fwrite($socket, "MAIL FROM: <$from>\r\n");
+        $write($socket, "MAIL FROM: <$from>\r\n");
         $getResponse($socket);
-        fwrite($socket, "RCPT TO: <$to>\r\n");
+        $write($socket, "RCPT TO: <$to>\r\n");
         $getResponse($socket);
-        fwrite($socket, "DATA\r\n");
+        $write($socket, "DATA\r\n");
         $getResponse($socket);
 
         $headers = "To: $to\r\n";
@@ -125,10 +139,10 @@ function send_mail($to, $subject, $message) {
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         $headers .= "\r\n";
 
-        fwrite($socket, $headers . $message . "\r\n.\r\n");
+        $write($socket, $headers . $message . "\r\n.\r\n");
         $getResponse($socket);
-        fwrite($socket, "QUIT\r\n");
-        fclose($socket);
+        $write($socket, "QUIT\r\n");
+        @fclose($socket);
         return true;
     } catch (Exception $e) {
         error_log("SMTP Error: " . $e->getMessage());
@@ -261,6 +275,34 @@ function fetch_image($url) {
 
     if ($httpCode == 200 && strpos($contentType, 'image/') !== false) {
         return $data;
+    }
+
+    return false;
+}
+
+/**
+ * Safely handles image uploads with extension validation and unique renaming.
+ * @param array $file The $_FILES element
+ * @param string $target_subpath Subdirectory in assets/
+ * @return string|false Path to uploaded file relative to root, or false on failure.
+ */
+function upload_image($file, $target_subpath = 'uploads/') {
+    if (empty($file['name']) || $file['error'] !== UPLOAD_ERR_OK) return false;
+
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'ico'];
+    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+
+    if (!in_array($ext, $allowed)) return false;
+
+    $target_dir = __DIR__ . "/../assets/" . $target_subpath;
+    if (!is_dir($target_dir)) mkdir($target_dir, 0755, true);
+
+    // Unique filename to prevent overwrites and hide original name
+    $filename = bin2hex(random_bytes(8)) . "_" . time() . '.' . $ext;
+    $target_file = $target_dir . $filename;
+
+    if (move_uploaded_file($file['tmp_name'], $target_file)) {
+        return "/assets/" . $target_subpath . $filename;
     }
 
     return false;

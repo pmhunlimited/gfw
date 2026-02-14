@@ -36,14 +36,9 @@ if (isset($_POST['save_manual'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
 
     // Handle Image Upload
-    if (!empty($_FILES['image_file']['name'])) {
-        $target_dir = __DIR__ . "/../assets/uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-        $file_ext = strtolower(pathinfo($_FILES["image_file"]["name"], PATHINFO_EXTENSION));
-        $target_file = $target_dir . time() . '.' . $file_ext;
-        if (move_uploaded_file($_FILES["image_file"]["tmp_name"], $target_file)) {
-            $image = "/assets/uploads/" . basename($target_file);
-        }
+    $uploaded_image = upload_image($_FILES['image_file']);
+    if ($uploaded_image) {
+        $image = $uploaded_image;
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
@@ -80,14 +75,9 @@ if (isset($_POST['update_manual'])) {
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
 
-    if (!empty($_FILES['image_file']['name'])) {
-        $target_dir = __DIR__ . "/../assets/uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-        $file_ext = strtolower(pathinfo($_FILES["image_file"]["name"], PATHINFO_EXTENSION));
-        $target_file = $target_dir . time() . '.' . $file_ext;
-        if (move_uploaded_file($_FILES["image_file"]["tmp_name"], $target_file)) {
-            $image = "/assets/uploads/" . basename($target_file);
-        }
+    $uploaded_image = upload_image($_FILES['image_file']);
+    if ($uploaded_image) {
+        $image = $uploaded_image;
     }
 
     $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
