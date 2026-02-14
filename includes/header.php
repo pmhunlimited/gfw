@@ -15,7 +15,7 @@ $settings = get_settings();
     <meta name="keywords" content="<?php echo $custom_meta_keywords; ?>">
     <?php endif; ?>
     <?php if (!empty($settings['favicon'])): ?>
-    <link rel="icon" href="<?php echo $settings['favicon']; ?>" type="image/any">
+    <link rel="shortcut icon" href="<?php echo $settings['favicon']; ?>" type="image/x-icon">
     <?php endif; ?>
     <!-- Bootstrap 5.3.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -80,84 +80,52 @@ $settings = get_settings();
       .top-menu .nav-link:hover, .top-menu .nav-link.active { color: var(--electric-red); }
       .top-menu .post-count { background: rgba(255,62,62,0.1); color: var(--electric-red); padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-size: 9px; }
 
-      /* Fix Tailwind/Bootstrap Collapse Conflict */
-      .collapse:not(.show) { display: none !important; }
-      .navbar-collapse.collapse { display: none; }
-      .navbar-collapse.collapse.show { display: block !important; }
-      @media (min-width: 992px) {
-        .navbar-expand-lg .navbar-collapse { display: flex !important; }
-      }
     </style>
 </head>
 <body>
-    <!-- Top Menu (Categories + Top Pages) -->
-    <div class="top-menu">
-        <div class="container-fluid px-4">
-            <ul class="nav">
-                <?php
-                $current_path = $_SERVER['REQUEST_URI'];
-                $conn = get_db_connection();
-
-                // Top Pages
-                if ($conn) {
-                    $top_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'top'")->fetchAll();
-                    foreach ($top_pages as $tp) {
-                        $active = ($current_path == '/'.$tp['slug']) ? 'active' : '';
-                        echo '<li class="nav-item"><a class="nav-link '.$active.'" href="/'.$tp['slug'].'">'.$tp['title'].'</a></li>';
-                    }
-                } else {
-                    echo '<li class="nav-item"><a class="nav-link" href="/privacy-policy">PRIVACY POLICY</a></li>';
-                }
-
-                $categories = get_categories_with_counts();
-                foreach ($categories as $c) {
-                    $cat_url = '/category/' . urlencode($c['name']);
-                    $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active' : '';
-                    echo '<li class="nav-item">
-                            <a class="nav-link '.$active.'" href="'.$cat_url.'">
-                                '.$c['name'].' <span class="post-count">'.$c['post_count'].'</span>
-                            </a>
-                          </li>';
-                }
-                ?>
-            </ul>
-        </div>
-    </div>
-
     <!-- Main Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3" href="/">
+    <nav class="navbar navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
+        <div class="container-fluid px-4 d-flex align-items-center flex-wrap">
+            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-4" href="/">
                 <?php if (!empty($settings['logo'])): ?>
-                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;" class="d-inline-block align-middle">
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
                 <?php else: ?>
                     <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
                 <?php endif; ?>
             </a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <div class="flex-grow-1 d-flex align-items-center justify-content-between">
+                <ul class="nav font-condensed fw-bold uppercase small align-items-center no-scrollbar flex-nowrap overflow-x-auto">
+                    <?php
+                    $current_path = $_SERVER['REQUEST_URI'];
+                    $conn = get_db_connection();
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav font-condensed fw-bold uppercase tracking-widest small italic ms-lg-4">
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/">Home</a></li>
+                    $categories = get_categories_with_counts();
+                    foreach ($categories as $c) {
+                        $cat_url = '/category/' . urlencode($c['name']);
+                        $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
+                        echo '<li class="nav-item">
+                                <a class="nav-link px-2 '.$active.'" href="'.$cat_url.'" style="color: rgba(255,255,255,0.7);">
+                                    '.$c['name'].' <span class="post-count" style="font-size: 8px; background: rgba(255,62,62,0.1); color: #ff3e3e; padding: 1px 4px; border-radius: 3px;">'.$c['post_count'].'</span>
+                                </a>
+                              </li>';
+                    }
+                    ?>
+                </ul>
+                <ul class="nav font-condensed fw-bold uppercase tracking-widest small italic d-none d-lg-flex">
+                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/" style="color: #fff;">Home</a></li>
 
                     <?php
                     if ($conn) {
-                        // Dynamic Main Pages
                         $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
                             $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
+                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
                         }
-                    } else {
-                        echo '<li class="nav-item"><a class="nav-link px-3" href="/about">About</a></li>';
                     }
                     ?>
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch">Live Feed</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables">Standings</a></li>
-                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/betting') ? 'active text-electric-red' : ''; ?>" href="/betting">Betting</a></li>
+                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch" style="color: #fff;">Live Feed</a></li>
+                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables" style="color: #fff;">Standings</a></li>
                 </ul>
             </div>
         </div>

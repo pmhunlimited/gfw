@@ -5,6 +5,12 @@ if (!file_exists(__DIR__ . '/includes/config.php')) {
 }
 
 require_once __DIR__ . '/includes/config.php';
+
+if (defined('INSTALLED') && !INSTALLED) {
+    header("Location: /install/");
+    exit;
+}
+
 require_once __DIR__ . '/includes/db.php';
 
 // Simple Router

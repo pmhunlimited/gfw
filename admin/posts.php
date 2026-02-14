@@ -192,7 +192,6 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
-        <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#generateModal">GENERATE FROM AI</button>
     </div>
 </div>
 
@@ -464,81 +463,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     </div>
 </div>
 
-<!-- AI Modal -->
-<div class="modal fade" id="generateModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content bg-dark border-secondary rounded-4">
-            <div class="modal-header border-white border-opacity-10">
-                    <h5 class="modal-title font-condensed fw-black italic text-white uppercase">AI Post Generator</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" id="aiForm">
-                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                <div class="modal-body p-4">
-                    <div class="mb-4">
-                        <label class="form-label text-white-50 small uppercase font-black d-flex justify-content-between">
-                            Trending Subjects
-                            <button type="button" id="refreshTopics" class="btn btn-link p-0 text-danger small text-decoration-none">REFRESH</button>
-                        </label>
-                        <div id="suggestedTopics" class="d-flex flex-wrap gap-2">
-                            <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label text-white-50 small uppercase font-black">Post Subject</label>
-                        <input type="text" name="topic" id="topicInput" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="Select a topic above or type here..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-white-50 small uppercase font-black">Category</label>
-                        <select name="cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
-                            <?php foreach ($categories as $c): ?>
-                                <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Optional)</label>
-                        <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
-                    </div>
-                </div>
-                <div class="modal-footer border-white border-opacity-10">
-                    <button type="submit" name="generate_ai" class="btn btn-danger w-100 py-3 rounded-xl font-condensed italic fw-black">DECRYPT & DEPLOY</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-async function loadTopics() {
-    const container = document.getElementById('suggestedTopics');
-    container.innerHTML = '<div class="spinner-border spinner-border-sm text-danger"></div>';
-    try {
-        const response = await fetch('/admin/ajax_suggest.php');
-        const topics = await response.json();
-        container.innerHTML = '';
-        topics.forEach(topic => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn btn-sm btn-outline-secondary text-[10px] uppercase font-bold py-1 px-2 rounded-lg text-start';
-            btn.innerText = topic;
-            btn.onclick = () => document.getElementById('topicInput').value = topic;
-            container.appendChild(btn);
-        });
-    } catch (e) {
-        container.innerHTML = '<span class="text-danger small">Failed to load subjects.</span>';
-    }
-}
-
-document.getElementById('refreshTopics').onclick = loadTopics;
-document.getElementById('generateModal').addEventListener('shown.bs.modal', loadTopics);
-
-document.getElementById('aiForm').onsubmit = function() {
-    this.querySelector('button[type="submit"]').disabled = true;
-    this.querySelector('button[type="submit"]').innerHTML = '<span class="spinner-grow spinner-grow-sm me-2"></span>DECRYPTING...';
-};
-
 document.querySelectorAll('.edit-post').forEach(btn => {
     btn.onclick = function() {
         document.getElementById('edit_id').value = this.dataset.id;

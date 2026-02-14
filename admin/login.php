@@ -46,29 +46,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_request'])) {
-    $id_val = sanitize($_POST['id_val']);
+    $email = sanitize($_POST['id_val']);
+    $pin = $_POST['pin'] ?? '';
     $conn = get_db_connection();
     $settings = get_settings();
 
-    // Check email
     $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND role = 'admin'");
-    $stmt->execute([$id_val]);
+    $stmt->execute([$email]);
     $user = $stmt->fetch();
 
-    // Check PIN
-    $pin_match = false;
-    if (!empty($settings['admin_pin']) && password_verify($id_val, $settings['admin_pin'])) {
-        $pin_match = true;
-        if (!$user) {
-            $user = $conn->query("SELECT * FROM users WHERE role = 'admin' LIMIT 1")->fetch();
-        }
-    }
-
-    if ($user) {
+    if ($user && !empty($settings['admin_pin']) && password_verify($pin, $settings['admin_pin'])) {
         $_SESSION['reset_user_id'] = $user['id'];
         $view = 'reset_form';
     } else {
-        $error = "IDENTITY NOT RECOGNIZED.";
+        $error = "IDENTITY NOT RECOGNIZED OR PIN INVALID.";
+        log_activity("Failed password reset attempt for: " . $email);
     }
 }
 
@@ -146,9 +138,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
             <p class="text-center text-white-50 small uppercase tracking-widest mb-5">Verify your identity</p>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-                <div class="mb-5">
-                    <label class="form-label text-white-50 small uppercase font-black">Security PIN or Registered Email</label>
-                    <input type="text" name="id_val" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3" required>
+                <div class="mb-4">
+                    <label class="form-label text-white-50 small uppercase font-black">Registered Email</label>
+                    <input type="email" name="id_val" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3" required>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-white-50 small uppercase font-black">Security PIN</label>
+                    <input type="password" name="pin" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3" required>
                 </div>
                 <button type="submit" name="reset_request" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic mb-3">REQUEST RESET</button>
                 <a href="?view=login" class="btn btn-link w-100 text-white-50 font-condensed italic text-decoration-none">CANCEL</a>

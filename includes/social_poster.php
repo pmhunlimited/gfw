@@ -14,7 +14,7 @@ function broadcast_to_social($post_id) {
 
     if (!$post) return;
 
-    $site_url = (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+    $site_url = rtrim(SITE_URL, '/');
     $post_url = $site_url . "/post/" . $post['slug'];
     $message = $post['title'] . "\n\n" . $post['excerpt'] . "\n\nRead more: " . $post_url;
     $image_url = $site_url . $post['image'];

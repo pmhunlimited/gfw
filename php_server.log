@@ -1,35 +1,70 @@
-[Sat Feb 14 10:35:42 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
-[Sat Feb 14 10:36:22 2026] 127.0.0.1:50066 Accepted
-[Sat Feb 14 10:36:22 2026] 127.0.0.1:50066 Closing
-[Sat Feb 14 10:36:23 2026] 127.0.0.1:50068 Accepted
-[Sat Feb 14 10:36:23 2026] 127.0.0.1:50068 Closing
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50080 Accepted
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50080 Closing
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50082 Accepted
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50082 Closing
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50092 Accepted
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50092 Closing
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50106 Accepted
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50106 Closing
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50118 Accepted
-[Sat Feb 14 10:36:24 2026] 127.0.0.1:50118 Closing
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50134 Accepted
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50134 Closing
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50142 Accepted
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50142 Closing
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50154 Accepted
-[Sat Feb 14 10:36:26 2026] 127.0.0.1:50154 Closing
-[Sat Feb 14 10:36:27 2026] 127.0.0.1:44668 Accepted
-[Sat Feb 14 10:36:27 2026] 127.0.0.1:44668 Closing
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57744 Accepted
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57744 Closing
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57748 Accepted
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57748 Closing
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57758 Accepted
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57758 Closing
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57766 Accepted
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57766 Closing
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57780 Accepted
-[Sat Feb 14 10:37:44 2026] 127.0.0.1:57780 Closing
-[Sat Feb 14 10:37:46 2026] 127.0.0.1:57782 Accepted
-[Sat Feb 14 10:37:46 2026] 127.0.0.1:57782 Closing
+[Sat Feb 14 14:15:03 2026] PHP 8.3.6 Development Server (http://0.0.0.0:8000) started
+[Sat Feb 14 14:15:44 2026] 127.0.0.1:42662 Accepted
+[Sat Feb 14 14:15:44 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:15:44 2026] 127.0.0.1:42662 Closing
+[Sat Feb 14 14:15:47 2026] 127.0.0.1:59912 Accepted
+[Sat Feb 14 14:15:47 2026] 127.0.0.1:59912 Closing
+[Sat Feb 14 14:17:18 2026] 127.0.0.1:36562 Accepted
+[Sat Feb 14 14:17:18 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:17:18 2026] 127.0.0.1:36562 Closing
+[Sat Feb 14 14:17:20 2026] 127.0.0.1:36566 Accepted
+[Sat Feb 14 14:17:20 2026] 127.0.0.1:36566 Closing
+[Sat Feb 14 14:18:53 2026] 127.0.0.1:49164 Accepted
+[Sat Feb 14 14:18:53 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:18:53 2026] 127.0.0.1:49164 Closing
+[Sat Feb 14 14:18:56 2026] 127.0.0.1:60718 Accepted
+[Sat Feb 14 14:18:56 2026] 127.0.0.1:60718 Closing
+[Sat Feb 14 14:26:30 2026] 127.0.0.1:60762 Accepted
+[Sat Feb 14 14:26:30 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:26:30 2026] 127.0.0.1:60762 Closing
+[Sat Feb 14 14:26:58 2026] 127.0.0.1:42588 Accepted
+[Sat Feb 14 14:26:58 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:26:58 2026] 127.0.0.1:42588 Closing
+[Sat Feb 14 14:27:34 2026] 127.0.0.1:38314 Accepted
+[Sat Feb 14 14:27:34 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:27:34 2026] 127.0.0.1:38314 Closing
+[Sat Feb 14 14:27:57 2026] 127.0.0.1:56516 Accepted
+[Sat Feb 14 14:27:57 2026] PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 no such function: NOW in /app/pages/home.php:25
+Stack trace:
+#0 /app/pages/home.php(25): PDO->query()
+#1 /app/index.php(15): include('...')
+#2 /app/router.php(6): require('...')
+#3 {main}
+  thrown in /app/pages/home.php on line 25
+[Sat Feb 14 14:27:57 2026] 127.0.0.1:56516 Closing

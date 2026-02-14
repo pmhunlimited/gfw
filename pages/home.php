@@ -12,20 +12,20 @@ $totalPosts = 0;
 
 if ($conn) {
     if ($category) {
-        $stmt_count = $conn->prepare("SELECT COUNT(*) FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW())");
+        $stmt_count = $conn->prepare("SELECT COUNT(*) FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP)");
         $stmt_count->execute([$category]);
         $totalPosts = $stmt_count->fetchColumn();
 
-        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
+        $stmt = $conn->prepare("SELECT * FROM posts WHERE category = ? AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
         $stmt->bindValue(1, $category, PDO::PARAM_STR);
         $stmt->bindValue(2, $limit, PDO::PARAM_INT);
         $stmt->bindValue(3, $offset, PDO::PARAM_INT);
         $stmt->execute();
     } else {
-        $stmt_count = $conn->query("SELECT COUNT(*) FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW())");
+        $stmt_count = $conn->query("SELECT COUNT(*) FROM posts WHERE (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP)");
         $totalPosts = $stmt_count->fetchColumn();
 
-        $stmt = $conn->prepare("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
+        $stmt = $conn->prepare("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
         $stmt->bindValue(1, $limit, PDO::PARAM_INT);
         $stmt->bindValue(2, $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -55,7 +55,7 @@ $totalPages = ceil($totalPosts / $limit);
 
 // Featured posts for SYNDICATED NEXT (Only on home page or top of category)
 if ($conn) {
-    $stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
+    $stmt_featured = $conn->query("SELECT * FROM posts WHERE is_top_story = 1 AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT 4");
     $syndicatedNext = $stmt_featured->fetchAll();
 } else {
     $syndicatedNext = $posts;
@@ -65,7 +65,7 @@ if (count($syndicatedNext) < 4 && $conn) {
     // Fill with latest if not enough featured
     $latest_ids = array_map(function($p) { return $p['id']; }, $syndicatedNext);
     $placeholders = count($latest_ids) ? implode(',', array_fill(0, count($latest_ids), '?')) : '0';
-    $stmt_fill = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT " . (4 - count($syndicatedNext)));
+    $stmt_fill = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT " . (4 - count($syndicatedNext)));
     $stmt_fill->execute($latest_ids);
     $syndicatedNext = array_merge($syndicatedNext, $stmt_fill->fetchAll());
 }

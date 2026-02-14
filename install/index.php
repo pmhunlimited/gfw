@@ -92,12 +92,14 @@ if ($stage == 3 && $_SERVER['REQUEST_METHOD'] == 'POST') {
             $base_url .= '/migrate';
         }
 
-        $db_type_const = $db['type'] == 'sqlite' ? "define('DB_TYPE', 'sqlite');\n" : "";
+        $db_type_val = $db['type'];
         $config_content = "<?php
-{$db_type_const}define('DB_HOST', '".$db['host']."');
+define('DB_TYPE', '$db_type_val');
+define('DB_HOST', '".$db['host']."');
 define('DB_USER', '".$db['user']."');
 define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
+define('DB_FILE', __DIR__ . '/../database.sqlite');
 define('SITE_URL', '".$base_url."');
 define('INSTALLED', true);
 ?>";

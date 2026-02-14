@@ -5,7 +5,7 @@ $slug = $_GET['slug'] ?? null;
 $conn = get_db_connection();
 $post = null;
 if ($conn && $slug) {
-    $stmt = $conn->prepare("SELECT * FROM posts WHERE slug = ? AND (is_scheduled = 0 OR publish_date <= NOW())");
+    $stmt = $conn->prepare("SELECT * FROM posts WHERE slug = ? AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP)");
     $stmt->execute([$slug]);
     $post = $stmt->fetch();
 }
@@ -39,7 +39,7 @@ $stmt->execute([$post['id']]);
 $comments = $stmt->fetchAll();
 
 // Read Also - Similar News
-$stmt_related = $conn->prepare("SELECT * FROM posts WHERE category = ? AND id != ? AND (is_scheduled = 0 OR publish_date <= NOW()) ORDER BY publish_date DESC LIMIT 4");
+$stmt_related = $conn->prepare("SELECT * FROM posts WHERE category = ? AND id != ? AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT 4");
 $stmt_related->execute([$post['category'], $post['id']]);
 $relatedPosts = $stmt_related->fetchAll();
 
