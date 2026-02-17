@@ -20,12 +20,9 @@
                             <h4 class="font-condensed fw-black text-electric-red mb-3 small tracking-widest">RESOURCES</h4>
                             <ul class="list-unstyled small font-bold text-white-50 uppercase">
                                 <?php
-                                $conn = get_db_connection();
-                                if ($conn) {
-                                    $footer_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'footer'")->fetchAll();
-                                    foreach ($footer_pages as $fp) {
-                                        echo '<li class="mb-2"><a href="/'.$fp['slug'].'" class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
-                                    }
+                                $footer_pages = get_pages('footer');
+                                foreach ($footer_pages as $fp) {
+                                    echo '<li class="mb-2"><a href="/'.$fp['slug'].'" class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
                                 }
                                 ?>
                             </ul>

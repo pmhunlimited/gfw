@@ -24,12 +24,28 @@ function get_categories_with_counts() {
         ['name' => 'TRANSFER NEWS', 'post_count' => 3],
         ['name' => 'MATCH ANALYSIS', 'post_count' => 8]
     ];
-    $stmt = $conn->query("SELECT c.id, c.name, COUNT(p.id) as post_count
-                          FROM categories c
-                          LEFT JOIN posts p ON c.name = p.category
-                          GROUP BY c.id, c.name
-                          ORDER BY c.name ASC");
-    return $stmt->fetchAll();
+    try {
+        $stmt = $conn->query("SELECT c.id, c.name, COUNT(p.id) as post_count
+                              FROM categories c
+                              LEFT JOIN posts p ON c.name = p.category
+                              GROUP BY c.id, c.name
+                              ORDER BY c.name ASC");
+        return $stmt ? $stmt->fetchAll() : [];
+    } catch (Exception $e) {
+        return [];
+    }
+}
+
+function get_pages($position = 'main') {
+    $conn = get_db_connection();
+    if (!$conn) return [];
+    try {
+        $stmt = $conn->prepare("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = ?");
+        $stmt->execute([$position]);
+        return $stmt->fetchAll();
+    } catch (Exception $e) {
+        return [];
+    }
 }
 
 function sanitize($data) {
