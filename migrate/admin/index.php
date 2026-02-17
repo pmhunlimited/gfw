@@ -24,10 +24,11 @@ if (!empty($settings['pin_enabled'])) {
 
 // Admin Routing
 $request = $_SERVER['REQUEST_URI'];
-$path = strtok($request, '?');
+$path = rtrim(strtok($request, '?'), '/');
 if (strpos($path, '/admin') === 0) {
     $path = substr($path, 6);
 }
+if (empty($path)) $path = '/';
 
 // Layout helper
 function admin_header($title = "Dashboard") {

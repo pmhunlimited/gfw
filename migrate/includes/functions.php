@@ -3,6 +3,9 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/social_poster.php';
 
 function get_settings() {
+    static $settings = null;
+    if ($settings !== null) return $settings;
+
     $conn = get_db_connection();
     if (!$conn) return [
         'name' => 'GLOBAL FOOTBALL WATCH',
@@ -10,14 +13,18 @@ function get_settings() {
         'favicon' => ''
     ];
     $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-    return $stmt->fetch() ?: [
+    $settings = $stmt->fetch() ?: [
         'name' => 'GLOBAL FOOTBALL WATCH',
         'logo' => '',
         'favicon' => ''
     ];
+    return $settings;
 }
 
 function get_categories_with_counts() {
+    static $categories = null;
+    if ($categories !== null) return $categories;
+
     $conn = get_db_connection();
     if (!$conn) return [
         ['name' => 'PREMIER LEAGUE', 'post_count' => 5],
@@ -29,7 +36,8 @@ function get_categories_with_counts() {
                           LEFT JOIN posts p ON c.name = p.category
                           GROUP BY c.id, c.name
                           ORDER BY c.name ASC");
-    return $stmt->fetchAll();
+    $categories = $stmt->fetchAll();
+    return $categories;
 }
 
 function sanitize($data) {
@@ -164,7 +172,8 @@ function get_ai_insight($prompt) {
     if (strpos($model, 'gemini') !== false) {
         $apiKey = $settings['gemini_api_key'];
         if (empty($apiKey)) return "Gemini API Key missing.";
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey";
+        // Switched from v1beta to v1 for better stability with 1.5 models
+        $url = "https://generativelanguage.googleapis.com/v1/models/$model:generateContent?key=$apiKey";
         $data = ["contents" => [["parts" => [["text" => $prompt]]]]];
         $headers = ['Content-Type: application/json'];
     } else {
@@ -186,8 +195,8 @@ function get_ai_insight($prompt) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // 60 seconds timeout
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120); // Increased to 120 seconds to prevent timeouts
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
 
     $response = curl_exec($ch);
     $result = json_decode($response, true);

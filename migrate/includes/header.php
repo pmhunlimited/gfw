@@ -67,6 +67,9 @@ $settings = get_settings();
       .bg-white, .bg-white p, .bg-white h1, .bg-white h2, .bg-white h3, .bg-white span { color: #000 !important; }
       .alert { border-radius: 15px; border-opacity: 0.2; }
 
+      /* Fix Tailwind/Bootstrap .collapse conflict */
+      .navbar-collapse.collapse { visibility: visible !important; }
+
     </style>
 </head>
 <body>
