@@ -243,7 +243,7 @@ function get_ai_insight($prompt) {
 
 function get_suggested_topics() {
     $today = date('D d M Y');
-    $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"]. Be very specific about current teams, transfers and players.";
+    $prompt = "Act as an expert sports editor. Suggest 5 EXTREMELY RELEVANT and LATEST football news subjects/headlines specifically for today, $today. Focus only on events that occurred in the last 24 hours. Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"]. Be very specific about current teams, transfers and players.";
     $raw = get_ai_insight($prompt);
 
     $topics = extract_json($raw, true);

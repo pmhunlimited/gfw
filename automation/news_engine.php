@@ -21,15 +21,15 @@ $cat_list = implode(', ', $available_categories);
 
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. Based on current global football trends around $today, identify 5 major news stories.
+$prompt = "Act as a leading football news aggregator. CRITICAL: Only identify major news stories that happened TODAY ($today) or in the last 24 hours. Do not include old news. Identify 5 major fresh stories.
 For each story, provide:
 1. 'title': Engaging headline.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
-3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
-4. 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g., 'Erling Haaland Manchester City' instead of just 'football').
+3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone with high-level SEO optimization. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
+4. 'image_keyword': 3-5 EXTREMELY specific keywords for an exact image matching this story (e.g., 'Lionel Messi Inter Miami goal celebration' or 'Jurgen Klopp Liverpool press conference' - avoid generic terms).
 5. 'tags': 5-8 relevant SEO tags (comma separated).
-6. 'meta_title': SEO optimized title (max 60 chars).
-7. 'meta_description': Compelling SEO description (max 160 chars).
+6. 'meta_title': SEO optimized title (max 60 chars, must include primary keywords).
+7. 'meta_description': Compelling SEO description (max 160 chars, must be optimized for search intent).
 8. 'meta_keywords': High ranking keywords for this specific news.
 Return the results as a JSON array of objects ONLY.";
 

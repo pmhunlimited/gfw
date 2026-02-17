@@ -28,6 +28,7 @@ $path = strtok($request, '?');
 if (strpos($path, '/admin') === 0) {
     $path = substr($path, 6);
 }
+$path = rtrim($path, '/');
 
 // Layout helper
 function admin_header($title = "Dashboard") {
