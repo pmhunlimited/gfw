@@ -37,7 +37,12 @@ CREATE TABLE IF NOT EXISTS site_settings (
     ig_access_token TEXT,
     tt_client_key VARCHAR(255),
     tt_client_secret VARCHAR(255),
-    tt_access_token TEXT
+    tt_access_token TEXT,
+    adsense_code TEXT,
+    analytics_code TEXT,
+    header_scripts TEXT,
+    footer_scripts TEXT,
+    ads_txt TEXT
 );
 
 CREATE TABLE IF NOT EXISTS users (

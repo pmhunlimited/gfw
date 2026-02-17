@@ -69,6 +69,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_security'])) {
     $success = "Security protocols updated.";
 }
 
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ads'])) {
+    if (!verify_csrf_token($_POST['csrf_token'])) {
+        die("CSRF Token Validation Failed");
+    }
+    $stmt = $conn->prepare("UPDATE site_settings SET adsense_code = ?, analytics_code = ?, header_scripts = ?, footer_scripts = ?, ads_txt = ? WHERE id = 1");
+    $stmt->execute([
+        $_POST['adsense_code'],
+        $_POST['analytics_code'],
+        $_POST['header_scripts'],
+        $_POST['footer_scripts'],
+        $_POST['ads_txt']
+    ]);
+
+    // Write ads.txt to root
+    if (!empty($_POST['ads_txt'])) {
+        file_put_contents(__DIR__ . '/../ads.txt', $_POST['ads_txt']);
+    }
+
+    $success = "Advertising & Analytics parameters deployed.";
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_social'])) {
     $stmt = $conn->prepare("UPDATE site_settings SET
         tw_url = ?, fb_url = ?, ig_url = ?, yt_url = ?,
@@ -104,6 +125,7 @@ $activeTab = $_GET['tab'] ?? 'general';
         <a href="?tab=smtp" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'smtp' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">SMTP</a>
         <a href="?tab=security" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'security' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Security</a>
         <a href="?tab=automation" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'automation' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Automation</a>
+        <a href="?tab=ads" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'ads' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Ads & Analytics</a>
         <a href="?tab=social" class="flex-grow-1 text-center py-4 text-[10px] font-black uppercase tracking-widest text-decoration-none border-bottom-2 <?php echo $activeTab == 'social' ? 'text-danger border-danger' : 'text-secondary border-transparent'; ?>">Social API Hub</a>
     </div>
 
@@ -294,6 +316,35 @@ $activeTab = $_GET['tab'] ?? 'general';
                     </div>
                 </div>
                 <button type="submit" name="save_smtp" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply SMTP Config</button>
+            </form>
+
+        <?php elseif ($activeTab == 'ads'): ?>
+            <form method="POST" class="space-y-8">
+                <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+                <div class="row g-4">
+                    <div class="col-md-12">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Google AdSense Script / Auto-Ads Code</label>
+                        <textarea name="adsense_code" rows="4" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm"><?php echo $settings['adsense_code']; ?></textarea>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Google Analytics (GTAG) / Tracking Code</label>
+                        <textarea name="analytics_code" rows="4" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm"><?php echo $settings['analytics_code']; ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Custom Header Scripts (&lt;head&gt;)</label>
+                        <textarea name="header_scripts" rows="6" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm"><?php echo $settings['header_scripts']; ?></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Custom Footer Scripts (Before &lt;/body&gt;)</label>
+                        <textarea name="footer_scripts" rows="6" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm"><?php echo $settings['footer_scripts']; ?></textarea>
+                    </div>
+                    <div class="col-md-12 border-top border-white/5 pt-4 mt-4">
+                        <label class="block text-[10px] font-black uppercase text-danger mb-2">ads.txt Content</label>
+                        <textarea name="ads_txt" rows="6" class="w-full bg-black border border-danger/20 rounded-2xl px-6 py-4 text-white font-mono text-sm" placeholder="google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0"><?php echo $settings['ads_txt']; ?></textarea>
+                        <p class="text-[9px] text-gray-500 mt-2 italic uppercase">System will automatically generate/update the ads.txt file in your root directory upon commitment.</p>
+                    </div>
+                </div>
+                <button type="submit" name="save_ads" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Commit Ads Logic</button>
             </form>
 
         <?php elseif ($activeTab == 'social'): ?>

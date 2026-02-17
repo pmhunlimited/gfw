@@ -31,6 +31,7 @@ if (isset($_POST['save_manual'])) {
     $meta_desc = sanitize($_POST['meta_description'] ?? '');
     $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
     $is_top = isset($_POST['is_top_story']) ? 1 : 0;
+    $video_url = sanitize($_POST['video_url'] ?? '');
 
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
@@ -42,8 +43,8 @@ if (isset($_POST['save_manual'])) {
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, video_url, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $video_url, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
@@ -71,6 +72,7 @@ if (isset($_POST['update_manual'])) {
     $meta_desc = sanitize($_POST['meta_description'] ?? '');
     $meta_keys = sanitize($_POST['meta_keywords'] ?? '');
     $is_top = isset($_POST['is_top_story']) ? 1 : 0;
+    $video_url = sanitize($_POST['video_url'] ?? '');
 
     $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
@@ -80,8 +82,8 @@ if (isset($_POST['update_manual'])) {
         $image = $uploaded_image;
     }
 
-    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
-    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top, $id])) {
+    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, video_url = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
+    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $video_url, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top, $id])) {
         $success = "Report updated successfully.";
     } else {
         $error = "Failed to update report.";
@@ -253,6 +255,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-mdesc="<?php echo htmlspecialchars($post['meta_description'] ?? ''); ?>"
                             data-mkeys="<?php echo htmlspecialchars($post['meta_keywords'] ?? ''); ?>"
                             data-top="<?php echo $post['is_top_story']; ?>"
+                            data-video="<?php echo htmlspecialchars($post['video_url'] ?? ''); ?>"
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
@@ -340,6 +343,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">YouTube Video URL</label>
+                            <input type="url" name="video_url" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Optional)</label>
                             <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
@@ -420,6 +427,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">Update Image File</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">YouTube Video URL</label>
+                            <input type="url" name="video_url" id="edit_video" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment</label>
                             <input type="datetime-local" name="publish_date" id="edit_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
@@ -478,6 +489,7 @@ document.querySelectorAll('.edit-post').forEach(btn => {
         document.getElementById('edit_mdesc').value = this.dataset.mdesc;
         document.getElementById('edit_mkeys').value = this.dataset.mkeys;
         document.getElementById('edit_top').checked = this.dataset.top == "1";
+        document.getElementById('edit_video').value = this.dataset.video;
     };
 });
 </script>

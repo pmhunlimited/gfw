@@ -67,6 +67,20 @@ $relatedPosts = $stmt_related->fetchAll();
             <div class="col-lg-8">
                 <article class="prose prose-invert prose-red max-w-none">
                     <p class="lead text-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-6"><?php echo $post['excerpt']; ?></p>
+
+                    <?php if (!empty($post['video_url'])): ?>
+                        <?php
+                        $video_id = '';
+                        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $post['video_url'], $matches)) {
+                            $video_id = $matches[1];
+                        }
+                        if ($video_id): ?>
+                            <div class="ratio ratio-16x9 mb-10 shadow-2xl rounded-2xl overflow-hidden border border-white/10 bg-black">
+                                <iframe src="https://www.youtube.com/embed/<?php echo $video_id; ?>" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            </div>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
                     <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90">
                         <?php echo parse_markdown($post['content']); ?>
                     </div>

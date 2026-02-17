@@ -3,18 +3,31 @@ require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/social_poster.php';
 
 function get_settings() {
+    static $settings = null;
+    if ($settings !== null) return $settings;
+
     $conn = get_db_connection();
     if (!$conn) return [
         'name' => 'GLOBAL FOOTBALL WATCH',
         'logo' => '',
         'favicon' => ''
     ];
-    $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-    return $stmt->fetch() ?: [
-        'name' => 'GLOBAL FOOTBALL WATCH',
-        'logo' => '',
-        'favicon' => ''
-    ];
+
+    try {
+        $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+        $settings = $stmt->fetch();
+    } catch (Exception $e) {
+        $settings = null;
+    }
+
+    if (!$settings) {
+        $settings = [
+            'name' => 'GLOBAL FOOTBALL WATCH',
+            'logo' => '',
+            'favicon' => ''
+        ];
+    }
+    return $settings;
 }
 
 function get_categories_with_counts() {

@@ -24,6 +24,18 @@ $settings = get_settings();
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Analytics & AdSense Integration -->
+    <?php if (!empty($settings['analytics_code'])): ?>
+        <?php echo $settings['analytics_code']; ?>
+    <?php endif; ?>
+    <?php if (!empty($settings['adsense_code'])): ?>
+        <?php echo $settings['adsense_code']; ?>
+    <?php endif; ?>
+    <?php if (!empty($settings['header_scripts'])): ?>
+        <?php echo $settings['header_scripts']; ?>
+    <?php endif; ?>
+
     <style>
       :root {
         --pitch-dark: #05070a;
