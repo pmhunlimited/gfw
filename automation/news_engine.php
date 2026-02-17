@@ -17,31 +17,45 @@ echo "Starting AI-Powered News Discovery...\n";
 
 // Fetch current categories from DB
 $available_categories = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
+if (empty($available_categories)) {
+    die("Error: No categories found in database. Please create categories first.\n");
+}
 $cat_list = implode(', ', $available_categories);
 
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. CRITICAL: Only identify major news stories that happened TODAY ($today) or in the last 24 hours. Do not include old news. Identify 5 major fresh stories.
+$prompt = "Act as a leading global football news aggregator.
+CRITICAL: Only identify major news stories that happened TODAY ($today). Do not include old news.
+Identify 10 major fresh stories, ensuring a balanced distribution specifically for each major league (Premier League, La Liga, Champions League, Serie A, Bundesliga, and Ligue 1).
+
 For each story, provide:
-1. 'title': Engaging headline.
+1. 'title': Engaging, sharp headline.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
-3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone with high-level SEO optimization. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
-4. 'image_keyword': 3-5 EXTREMELY specific keywords for an exact image matching this story (e.g., 'Lionel Messi Inter Miami goal celebration' or 'Jurgen Klopp Liverpool press conference' - avoid generic terms).
-5. 'tags': 5-8 relevant SEO tags (comma separated).
-6. 'meta_title': SEO optimized title (max 60 chars, must include primary keywords).
-7. 'meta_description': Compelling SEO description (max 160 chars, must be optimized for search intent).
-8. 'meta_keywords': High ranking keywords for this specific news.
-Return the results as a JSON array of objects ONLY.";
+3. 'content': A comprehensive sports report in an engaging fan-blogger tone with extremely high-level SEO optimization. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
+4. 'image_keyword': 3-5 EXTREMELY specific keywords for an exact image matching this story (e.g., 'Erling Haaland goal celebration vs Arsenal 2024' or 'Kylian Mbappe Real Madrid presentation' - avoid all generic terms).
+5. 'tags': 8-12 relevant, high-ranking SEO tags (comma separated).
+6. 'meta_title': High-level SEO optimized title (max 60 chars, must include primary keywords and the league name).
+7. 'meta_description': Compelling, high-converting SEO description (max 160 chars, must be optimized for search intent and accuracy).
+8. 'meta_keywords': High ranking, specific keywords for this specific news.
+Return the results as a JSON array of 10 objects ONLY.";
 
 $raw_ai = get_ai_insight($prompt);
-if (!$raw_ai) {
-    die("Error: AI failed to discover news.\n");
+if (!$raw_ai || strpos($raw_ai, 'AI Error:') !== false || strpos($raw_ai, 'API Key missing') !== false) {
+    error_log("AI discovery failed. Raw output: " . ($raw_ai ?? 'NULL'));
+    die("Error: AI discovery failed. Raw: " . ($raw_ai ?? 'NULL') . "\n");
 }
 
 // Extract JSON
 $news_items = extract_json($raw_ai, true);
 
-if (!$news_items) die("Error: Could not parse news data. Raw: " . substr($raw_ai, 0, 100) . "...\n");
+if ($news_items === null) {
+    error_log("JSON parsing failed. Raw output: " . substr($raw_ai, 0, 1000));
+    die("Error: Could not parse news data. Raw: " . substr($raw_ai, 0, 500) . "\n");
+}
+
+if (empty($news_items)) {
+    die("No news stories discovered for today. AI response was empty array.\n");
+}
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
@@ -50,7 +64,7 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
 $count = 0;
 foreach ($news_items as $item) {
-    if ($count >= 5) break;
+    if ($count >= 10) break;
     echo "Processing: " . $item['title'] . "\n";
 
     // 2. Fetch Image - Using highly specific keywords for exact match

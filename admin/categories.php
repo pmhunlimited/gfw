@@ -2,6 +2,7 @@
 admin_header("Taxonomy");
 
 if (isset($_GET['delete'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("DELETE FROM categories WHERE id = ?");
     $stmt->execute([(int)$_GET['delete']]);
     $success = "Taxonomy decommissioned.";
@@ -63,7 +64,7 @@ $categories = get_categories_with_counts();
                             <button class="btn btn-sm btn-outline-light border-0 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <a href="/admin/categories?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
+                            <a href="/admin/categories?delete=<?php echo $cat['id']; ?>&csrf_token=<?php echo generate_csrf_token(); ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>

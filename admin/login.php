@@ -46,7 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_request'])) {
-    $email = sanitize($_POST['id_val']);
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = "CSRF TOKEN INVALID.";
+    } else {
+        $email = sanitize($_POST['id_val']);
     $pin = $_POST['pin'] ?? '';
     $conn = get_db_connection();
     $settings = get_settings();
@@ -55,36 +58,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['reset_request'])) {
     $stmt->execute([$email]);
     $user = $stmt->fetch();
 
-    if ($user && !empty($settings['admin_pin']) && password_verify($pin, $settings['admin_pin'])) {
-        $_SESSION['reset_user_id'] = $user['id'];
-        $view = 'reset_form';
-    } else {
-        $error = "IDENTITY NOT RECOGNIZED OR PIN INVALID.";
-        log_activity("Failed password reset attempt for: " . $email);
+        if ($user && !empty($settings['admin_pin']) && password_verify($pin, $settings['admin_pin'])) {
+            $_SESSION['reset_user_id'] = $user['id'];
+            $view = 'reset_form';
+        } else {
+            $error = "IDENTITY NOT RECOGNIZED OR PIN INVALID.";
+            log_activity("Failed password reset attempt for: " . $email);
+        }
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
-    $user_id = $_SESSION['reset_user_id'] ?? null;
-    $new_pass = $_POST['new_password'];
+    if (!verify_csrf_token($_POST['csrf_token'] ?? '')) {
+        $error = "CSRF TOKEN INVALID.";
+    } else {
+        $user_id = $_SESSION['reset_user_id'] ?? null;
+        $new_pass = $_POST['new_password'];
 
-    if ($user_id && !empty($new_pass)) {
+        if ($user_id && !empty($new_pass)) {
         $conn = get_db_connection();
         $hashed = password_hash($new_pass, PASSWORD_BCRYPT);
         $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-        if ($stmt->execute([$hashed, $user_id])) {
-            $stmt = $conn->prepare("SELECT username, email FROM users WHERE id = ?");
-            $stmt->execute([$user_id]);
-            $user = $stmt->fetch();
+            if ($stmt->execute([$hashed, $user_id])) {
+                $stmt = $conn->prepare("SELECT username, email FROM users WHERE id = ?");
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch();
 
-            $settings = get_settings();
-            $subject = "Password Changed for " . $settings['name'];
-            $msg = "Password has been changed for the admin user: [" . $user['username'] . "], If you are not the one that initiate this change, please login to cPanel immediately to stop the abuse of your website.";
-            send_mail($user['email'], $subject, $msg);
+                $settings = get_settings();
+                $subject = "Password Changed for " . $settings['name'];
+                $msg = "Password has been changed for the admin user: [" . $user['username'] . "], If you are not the one that initiate this change, please login to cPanel immediately to stop the abuse of your website.";
+                send_mail($user['email'], $subject, $msg);
 
-            $success = "CIPHER UPDATED. ACCESS GRANTED.";
-            $view = 'login';
-            unset($_SESSION['reset_user_id']);
+                $success = "CIPHER UPDATED. ACCESS GRANTED.";
+                $view = 'login';
+                unset($_SESSION['reset_user_id']);
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Handle deletion
 if (isset($_GET['delete'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("DELETE FROM posts WHERE id = ?");
     $stmt->execute([(int)$_GET['delete']]);
     $success = "Report decommissioned.";
@@ -192,7 +193,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
-                        <a href="?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
+                        <a href="?delete=<?php echo $post['id']; ?>&csrf_token=<?php echo generate_csrf_token(); ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

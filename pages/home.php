@@ -114,8 +114,8 @@ if ($category) {
                         <div class="mb-4">
                             <span class="badge bg-electric-red rounded-0 px-4 py-2 italic font-condensed fw-black shadow-2xl">GLOBAL EXCLUSIVE</span>
                         </div>
-                        <h1 class="display-2 font-condensed fw-black text-white italic text-uppercase lh-1 mb-4"><?php echo $latestPost['title']; ?></h1>
-                        <p class="lead text-white text-opacity-70 fw-bold text-uppercase fs-4 mb-0 d-none d-md-block"><?php echo $latestPost['excerpt']; ?></p>
+                        <h1 class="display-2 font-condensed fw-black text-white italic text-uppercase lh-1 mb-4" style="text-shadow: 0 4px 12px rgba(0,0,0,0.8);"><?php echo $latestPost['title']; ?></h1>
+                        <p class="lead text-white text-opacity-90 fw-bold text-uppercase fs-4 mb-0 d-none d-md-block" style="text-shadow: 0 2px 8px rgba(0,0,0,0.8);"><?php echo $latestPost['excerpt']; ?></p>
                         <div class="mt-5">
                             <span class="btn btn-outline-light rounded-0 px-5 py-3 font-condensed fw-black italic tracking-widest">DECRYPT FULL REPORT →</span>
                         </div>

@@ -2,21 +2,27 @@
 admin_header("Feedback");
 
 if (isset($_GET['approve'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("UPDATE comments SET status = 'approved' WHERE id = ?");
     $stmt->execute([(int)$_GET['approve']]);
+    redirect('/admin/comments');
 }
 
 if (isset($_GET['reject'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("UPDATE comments SET status = 'rejected' WHERE id = ?");
     $stmt->execute([(int)$_GET['reject']]);
+    redirect('/admin/comments');
 }
 
 if (isset($_GET['delete'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("DELETE FROM comments WHERE id = ?");
     $stmt->execute([(int)$_GET['delete']]);
+    redirect('/admin/comments');
 }
 
-$comments = $conn->query("SELECT c.*, p.title as post_title FROM comments c JOIN posts p ON c.post_id = p.id ORDER BY c.created_at DESC")->fetchAll();
+$comments = $conn->query("SELECT c.*, p.title as post_title FROM comments c LEFT JOIN posts p ON c.post_id = p.id ORDER BY c.created_at DESC")->fetchAll();
 
 ?>
 <h1 class="font-condensed fw-black italic text-white display-5 mb-5">INTELLIGENCE <span class="text-danger">FEEDBACK</span></h1>
@@ -46,11 +52,13 @@ $comments = $conn->query("SELECT c.*, p.title as post_title FROM comments c JOIN
                         <span class="badge <?php echo $c['status'] == 'approved' ? 'bg-success' : ($c['status'] == 'pending' ? 'bg-warning' : 'bg-danger'); ?> text-dark font-condensed italic px-2 py-1 uppercase"><?php echo $c['status']; ?></span>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
-                        <?php if ($c['status'] == 'pending'): ?>
-                            <a href="?approve=<?php echo $c['id']; ?>" class="text-success me-3"><i class="bi bi-check-circle fs-5"></i></a>
-                            <a href="?reject=<?php echo $c['id']; ?>" class="text-warning me-3"><i class="bi bi-x-circle fs-5"></i></a>
+                        <?php
+                        $csrf_token = generate_csrf_token();
+                        if ($c['status'] == 'pending'): ?>
+                            <a href="?approve=<?php echo $c['id']; ?>&csrf_token=<?php echo $csrf_token; ?>" class="text-success me-3"><i class="bi bi-check-circle fs-5"></i></a>
+                            <a href="?reject=<?php echo $c['id']; ?>&csrf_token=<?php echo $csrf_token; ?>" class="text-warning me-3"><i class="bi bi-x-circle fs-5"></i></a>
                         <?php endif; ?>
-                        <a href="?delete=<?php echo $c['id']; ?>" class="text-danger" onclick="return confirm('Purge this comment?')"><i class="bi bi-trash fs-5"></i></a>
+                        <a href="?delete=<?php echo $c['id']; ?>&csrf_token=<?php echo $csrf_token; ?>" class="text-danger" onclick="return confirm('Purge this comment?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

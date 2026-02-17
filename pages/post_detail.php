@@ -52,8 +52,8 @@ $relatedPosts = $stmt_related->fetchAll();
         <div class="absolute bottom-0 left-0 w-full p-6 md:p-12">
             <div class="container mx-auto">
                 <span class="bg-electric-red text-white px-4 py-2 font-condensed fw-black italic uppercase text-xs mb-4 inline-block tracking-widest shadow-2xl">GLOBAL EXCLUSIVE</span>
-                <h1 class="display-2 font-condensed fw-black italic text-white uppercase tracking-tighter leading-none mb-6"><?php echo $post['title']; ?></h1>
-                <div class="flex items-center gap-6 text-white-50 font-monospace text-xs uppercase tracking-widest">
+                <h1 class="display-2 font-condensed fw-black italic text-white uppercase tracking-tighter leading-none mb-6" style="text-shadow: 0 4px 12px rgba(0,0,0,0.8);"><?php echo $post['title']; ?></h1>
+                <div class="flex items-center gap-6 text-white-50 font-monospace text-xs uppercase tracking-widest font-bold">
                     <span>BY <span class="text-white fw-bold"><?php echo $post['author']; ?></span></span>
                     <span class="w-1 h-1 bg-white/20 rounded-full"></span>
                     <span><?php echo date('M d, Y', strtotime($post['created_at'])); ?></span>
@@ -66,7 +66,7 @@ $relatedPosts = $stmt_related->fetchAll();
         <div class="row g-5">
             <div class="col-lg-8">
                 <article class="prose prose-invert prose-red max-w-none">
-                    <p class="lead text-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-6"><?php echo $post['excerpt']; ?></p>
+                    <p class="lead text-xl text-white font-medium italic mb-8 border-l-4 border-electric-red pl-6 opacity-90"><?php echo $post['excerpt']; ?></p>
 
                     <?php if (!empty($post['video_url'])): ?>
                         <?php

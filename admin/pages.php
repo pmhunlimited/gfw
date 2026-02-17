@@ -3,6 +3,7 @@ admin_header("CMS Pages");
 
 // Handle Delete
 if (isset($_GET['delete'])) {
+    if (!verify_csrf_token($_GET['csrf_token'] ?? '')) die("CSRF Validation Failed");
     $stmt = $conn->prepare("DELETE FROM pages WHERE id = ?");
     $stmt->execute([(int)$_GET['delete']]);
     $success = "Page decommissioned.";
@@ -111,7 +112,7 @@ $pages = $stmt->fetchAll();
                                 data-bs-toggle="modal" data-bs-target="#pageModal">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <a href="/admin/pages?delete=<?php echo $p['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this page permanently?')">
+                            <a href="/admin/pages?delete=<?php echo $p['id']; ?>&csrf_token=<?php echo generate_csrf_token(); ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this page permanently?')">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>

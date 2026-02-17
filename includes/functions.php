@@ -219,26 +219,37 @@ function get_ai_insight($prompt) {
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
     $response = curl_exec($ch);
-    $result = json_decode($response, true);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
     curl_close($ch);
+
+    if ($response === false) {
+        return "AI Error: Connection failed - $curlError";
+    }
+
+    $result = json_decode($response, true);
+
+    if ($httpCode !== 200) {
+        return "AI Error: HTTP $httpCode - " . substr($response, 0, 200);
+    }
 
     if (strpos($model, 'gemini') !== false) {
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             return $result['candidates'][0]['content']['parts'][0]['text'];
         }
         if (isset($result['error'])) {
-            return "Gemini Error: " . ($result['error']['message'] ?? 'Unknown');
+            return "AI Error: Gemini - " . ($result['error']['message'] ?? 'Unknown');
         }
     } else {
         if (isset($result['choices'][0]['message']['content'])) {
             return $result['choices'][0]['message']['content'];
         }
         if (isset($result['error'])) {
-            return "DeepSeek Error: " . ($result['error']['message'] ?? 'Unknown');
+            return "AI Error: DeepSeek - " . ($result['error']['message'] ?? 'Unknown');
         }
     }
 
-    return "Intelligence gathering failed. Response: " . substr($response, 0, 100);
+    return "AI Error: No content in response - " . substr($response, 0, 100);
 }
 
 function get_suggested_topics() {

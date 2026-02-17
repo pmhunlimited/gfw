@@ -54,7 +54,11 @@ $settings = get_settings();
         font-family: 'Barlow Condensed', sans-serif;
         text-transform: uppercase;
         letter-spacing: -0.01em;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
       }
+
+      .text-white-50 { color: #cbd5e1 !important; }
+      .text-secondary { color: #94a3b8 !important; }
 
       .text-electric-red { color: var(--electric-red); }
       .bg-electric-red { background-color: var(--electric-red); }
@@ -118,8 +122,15 @@ $settings = get_settings();
       }
 
       /* Fix conflict between Bootstrap and Tailwind 'collapse' class */
-      .navbar-collapse.collapse {
+      @media (min-width: 992px) {
+        .navbar-collapse.collapse {
+          visibility: visible !important;
+          display: flex !important;
+        }
+      }
+      .navbar-collapse.collapse.show {
         visibility: visible !important;
+        display: block !important;
       }
     </style>
 </head>
