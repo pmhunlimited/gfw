@@ -90,73 +90,6 @@ if (isset($_POST['update_manual'])) {
     }
 }
 
-// Handle Auto-generation from AI
-if (isset($_POST['generate_ai'])) {
-    $topic = sanitize($_POST['topic']);
-    $cat = sanitize($_POST['cat']);
-    $is_scheduled = !empty($_POST['publish_date']) ? 1 : 0;
-    $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
-    $is_top = 1; // AI generated posts are promoted by default
-
-    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
-               Write in an engaging first-person 'fan blogger' perspective.
-               Return JSON with:
-               - 'title': Catchy headline.
-               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
-               - 'tags': 5-8 relevant SEO tags (comma separated).
-               - 'meta_title': SEO optimized title (max 60 chars).
-               - 'meta_description': Compelling SEO description (max 160 chars).
-               - 'meta_keywords': High ranking keywords for this specific news.
-               Ensure the response is a valid JSON object.";
-    $raw = get_ai_insight($prompt);
-
-    $data = extract_json($raw, false);
-
-    if ($data && !empty($data['title']) && !empty($data['content'])) {
-        $title = sanitize($data['title']);
-        $content = $data['content'];
-        $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
-
-        $tags = sanitize($data['tags'] ?? '');
-        $meta_title = sanitize($data['meta_title'] ?? $title);
-        $meta_desc = sanitize($data['meta_description'] ?? $excerpt);
-        $meta_keys = sanitize($data['meta_keywords'] ?? '');
-        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
-
-        // Handle Image - Highly specific search
-        $keyword = urlencode(str_replace(' ', ',', ($data['image_keyword'] ?? $topic)) . ",football,soccer");
-        $image_url = "https://loremflickr.com/1200/800/" . $keyword . "/all";
-
-        $target_dir = __DIR__ . "/../assets/uploads/";
-        if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
-
-        $img_data = fetch_image($image_url);
-
-        $image_filename = "ai_" . time() . ".jpg";
-        $db_image = "/assets/uploads/" . $image_filename;
-        if ($img_data) {
-            file_put_contents($target_dir . $image_filename, $img_data);
-        } else {
-            $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
-        }
-
-        $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
-            $post_id = $conn->lastInsertId();
-            if (!$is_scheduled || strtotime($publish_date) <= time()) {
-                broadcast_to_social($post_id);
-                $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
-            } else {
-                $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;
-            }
-        } else {
-            $error = "Database insertion failed: " . implode(":", $stmt->errorInfo());
-        }
-    } else {
-        $error = "AI extraction failed. Raw Response: " . htmlspecialchars($raw);
-    }
-}
 
 // Pagination & Search Logic
 $search = sanitize($_GET['search'] ?? '');
@@ -193,7 +126,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="SEARCH REPORTS..." class="bg-black border border-white/10 rounded-xl px-4 py-2 text-white font-condensed italic small w-64 focus:border-danger outline-none transition-all">
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
-        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
+        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>
 
@@ -312,7 +245,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary rounded-4">
             <div class="modal-header border-white border-opacity-10">
-                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Manual Post Entry</h5>
+                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Create New Post</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" enctype="multipart/form-data">
