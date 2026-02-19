@@ -24,6 +24,8 @@ if ($path == '/' || $path == '' || empty($path)) {
     include __DIR__ . '/pages/post_detail.php';
 } elseif ($path == '/watch') {
     include __DIR__ . '/pages/watch.php';
+} elseif ($path == '/fixtures') {
+    include __DIR__ . '/pages/fixtures.php';
 } elseif ($path == '/betting') {
     include __DIR__ . '/pages/betting.php';
 } elseif ($path == '/tables' || $path == '/standings') {

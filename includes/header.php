@@ -35,13 +35,14 @@ $settings = get_settings();
         overflow-x: hidden;
         font-family: 'Inter', sans-serif;
         background-color: var(--pitch-dark);
-        color: #fff;
+        color: #ffffff;
       }
 
       h1, h2, h3, h4, h5, h6, .font-condensed {
         font-family: 'Barlow Condensed', sans-serif;
         text-transform: uppercase;
         letter-spacing: -0.01em;
+        color: #ffffff;
       }
 
       .text-electric-red { color: var(--electric-red); }
@@ -67,40 +68,65 @@ $settings = get_settings();
       .bg-white, .bg-white p, .bg-white h1, .bg-white h2, .bg-white h3, .bg-white span { color: #000 !important; }
       .alert { border-radius: 15px; border-opacity: 0.2; }
 
+      .text-white { color: #ffffff !important; }
+      .text-white-50 { color: rgba(255,255,255,0.5) !important; }
+      .text-gray-400 { color: #94a3b8 !important; }
+
     </style>
 </head>
 <body>
+    <?php $conn = get_db_connection(); $current_path = $_SERVER['REQUEST_URI']; ?>
+
+    <!-- TOP MENU -->
+    <div class="bg-black border-bottom border-white border-opacity-5 py-2">
+        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
+            <div class="d-none d-md-flex gap-3">
+                <?php
+                if ($conn) {
+                    $top_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'top'")->fetchAll();
+                    foreach ($top_pages as $p) {
+                        echo '<a href="/'.$p['slug'].'" class="text-[10px] font-black uppercase tracking-widest text-white-50 hover:text-white text-decoration-none">'.$p['title'].'</a>';
+                    }
+                }
+                ?>
+            </div>
+            <div class="d-flex gap-3 ms-auto">
+                <a href="<?php echo $settings['tw_url'] ?? '#'; ?>" class="text-white-50 hover:text-white"><i class="bi bi-twitter-x"></i></a>
+                <a href="<?php echo $settings['fb_url'] ?? '#'; ?>" class="text-white-50 hover:text-white"><i class="bi bi-facebook"></i></a>
+                <a href="<?php echo $settings['ig_url'] ?? '#'; ?>" class="text-white-50 hover:text-white"><i class="bi bi-instagram"></i></a>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Navbar -->
-    <nav class="navbar navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
+    <nav class="navbar navbar-dark bg-black border-bottom border-white border-opacity-10 py-3 sticky-top">
         <div class="container-fluid px-4 d-flex align-items-center">
-            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-4" href="/">
+            <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-2 me-5" href="/">
                 <?php if (!empty($settings['logo'])): ?>
-                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 45px;" class="d-inline-block align-middle">
                 <?php else: ?>
                     <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
                 <?php endif; ?>
             </a>
 
             <div class="d-flex align-items-center justify-content-between flex-grow-1">
-                <ul class="nav font-condensed fw-bold uppercase small italic align-items-center">
-                    <?php $current_path = $_SERVER['REQUEST_URI']; ?>
-                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/" style="color: #fff;">Home</a></li>
+                <ul class="nav font-condensed fw-bold uppercase fs-5 italic align-items-center">
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : 'text-white'; ?>" href="/">Home</a></li>
 
                     <?php
-                    $conn = get_db_connection();
                     if ($conn) {
                         $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
-                            $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
+                            $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : 'text-white';
+                            echo '<li class="nav-item"><a class="nav-link px-3 '.$active.'" href="/'.$p['slug'].'">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
-                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : ''; ?>" href="/watch" style="color: #fff;">Live Feed</a></li>
-                    <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables" style="color: #fff;">Standings</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/fixtures') ? 'active text-electric-red' : 'text-white'; ?>" href="/fixtures">Fixtures</a></li>
+                    <li class="nav-item"><a class="nav-link px-3 <?php echo ($current_path == '/watch') ? 'active text-electric-red' : 'text-white'; ?>" href="/watch">Live</a></li>
                 </ul>
 
-                <ul class="nav font-condensed fw-bold uppercase small align-items-center no-scrollbar flex-nowrap overflow-x-auto d-none d-lg-flex">
+                <ul class="nav font-condensed fw-bold uppercase small align-items-center no-scrollbar flex-nowrap overflow-x-auto d-none d-xl-flex">
                     <?php
                     $categories = get_categories_with_counts();
                     foreach ($categories as $c) {

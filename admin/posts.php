@@ -24,6 +24,7 @@ if (isset($_POST['save_manual'])) {
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
 
     $image = sanitize($_POST['image']);
+    $video_url = sanitize($_POST['video_url'] ?? '');
     $author = sanitize($_POST['author'] ?? 'STAFF');
 
     $tags = sanitize($_POST['tags'] ?? '');
@@ -42,8 +43,8 @@ if (isset($_POST['save_manual'])) {
     }
 
     $slug = strtolower(str_replace(' ', '-', $title)) . '-' . time();
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, video_url, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $image, $video_url, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
@@ -65,6 +66,7 @@ if (isset($_POST['update_manual'])) {
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $author = sanitize($_POST['author'] ?? 'STAFF');
     $image = sanitize($_POST['image']);
+    $video_url = sanitize($_POST['video_url'] ?? '');
 
     $tags = sanitize($_POST['tags'] ?? '');
     $meta_title = sanitize($_POST['meta_title'] ?? '');
@@ -80,8 +82,8 @@ if (isset($_POST['update_manual'])) {
         $image = $uploaded_image;
     }
 
-    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
-    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top, $id])) {
+    $stmt = $conn->prepare("UPDATE posts SET title = ?, excerpt = ?, content = ?, category = ?, author = ?, image = ?, video_url = ?, is_scheduled = ?, publish_date = ?, tags = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_top_story = ? WHERE id = ?");
+    if ($stmt->execute([$title, $excerpt, $content, $cat, $author, $image, $video_url, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top, $id])) {
         $success = "Report updated successfully.";
     } else {
         $error = "Failed to update report.";
@@ -228,7 +230,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         </div>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
-                        <span class="badge bg-white bg-opacity-5 text-white-50 font-condensed italic px-2 py-1"><?php echo strtoupper($post['category']); ?></span>
+                        <span class="badge bg-danger text-white font-condensed italic px-2 py-1 uppercase tracking-wider" style="font-size: 9px;"><?php echo $post['category']; ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
                         <span class="text-white-50 small font-bold italic"><?php echo $post['author']; ?></span>
@@ -246,6 +248,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-cat="<?php echo htmlspecialchars($post['category']); ?>"
                             data-author="<?php echo htmlspecialchars($post['author']); ?>"
                             data-image="<?php echo htmlspecialchars($post['image']); ?>"
+                            data-video="<?php echo htmlspecialchars($post['video_url'] ?? ''); ?>"
                             data-content="<?php echo htmlspecialchars($post['content']); ?>"
                             data-date="<?php echo $post['publish_date'] ? date('Y-m-d\TH:i', strtotime($post['publish_date'])) : ''; ?>"
                             data-tags="<?php echo htmlspecialchars($post['tags'] ?? ''); ?>"
@@ -340,6 +343,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">OR Upload Image</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">YouTube Video URL</label>
+                            <input type="url" name="video_url" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment (Optional)</label>
                             <input type="datetime-local" name="publish_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
@@ -420,6 +427,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">Update Image File</label>
                             <input type="file" name="image_file" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-12">
+                            <label class="form-label text-white-50 small uppercase font-black">YouTube Video URL</label>
+                            <input type="url" name="video_url" id="edit_video" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="https://www.youtube.com/watch?v=...">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment</label>
                             <input type="datetime-local" name="publish_date" id="edit_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
@@ -471,6 +482,7 @@ document.querySelectorAll('.edit-post').forEach(btn => {
         document.getElementById('edit_cat').value = this.dataset.cat;
         document.getElementById('edit_author').value = this.dataset.author;
         document.getElementById('edit_image').value = this.dataset.image;
+        document.getElementById('edit_video').value = this.dataset.video;
         document.getElementById('edit_content').value = this.dataset.content;
         document.getElementById('edit_date').value = this.dataset.date;
         document.getElementById('edit_tags').value = this.dataset.tags;

@@ -67,6 +67,26 @@ $relatedPosts = $stmt_related->fetchAll();
             <div class="col-lg-8">
                 <article class="prose prose-invert prose-red max-w-none">
                     <p class="lead text-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-6"><?php echo $post['excerpt']; ?></p>
+
+                    <?php if (!empty($post['video_url'])): ?>
+                    <div class="ratio ratio-16x9 mb-8 rounded-4 overflow-hidden shadow-2xl border border-white/10">
+                        <?php
+                        $vid_url = $post['video_url'];
+                        if (strpos($vid_url, 'youtube.com') !== false || strpos($vid_url, 'youtu.be') !== false) {
+                            $vid_id = "";
+                            if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/', $vid_url, $matches)) {
+                                $vid_id = $matches[1];
+                            }
+                            if ($vid_id) {
+                                echo '<iframe src="https://www.youtube.com/embed/'.$vid_id.'" allowfullscreen></iframe>';
+                            } else {
+                                echo '<p class="text-white-50 p-5 text-center">Invalid YouTube URL</p>';
+                            }
+                        }
+                        ?>
+                    </div>
+                    <?php endif; ?>
+
                     <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90">
                         <?php echo parse_markdown($post['content']); ?>
                     </div>
@@ -121,6 +141,7 @@ $relatedPosts = $stmt_related->fetchAll();
 
             <div class="col-lg-4">
                 <div class="sticky-top" style="top: 100px;">
+                    <!-- Newsletter -->
                     <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
                         <h4 class="font-condensed fw-black italic text-electric-red text-xl mb-4 uppercase">Newsletter Syndication</h4>
                         <p class="text-white-50 small mb-6">Receive real-time intelligence directly to your secure inbox.</p>
@@ -128,6 +149,40 @@ $relatedPosts = $stmt_related->fetchAll();
                             <input type="email" name="email" placeholder="SECURE EMAIL ADDRESS" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-monospace text-xs mb-4" required>
                             <button type="submit" class="w-full bg-white text-black px-6 py-3 rounded-xl font-black uppercase italic tracking-widest hover:bg-electric-red hover:text-white transition-all">Secure Subscription</button>
                         </form>
+                    </div>
+
+                    <!-- Recent Reports -->
+                    <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
+                        <h4 class="font-condensed fw-black italic text-white text-xl mb-6 uppercase">Recent Intelligence</h4>
+                        <div class="space-y-6">
+                            <?php
+                            $recent = $conn->query("SELECT title, slug, image, created_at FROM posts WHERE id != {$post['id']} AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT 5")->fetchAll();
+                            foreach ($recent as $r):
+                            ?>
+                            <a href="/post/<?php echo $r['slug']; ?>" class="d-flex gap-3 text-decoration-none group">
+                                <img src="<?php echo $r['image']; ?>" class="w-16 h-16 object-cover rounded-lg border border-white/10" alt="">
+                                <div>
+                                    <h5 class="text-white font-condensed fw-bold text-sm uppercase italic line-clamp-2 group-hover:text-electric-red transition-all"><?php echo $r['title']; ?></h5>
+                                    <span class="text-[9px] text-white-50 font-monospace uppercase"><?php echo date('M d, Y', strtotime($r['created_at'])); ?></span>
+                                </div>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+
+                    <!-- Categories -->
+                    <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
+                        <h4 class="font-condensed fw-black italic text-white text-xl mb-6 uppercase">Taxonomy Hub</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <?php
+                            $cats = get_categories_with_counts();
+                            foreach ($cats as $c):
+                            ?>
+                            <a href="/category/<?php echo urlencode($c['name']); ?>" class="bg-white/5 border border-white/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase italic text-white-50 hover:bg-electric-red hover:text-white transition-all">
+                                <?php echo $c['name']; ?> <span class="text-electric-red group-hover:text-white ms-1"><?php echo $c['post_count']; ?></span>
+                            </a>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </div>
             </div>
