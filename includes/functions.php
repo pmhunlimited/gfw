@@ -190,8 +190,18 @@ function get_ai_insight($prompt) {
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
 
     $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
     $result = json_decode($response, true);
     curl_close($ch);
+
+    if ($response === false) {
+        return "Network Error: " . $curlError;
+    }
+
+    if ($httpCode !== 200) {
+        return "API Error (Status $httpCode): " . ($result['error']['message'] ?? substr($response, 0, 100));
+    }
 
     if (strpos($model, 'gemini') !== false) {
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
