@@ -30,8 +30,9 @@ $cat_list = implode(', ', $available_categories);
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
 $prompt = "Act as a leading football news aggregator. Today's date is $today.
-CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major news stories that happened WITHIN THE LAST 24 HOURS (today, $today).
-Focus on: Latest match results from today, breaking transfers from today, and major team news from today.
+CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major news stories that happened WITHIN THE LAST 24 HOURS (specifically on $today).
+Focus EXCLUSIVELY on: Latest match results from today, breaking transfers announced today, and major team news/press conferences from today.
+DO NOT include old news or general historical facts. Every story MUST be a 'featured news' item from the last 24 hours.
 Cover various leagues: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, and global transfer news.
 
 For each story, provide:
