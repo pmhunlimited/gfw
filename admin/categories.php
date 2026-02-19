@@ -7,6 +7,15 @@ if (isset($_GET['delete'])) {
     $success = "Taxonomy decommissioned.";
 }
 
+// Handle Bulk Deletion
+if (isset($_POST['bulk_delete_cats']) && !empty($_POST['selected_cats'])) {
+    $ids = $_POST['selected_cats'];
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $conn->prepare("DELETE FROM categories WHERE id IN ($placeholders)");
+    $stmt->execute($ids);
+    $success = count($ids) . " taxonomies decommissioned in bulk.";
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_category'])) {
     if (!verify_csrf_token($_POST['csrf_token'])) {
         die("CSRF Token Validation Failed");
@@ -26,9 +35,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_category'])) {
 $categories = get_categories_with_counts();
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-5">
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CATEGORIES <span class="text-danger">REGISTRY</span></h1>
-    <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#categoryModal">NEW CATEGORY</button>
+    <div class="d-flex flex-wrap gap-3">
+        <button type="button" id="bulkDeleteCatsBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDeleteCats()">BULK DELETE</button>
+        <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#categoryModal">NEW CATEGORY</button>
+    </div>
 </div>
 
 <?php if (isset($success)): ?>
@@ -36,10 +48,16 @@ $categories = get_categories_with_counts();
 <?php endif; ?>
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+    <form id="bulkFormCats" method="POST">
+    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+    <input type="hidden" name="bulk_delete_cats" value="1">
     <div class="table-responsive">
         <table class="table table-dark table-hover mb-0 align-middle">
             <thead class="bg-black">
                 <tr>
+                    <th class="ps-5 py-4 border-0" style="width: 40px;">
+                        <input type="checkbox" id="selectAllCats" class="form-check-input bg-black border-white/20">
+                    </th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">ID</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Category Name</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-center">Posts</th>
@@ -49,6 +67,9 @@ $categories = get_categories_with_counts();
             <tbody>
                 <?php foreach ($categories as $cat): ?>
                 <tr>
+                    <td class="ps-5 py-4 border-white border-opacity-5">
+                        <input type="checkbox" name="selected_cats[]" value="<?php echo $cat['id']; ?>" class="form-check-input bg-black border-white/20 cat-checkbox">
+                    </td>
                     <td class="px-5 py-4 border-white border-opacity-5">
                         <span class="text-white-50 font-monospace small">#<?php echo ($cat['id'] ?? '?'); ?></span>
                     </td>
@@ -73,6 +94,7 @@ $categories = get_categories_with_counts();
             </tbody>
         </table>
     </div>
+    </form>
 </div>
 
 <!-- Category Modal -->
@@ -101,6 +123,38 @@ $categories = get_categories_with_counts();
 </div>
 
 <script>
+const selectAllCats = document.getElementById('selectAllCats');
+const catCheckboxes = document.querySelectorAll('.cat-checkbox');
+const bulkDeleteCatsBtn = document.getElementById('bulkDeleteCatsBtn');
+const bulkFormCats = document.getElementById('bulkFormCats');
+
+if (selectAllCats) {
+    selectAllCats.addEventListener('change', function() {
+        catCheckboxes.forEach(cb => cb.checked = this.checked);
+        toggleBulkDeleteCatsBtn();
+    });
+}
+
+catCheckboxes.forEach(cb => {
+    cb.addEventListener('change', toggleBulkDeleteCatsBtn);
+});
+
+function toggleBulkDeleteCatsBtn() {
+    const checkedCount = document.querySelectorAll('.cat-checkbox:checked').length;
+    if (checkedCount > 0) {
+        bulkDeleteCatsBtn.classList.remove('d-none');
+    } else {
+        bulkDeleteCatsBtn.classList.add('d-none');
+    }
+}
+
+function confirmBulkDeleteCats() {
+    const checkedCount = document.querySelectorAll('.cat-checkbox:checked').length;
+    if (confirm(`Are you sure you want to permanently delete ${checkedCount} categories?`)) {
+        bulkFormCats.submit();
+    }
+}
+
 document.querySelectorAll('.edit-cat').forEach(button => {
     button.addEventListener('click', function() {
         document.getElementById('cat_id').value = this.dataset.id;

@@ -63,6 +63,11 @@
         </div>
     </div>
 
+    <!-- ShareThis Sticky Buttons -->
+    <?php if (!empty($settings['sharethis_property_id'])): ?>
+    <script type="text/javascript" src="https://platform-api.sharethis.com/js/sharethis.js#property=<?php echo $settings['sharethis_property_id']; ?>&product=sticky-share-buttons" async="async"></script>
+    <?php endif; ?>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS site_settings (
     logo VARCHAR(255),
     admin_email VARCHAR(255),
     whatsapp_number VARCHAR(50),
+    sharethis_property_id VARCHAR(100),
     selected_model VARCHAR(50) DEFAULT 'gemini-1.5-flash',
     gemini_api_key VARCHAR(255),
     deepseek_api_key VARCHAR(255),

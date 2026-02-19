@@ -90,9 +90,16 @@ foreach ($news_items as $item) {
         $img_data = fetch_image($bing_url);
     }
 
-    // Source 3: Unsplash Source (Fallback)
+    // Source 2b: Broad Bing (if specific failed)
     if (!$img_data) {
-        $unsplash_url = "https://source.unsplash.com/featured/1200x800/?" . $specific_keyword . ",football";
+        $broad_keyword = urlencode($item['category'] . " football soccer");
+        $bing_url = "https://tse1.mm.bing.net/th?q=" . $broad_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
+        $img_data = fetch_image($bing_url);
+    }
+
+    // Source 3: Unsplash (Fallback)
+    if (!$img_data) {
+        $unsplash_url = "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop"; // Generic high-quality stadium as last resort
         $img_data = fetch_image($unsplash_url);
     }
 
