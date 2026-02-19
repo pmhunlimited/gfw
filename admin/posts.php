@@ -14,6 +14,15 @@ if (isset($_GET['delete'])) {
     $success = "Report decommissioned.";
 }
 
+// Handle Bulk Deletion
+if (isset($_POST['bulk_delete']) && !empty($_POST['selected_posts'])) {
+    $ids = $_POST['selected_posts'];
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $conn->prepare("DELETE FROM posts WHERE id IN ($placeholders)");
+    $stmt->execute($ids);
+    $success = count($ids) . " reports decommissioned in bulk.";
+}
+
 // Handle Manual Post Submission
 if (isset($_POST['save_manual'])) {
     $title = sanitize($_POST['title']);
@@ -191,6 +200,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" placeholder="SEARCH REPORTS..." class="bg-black border border-white/10 rounded-xl px-4 py-2 text-white font-condensed italic small w-64 focus:border-danger outline-none transition-all">
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
+        <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
     </div>
 </div>
@@ -204,10 +214,16 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 <?php endif; ?>
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+    <form id="bulkForm" method="POST">
+    <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
+    <input type="hidden" name="bulk_delete" value="1">
     <div class="table-responsive">
         <table class="table table-dark table-hover mb-0 align-middle">
             <thead class="bg-black">
                 <tr>
+                    <th class="ps-5 py-4 border-0" style="width: 40px;">
+                        <input type="checkbox" id="selectAll" class="form-check-input bg-black border-white/20">
+                    </th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Report</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Taxonomy</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Operator</th>
@@ -218,6 +234,9 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <tbody>
                 <?php foreach ($posts as $post): ?>
                 <tr>
+                    <td class="ps-5 py-4 border-white border-opacity-5">
+                        <input type="checkbox" name="selected_posts[]" value="<?php echo $post['id']; ?>" class="form-check-input bg-black border-white/20 post-checkbox">
+                    </td>
                     <td class="px-5 py-4 border-white border-opacity-5">
                         <div class="d-flex align-items-center">
                             <img src="<?php echo $post['image']; ?>" class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
@@ -263,6 +282,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             </tbody>
         </table>
     </div>
+    </form>
 
     <!-- Pagination -->
     <?php if ($total_pages > 1): ?>
@@ -464,6 +484,36 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 </div>
 
 <script>
+const selectAll = document.getElementById('selectAll');
+const checkboxes = document.querySelectorAll('.post-checkbox');
+const bulkBtn = document.getElementById('bulkDeleteBtn');
+const bulkForm = document.getElementById('bulkForm');
+
+selectAll.addEventListener('change', function() {
+    checkboxes.forEach(cb => cb.checked = this.checked);
+    toggleBulkBtn();
+});
+
+checkboxes.forEach(cb => {
+    cb.addEventListener('change', toggleBulkBtn);
+});
+
+function toggleBulkBtn() {
+    const checkedCount = document.querySelectorAll('.post-checkbox:checked').length;
+    if (checkedCount > 0) {
+        bulkBtn.classList.remove('d-none');
+    } else {
+        bulkBtn.classList.add('d-none');
+    }
+}
+
+function confirmBulkDelete() {
+    const checkedCount = document.querySelectorAll('.post-checkbox:checked').length;
+    if (confirm(`Are you sure you want to permanently delete ${checkedCount} reports?`)) {
+        bulkForm.submit();
+    }
+}
+
 document.querySelectorAll('.edit-post').forEach(btn => {
     btn.onclick = function() {
         document.getElementById('edit_id').value = this.dataset.id;

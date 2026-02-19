@@ -64,6 +64,15 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 $count = 0;
 foreach ($news_items as $item) {
     if ($count >= 10) break;
+
+    // Skip if already exists
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ?");
+    $check_stmt->execute([$item['title']]);
+    if ($check_stmt->fetch()) {
+        echo "Skipping existing post: " . $item['title'] . "\n";
+        continue;
+    }
+
     echo "Processing: " . $item['title'] . "\n";
 
     // 2. Fetch Image - Robust Discovery from Multiple Sources
