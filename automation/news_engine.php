@@ -21,7 +21,7 @@ $cat_list = implode(', ', $available_categories);
 
 // 1. Ask AI for trending stories
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. Based on current global football trends for today ($today), identify 10 major and latest news stories covering various leagues (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, etc.) and transfer news.
+$prompt = "Act as a leading football news aggregator. Based on current global football trends for today ($today), identify 10 major and latest news stories (published within the last 24 hours) covering various leagues (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, etc.) and transfer news. Ensure the news is highly accurate and specifically related to today's events.
 For each story, provide:
 1. 'title': Engaging and accurate sports headline.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
@@ -34,8 +34,8 @@ For each story, provide:
 Return the results as a JSON array of 10 objects ONLY.";
 
 $raw_ai = get_ai_insight($prompt);
-if (!$raw_ai) {
-    die("Error: AI failed to discover news.\n");
+if (!$raw_ai || strpos($raw_ai, 'AI Error:') === 0) {
+    die("Error: AI discovery failed. Raw: " . $raw_ai . "\n");
 }
 
 // Extract JSON

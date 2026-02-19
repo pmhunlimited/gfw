@@ -207,18 +207,22 @@ function get_ai_insight($prompt) {
             return $result['candidates'][0]['content']['parts'][0]['text'];
         }
         if (isset($result['error'])) {
-            return "Gemini Error: " . ($result['error']['message'] ?? 'Unknown');
+            return "AI Error: Gemini HTTP " . ($result['error']['code'] ?? '???') . " - " . ($result['error']['message'] ?? 'Unknown');
         }
     } else {
         if (isset($result['choices'][0]['message']['content'])) {
             return $result['choices'][0]['message']['content'];
         }
         if (isset($result['error'])) {
-            return "DeepSeek Error: " . ($result['error']['message'] ?? 'Unknown');
+            return "AI Error: DeepSeek - " . ($result['error']['message'] ?? 'Unknown');
         }
     }
 
-    return "Intelligence gathering failed. Response: " . substr($response, 0, 100);
+    if (curl_errno($ch)) {
+        return "AI Error: Connection failed - " . curl_error($ch);
+    }
+
+    return "AI Error: Intelligence gathering failed. Response: " . substr($response, 0, 100);
 }
 
 function get_suggested_topics() {
