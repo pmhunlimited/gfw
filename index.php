@@ -17,7 +17,7 @@ require_once __DIR__ . '/includes/db.php';
 $request = $_SERVER['REQUEST_URI'];
 $path = strtok($request, '?');
 
-if ($path == '/' || $path == '' || empty($path)) {
+if ($path == '/' || $path == '' || empty($path) || $path == '/index.php') {
     include __DIR__ . '/pages/home.php';
 } elseif (preg_match('/^\/post\/([^\/]+)$/', $path, $matches)) {
     $_GET['slug'] = $matches[1];

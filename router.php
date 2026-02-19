@@ -2,6 +2,22 @@
 // GFW Development Router
 $uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
 
+// Installation Redirect Logic
+if (!file_exists(__DIR__ . '/includes/config.php')) {
+    if (strpos($uri, '/install') !== 0) {
+        header("Location: /install/");
+        exit;
+    }
+} else {
+    require_once __DIR__ . '/includes/config.php';
+    if (defined('INSTALLED') && !INSTALLED) {
+        if (strpos($uri, '/install') !== 0) {
+            header("Location: /install/");
+            exit;
+        }
+    }
+}
+
 if ($uri !== '/' && file_exists(__DIR__ . $uri)) {
     return false;
 }
@@ -30,8 +46,6 @@ if (preg_match('/^\/post\/(.+)$/', $uri, $matches)) {
 $static_pages = ['watch', 'tables', 'standings', 'privacy-policy'];
 foreach ($static_pages as $page) {
     if ($uri === '/' . $page) {
-        include __DIR__ . '/pages/home.php'; // These are often handled within home.php or similar
-        // Actually, let's check if the file exists in pages/
         if (file_exists(__DIR__ . '/pages/' . $page . '.php')) {
             include __DIR__ . '/pages/' . $page . '.php';
             return;
