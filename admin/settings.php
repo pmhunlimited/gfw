@@ -196,14 +196,13 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
                     <?php
                     $models = [
-                        ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1 Stable)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1beta)', 'provider' => 'Google'],
-                        ['id' => 'v1/gemini-1.5-flash-8b', 'name' => 'Gemini 1.5 Flash-8B (v1 Stable)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-flash-8b', 'name' => 'Gemini 1.5 Flash-8B (v1beta)', 'provider' => 'Google'],
-                        ['id' => 'v1/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro (v1 Stable)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro (v1beta)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-flash-exp', 'name' => 'Gemini 2.0 Flash Exp (v1beta)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-pro-exp-02-05', 'name' => 'Gemini 2.0 Pro Exp (v1beta)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (Recommended)', 'provider' => 'Google'],
+                        ['id' => 'v1/gemini-1.5-flash-latest', 'name' => 'Gemini 1.5 Flash Latest (v1)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-flash-8b', 'name' => 'Gemini 1.5 Flash-8B', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-2.0-flash-exp', 'name' => 'Gemini 2.0 Flash Exp', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-2.0-pro-exp-02-05', 'name' => 'Gemini 2.0 Pro Exp', 'provider' => 'Google'],
+                        ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1 Legacy)', 'provider' => 'Google'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
                     ];

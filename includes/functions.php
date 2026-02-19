@@ -184,6 +184,11 @@ function get_ai_insight($prompt) {
         // Ensure model name doesn't have duplicate models/ prefix
         $model_id = (strpos($model_id, 'models/') === 0) ? substr($model_id, 7) : $model_id;
 
+        // Special handling: if model contains '-latest', it's usually v1 compatible
+        if (strpos($model_id, '-latest') !== false && $version === 'v1beta') {
+            $version = 'v1';
+        }
+
         $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
         $data = [
             "contents" => [["parts" => [["text" => $prompt]]]],
@@ -218,7 +223,22 @@ function get_ai_insight($prompt) {
 
     $response = curl_exec($ch);
     $result = json_decode($response, true);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+
+    // Auto-retry Gemini v1 failures with v1beta
+    if (strpos($model, 'gemini') !== false && $httpCode == 404 && $version == 'v1') {
+        $url = str_replace('/v1/', '/v1beta/', $url);
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        $response = curl_exec($ch);
+        $result = json_decode($response, true);
+        curl_close($ch);
+    }
 
     if (strpos($model, 'gemini') !== false) {
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
