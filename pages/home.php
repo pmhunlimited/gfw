@@ -8,14 +8,20 @@ $offset = ($page - 1) * $limit;
 
 $conn = get_db_connection();
 $posts = [];
+$featuredNews = [];
+$topNews = [];
+$watchLive = [];
+$categories = [];
 $totalPosts = 0;
+$totalPages = 0;
 
 if ($conn) {
     if ($category) {
         // CATEGORY PAGE: Display all posts in this category
         $stmt_count = $conn->prepare("SELECT COUNT(*) FROM posts WHERE LOWER(category) = LOWER(?) AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP)");
         $stmt_count->execute([$category]);
-        $totalPosts = $stmt_count->fetchColumn();
+        $totalPosts = (int)$stmt_count->fetchColumn();
+        $totalPages = ceil($totalPosts / $limit);
 
         $stmt = $conn->prepare("SELECT * FROM posts WHERE LOWER(category) = LOWER(?) AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT ? OFFSET ?");
         $stmt->bindValue(1, $category, PDO::PARAM_STR);
@@ -46,7 +52,7 @@ if ($conn) {
 }
 
 if ($category) {
-    $custom_meta_title = "Category: $category | GFW";
+    $custom_meta_title = "Category: " . htmlspecialchars($category) . " | GFW";
 }
 ?>
 
@@ -204,7 +210,7 @@ if ($category) {
                 </div>
 
                 <!-- Pagination -->
-                <?php if ($totalPages > 1): ?>
+                <?php if (isset($totalPages) && $totalPages > 1): ?>
                 <div class="mt-16 flex justify-center gap-2">
                     <?php $base_url = "/category/" . urlencode($category) . "?"; ?>
                     <?php if ($page > 1): ?>
