@@ -88,9 +88,6 @@ if ($stage == 3 && $_SERVER['REQUEST_METHOD'] == 'POST') {
 
         // Generate config.php
         $base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'];
-        if (strpos($_SERVER['REQUEST_URI'], '/migrate') !== false) {
-            $base_url .= '/migrate';
-        }
 
         $db_type_val = $db['type'];
         $config_content = "<?php
