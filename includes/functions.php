@@ -172,10 +172,19 @@ function get_ai_insight($prompt) {
     if (strpos($model, 'gemini') !== false) {
         $apiKey = $settings['gemini_api_key'];
         if (empty($apiKey)) return "Gemini API Key missing.";
+
+        // Handle version/model format
+        if (strpos($model, '/') !== false) {
+            list($version, $model_id) = explode('/', $model, 2);
+        } else {
+            $version = 'v1beta';
+            $model_id = $model;
+        }
+
         // Ensure model name doesn't have duplicate models/ prefix
-        $model_id = (strpos($model, 'models/') === 0) ? substr($model, 7) : $model;
-        // Using v1beta as it often has better support for latest flash models in many regions
-        $url = "https://generativelanguage.googleapis.com/v1beta/models/$model_id:generateContent?key=$apiKey";
+        $model_id = (strpos($model_id, 'models/') === 0) ? substr($model_id, 7) : $model_id;
+
+        $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
         $data = [
             "contents" => [["parts" => [["text" => $prompt]]]],
             "generationConfig" => [
@@ -274,19 +283,20 @@ function extract_json($raw, $as_array = false) {
 
     $json_str = substr($raw, $start_pos, $end_pos - $start_pos + 1);
 
-    // Clean up invisible control characters that might break json_decode
-    $json_str = preg_replace('/[\x00-\x1F\x7F]/', '', $json_str);
-
+    // 1. Direct attempt
     $json = json_decode($json_str, true);
     if ($json !== null) return $json;
 
-    // Fallback: If it still fails, try to fix common JSON issues (like unescaped newlines in content)
-    // This is risky but can help if the AI is being messy
-    $json_str_fixed = str_replace("\n", "\\n", $json_str);
-    // But don't break the actual JSON structure newlines
-    $json_str_fixed = preg_replace('/(?<=[,\[\{\:])\s*\\\\n\s*/', "\n", $json_str_fixed);
+    // 2. Try to escape literal newlines inside strings
+    $escaped = preg_replace_callback('/"([^"\\\\]|\\\\.)*"/', function($matches) {
+        return str_replace(["\n", "\r"], ["\\n", "\\r"], $matches[0]);
+    }, $json_str);
+    $json = json_decode($escaped, true);
+    if ($json !== null) return $json;
 
-    $json = json_decode($json_str_fixed, true);
+    // 3. Last resort: Clean all literal control characters
+    $cleaned = preg_replace('/[\x00-\x1F\x7F]/', '', $json_str);
+    $json = json_decode($cleaned, true);
     return $json;
 }
 
