@@ -25,13 +25,13 @@ $prompt = "Act as a leading football news aggregator. Based on current global fo
 For each story, provide:
 1. 'title': Engaging and accurate sports headline.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
-3. 'content': A comprehensive 500-word sports report in an engaging fan-blogger tone. Structure it with 4 to 5 long, detailed paragraphs. Use Markdown.
+3. 'content': A comprehensive sports report (approx 400 words) in an engaging fan-blogger tone. Structure it with 3 to 4 detailed paragraphs. Use Markdown.
 4. 'image_keyword': 3-5 highly specific and accurate keywords for an exact image matching this story (e.g., 'Lionel Messi Inter Miami' instead of just 'football').
 5. 'tags': 5-8 relevant and high-ranking SEO tags (comma separated).
 6. 'meta_title': High level SEO optimized title (max 60 chars) for better site ranking.
 7. 'meta_description': Compelling and high-level SEO description (max 160 chars).
 8. 'meta_keywords': High ranking keywords for this specific news.
-Return the results as a JSON array of 10 objects ONLY.";
+Return ONLY a valid JSON array of 10 objects. No other text, no markdown code blocks.";
 
 $raw_ai = get_ai_insight($prompt);
 if (!$raw_ai || strpos($raw_ai, 'AI Error:') === 0) {

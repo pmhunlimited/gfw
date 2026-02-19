@@ -172,9 +172,17 @@ function get_ai_insight($prompt) {
     if (strpos($model, 'gemini') !== false) {
         $apiKey = $settings['gemini_api_key'];
         if (empty($apiKey)) return "Gemini API Key missing.";
-        // Switched from v1beta to v1 for better stability with 1.5 models
-        $url = "https://generativelanguage.googleapis.com/v1/models/$model:generateContent?key=$apiKey";
-        $data = ["contents" => [["parts" => [["text" => $prompt]]]]];
+        // Ensure model name doesn't have duplicate models/ prefix
+        $model_id = (strpos($model, 'models/') === 0) ? substr($model, 7) : $model;
+        // Using v1beta as it often has better support for latest flash models in many regions
+        $url = "https://generativelanguage.googleapis.com/v1beta/models/$model_id:generateContent?key=$apiKey";
+        $data = [
+            "contents" => [["parts" => [["text" => $prompt]]]],
+            "generationConfig" => [
+                "maxOutputTokens" => 8192,
+                "temperature" => 0.7
+            ]
+        ];
         $headers = ['Content-Type: application/json'];
     } else {
         $apiKey = $settings['deepseek_api_key'];
@@ -182,7 +190,8 @@ function get_ai_insight($prompt) {
         $url = "https://api.deepseek.com/chat/completions";
         $data = [
             "model" => $model,
-            "messages" => [["role" => "user", "content" => $prompt]]
+            "messages" => [["role" => "user", "content" => $prompt]],
+            "max_tokens" => 8192
         ];
         $headers = [
             'Content-Type: application/json',
@@ -253,20 +262,32 @@ function get_suggested_topics() {
  * @return mixed|null
  */
 function extract_json($raw, $as_array = false) {
-    // Remove markdown code blocks
-    $clean = preg_replace('/^```json\s*|\s*```$/i', '', trim($raw));
+    $start_char = $as_array ? '[' : '{';
+    $end_char = $as_array ? ']' : '}';
 
-    $pattern = $as_array ? '/\[.*\]/s' : '/\{.*\}/s';
-    if (preg_match($pattern, $clean, $matches)) {
-        $json = json_decode($matches[0], true);
-        if ($json !== null) return $json;
+    $start_pos = strpos($raw, $start_char);
+    $end_pos = strrpos($raw, $end_char);
+
+    if ($start_pos === false || $end_pos === false || $end_pos < $start_pos) {
+        return null;
     }
 
-    // Fallback: try decoding the whole clean string
-    $json = json_decode($clean, true);
+    $json_str = substr($raw, $start_pos, $end_pos - $start_pos + 1);
+
+    // Clean up invisible control characters that might break json_decode
+    $json_str = preg_replace('/[\x00-\x1F\x7F]/', '', $json_str);
+
+    $json = json_decode($json_str, true);
     if ($json !== null) return $json;
 
-    return null;
+    // Fallback: If it still fails, try to fix common JSON issues (like unescaped newlines in content)
+    // This is risky but can help if the AI is being messy
+    $json_str_fixed = str_replace("\n", "\\n", $json_str);
+    // But don't break the actual JSON structure newlines
+    $json_str_fixed = preg_replace('/(?<=[,\[\{\:])\s*\\\\n\s*/', "\n", $json_str_fixed);
+
+    $json = json_decode($json_str_fixed, true);
+    return $json;
 }
 
 /**
