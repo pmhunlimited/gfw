@@ -33,13 +33,13 @@ $prompt = "Act as a leading football news aggregator. Today's date is $today.
 CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major news stories that happened WITHIN THE LAST 24 HOURS (specifically on $today).
 Focus EXCLUSIVELY on: Latest match results from today, breaking transfers announced today, and major team news/press conferences from today.
 DO NOT include old news or general historical facts. Every story MUST be a 'featured news' item from the last 24 hours.
-Cover various leagues: Premier League, La Liga, Serie A, Bundesliga, Ligue 1, and global transfer news.
+Ensure you cover a variety of leagues: Premier League, La Liga, Serie A, Bundesliga, and Ligue 1. Each of the 10 stories must be distinct and relate to a different match or event.
 
 For each story, provide:
 1. 'title': Engaging, accurate and descriptive sports headline for $today.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
 3. 'content': A comprehensive sports report (approx 400 words) in an engaging fan-blogger tone. Structure it with 3 to 4 detailed paragraphs. Use Markdown.
-4. 'image_keyword': 4-6 highly specific and accurate keywords for an exact image matching this specific news story (e.g., 'Erling Haaland scoring vs Arsenal today' instead of just 'Haaland').
+4. 'image_keyword': EXTREMELY IMPORTANT: Provide a highly specific and UNIQUE search query for an image related ONLY to this specific story (e.g. 'Erling Haaland goal celebration vs Liverpool today'). Ensure each of the 10 stories has a DIFFERENT and HIGHLY SPECIFIC image_keyword.
 5. 'tags': 6-10 relevant and high-ranking SEO tags (comma separated).
 6. 'meta_title': High level SEO optimized title (max 60 chars) for maximum site ranking.
 7. 'meta_description': Compelling and high-level SEO description (max 160 chars).
@@ -62,6 +62,7 @@ $web_dir = "/assets/uploads/news/" . $date_path . "/";
 if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
 $count = 0;
+$fetched_hashes = [];
 foreach ($news_items as $item) {
     if ($count >= 10) break;
 
@@ -75,32 +76,28 @@ foreach ($news_items as $item) {
 
     echo "Processing: " . $item['title'] . "\n";
 
-    // 2. Fetch Image - Robust Discovery from Multiple Sources
+    // 2. Fetch Image - Multi-Source Unique Discovery
     $specific_keyword = urlencode($item['image_keyword']);
-    $general_keyword = urlencode($item['image_keyword'] . " football soccer");
+    $category_keyword = urlencode($item['category'] . " football soccer");
+
+    $image_sources = [
+        "https://tse1.mm.bing.net/th?q=" . $specific_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
+        "https://loremflickr.com/1200/800/" . urlencode(str_replace(' ', ',', $item['image_keyword'])) . "/all?lock=" . rand(1, 99999),
+        "https://tse1.mm.bing.net/th?q=" . $category_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
+        "https://loremflickr.com/1200/800/football,soccer/all?lock=" . rand(1, 99999)
+    ];
+
     $img_data = null;
-
-    // Source 1: LoremFlickr with specific lock
-    $img_url = "https://loremflickr.com/1200/800/" . urlencode(str_replace(' ', ',', $item['image_keyword'])) . "/all?lock=" . rand(1, 9999);
-    $img_data = fetch_image($img_url);
-
-    // Source 2: Bing Thumbnail (if source 1 failed)
-    if (!$img_data) {
-        $bing_url = "https://tse1.mm.bing.net/th?q=" . $specific_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
-        $img_data = fetch_image($bing_url);
-    }
-
-    // Source 2b: Broad Bing (if specific failed)
-    if (!$img_data) {
-        $broad_keyword = urlencode($item['category'] . " football soccer");
-        $bing_url = "https://tse1.mm.bing.net/th?q=" . $broad_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
-        $img_data = fetch_image($bing_url);
-    }
-
-    // Source 3: Unsplash (Fallback)
-    if (!$img_data) {
-        $unsplash_url = "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=1200&auto=format&fit=crop"; // Generic high-quality stadium as last resort
-        $img_data = fetch_image($unsplash_url);
+    foreach ($image_sources as $source_url) {
+        $temp_data = fetch_image($source_url);
+        if ($temp_data && strlen($temp_data) > 5000) { // Ensure it's a substantial image
+            $temp_hash = md5($temp_data);
+            if (!in_array($temp_hash, $fetched_hashes)) {
+                $img_data = $temp_data;
+                $fetched_hashes[] = $temp_hash;
+                break;
+            }
+        }
     }
 
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
@@ -108,9 +105,9 @@ foreach ($news_items as $item) {
     $local_img_path = $upload_dir . $filename;
     $db_img_path = $web_dir . $filename;
 
-    if ($img_data && strlen($img_data) > 1000) { // Ensure it's not a tiny placeholder
+    if ($img_data) {
         file_put_contents($local_img_path, $img_data);
-        echo "Successfully fetched image for: " . $item['title'] . "\n";
+        echo "Successfully fetched unique image for: " . $item['title'] . "\n";
     } else {
         echo "Failed to get relevant image for: " . $item['title'] . ". Using default.\n";
         $db_img_path = "/assets/img/default-news.jpg";
