@@ -21,13 +21,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_category'])) {
         die("CSRF Token Validation Failed");
     }
     $name = sanitize($_POST['name']);
+    $slug = sanitize($_POST['slug']);
+    if (empty($slug)) {
+        $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name)));
+    }
+
     if (isset($_POST['id']) && !empty($_POST['id'])) {
-        $stmt = $conn->prepare("UPDATE categories SET name = ? WHERE id = ?");
-        $stmt->execute([$name, (int)$_POST['id']]);
+        $stmt = $conn->prepare("UPDATE categories SET name = ?, slug = ? WHERE id = ?");
+        $stmt->execute([$name, $slug, (int)$_POST['id']]);
         $success = "Taxonomy updated.";
     } else {
-        $stmt = $conn->prepare("INSERT IGNORE INTO categories (name) VALUES (?)");
-        $stmt->execute([$name]);
+        $stmt = $conn->prepare("INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)");
+        $stmt->execute([$name, $slug]);
         $success = "New taxonomy registered.";
     }
 }
@@ -39,7 +44,7 @@ $categories = get_categories_with_counts();
     <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CATEGORIES <span class="text-danger">REGISTRY</span></h1>
     <div class="d-flex flex-wrap gap-3">
         <button type="button" id="bulkDeleteCatsBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDeleteCats()">BULK DELETE</button>
-        <button class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#categoryModal">NEW CATEGORY</button>
+        <button type="button" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#categoryModal">NEW CATEGORY</button>
     </div>
 </div>
 
@@ -60,6 +65,7 @@ $categories = get_categories_with_counts();
                     </th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">ID</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Category Name</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Slug</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-center">Posts</th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-end">Actions</th>
                 </tr>
@@ -76,12 +82,15 @@ $categories = get_categories_with_counts();
                     <td class="px-4 py-4 border-white border-opacity-5">
                         <div class="text-white font-bold small uppercase italic"><?php echo $cat['name']; ?></div>
                     </td>
+                    <td class="px-4 py-4 border-white border-opacity-5">
+                        <div class="text-white-50 font-monospace small"><?php echo $cat['slug'] ?? '-'; ?></div>
+                    </td>
                     <td class="px-4 py-4 border-white border-opacity-5 text-center">
                         <span class="badge bg-danger bg-opacity-10 text-danger font-condensed px-3 py-1"><?php echo $cat['post_count']; ?></span>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
                         <div class="d-flex justify-content-end gap-3">
-                            <button class="btn btn-sm btn-outline-light border-0 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                            <button type="button" class="btn btn-sm btn-outline-light border-0 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-slug="<?php echo htmlspecialchars($cat['slug'] ?? ''); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
                             <a href="/admin/categories?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
@@ -111,7 +120,11 @@ $categories = get_categories_with_counts();
                 <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label text-white-50 small uppercase font-black">Category Name</label>
-                        <input type="text" name="name" id="cat_name" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="e.g. Premier League" required>
+                        <input type="text" name="name" id="cat_name" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="e.g. Premier League" required onkeyup="generateSlug(this.value)">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-white-50 small uppercase font-black">Category Slug</label>
+                        <input type="text" name="slug" id="cat_slug" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" placeholder="e.g. premier-league">
                     </div>
                 </div>
                 <div class="modal-footer border-white border-opacity-10">
@@ -155,16 +168,25 @@ function confirmBulkDeleteCats() {
     }
 }
 
+function generateSlug(name) {
+    if (document.getElementById('cat_id').value === '') {
+        const slug = name.toLowerCase().trim().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+        document.getElementById('cat_slug').value = slug;
+    }
+}
+
 document.querySelectorAll('.edit-cat').forEach(button => {
     button.addEventListener('click', function() {
         document.getElementById('cat_id').value = this.dataset.id;
         document.getElementById('cat_name').value = this.dataset.name;
+        document.getElementById('cat_slug').value = this.dataset.slug;
         document.getElementById('catModalLabel').innerText = 'Update Taxonomy';
     });
 });
 document.getElementById('categoryModal').addEventListener('hidden.bs.modal', function () {
     document.getElementById('cat_id').value = '';
     document.getElementById('cat_name').value = '';
+    document.getElementById('cat_slug').value = '';
     document.getElementById('catModalLabel').innerText = 'Register Taxonomy';
 });
 </script>

@@ -107,8 +107,9 @@ $settings = get_settings();
                     <?php
                     $categories = get_categories_with_counts();
                     foreach ($categories as $c) {
-                        $cat_url = '/category/' . urlencode($c['name']);
-                        $active = (strpos($current_path, '/category/'.urlencode($c['name'])) !== false) ? 'active text-electric-red' : '';
+                        $cat_identifier = !empty($c['slug']) ? $c['slug'] : urlencode($c['name']);
+                        $cat_url = '/category/' . $cat_identifier;
+                        $active = (strpos($current_path, '/category/'.$cat_identifier) !== false) ? 'active text-electric-red' : '';
                         echo '<li class="nav-item">
                                 <a class="nav-link px-2 '.$active.'" href="'.$cat_url.'" style="color: rgba(255,255,255,0.7);">
                                     '.$c['name'].' <span class="post-count" style="font-size: 8px; background: rgba(255,62,62,0.1); color: #ff3e3e; padding: 1px 4px; border-radius: 3px;">'.$c['post_count'].'</span>

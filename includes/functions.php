@@ -27,6 +27,23 @@ function get_settings() {
         }
     }
 
+    // Auto-migration for categories slug
+    try {
+        $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
+        $first_cat = $stmt_cat->fetch();
+        if ($first_cat && !array_key_exists('slug', $first_cat)) {
+            $conn->exec("ALTER TABLE categories ADD COLUMN slug VARCHAR(100)");
+            // Populate slugs for existing categories
+            $all_cats = $conn->query("SELECT id, name FROM categories")->fetchAll();
+            foreach ($all_cats as $c) {
+                $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $c['name'])));
+                $conn->prepare("UPDATE categories SET slug = ? WHERE id = ?")->execute([$slug, $c['id']]);
+            }
+        }
+    } catch (Exception $e) {
+        // Handle case where table is empty or other errors
+    }
+
     $settings = $settings ?: [
         'name' => 'GLOBAL FOOTBALL WATCH',
         'logo' => '',
@@ -45,10 +62,10 @@ function get_categories_with_counts() {
         ['name' => 'TRANSFER NEWS', 'post_count' => 3],
         ['name' => 'MATCH ANALYSIS', 'post_count' => 8]
     ];
-    $stmt = $conn->query("SELECT c.id, c.name, COUNT(p.id) as post_count
+    $stmt = $conn->query("SELECT c.id, c.name, c.slug, COUNT(p.id) as post_count
                           FROM categories c
                           LEFT JOIN posts p ON c.name = p.category
-                          GROUP BY c.id, c.name
+                          GROUP BY c.id, c.name, c.slug
                           ORDER BY c.name ASC");
     $categories = $stmt->fetchAll();
     return $categories;

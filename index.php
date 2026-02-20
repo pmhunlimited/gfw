@@ -31,7 +31,21 @@ if ($path == '/' || $path == '' || empty($path)) {
 } elseif ($path == '/tables' || $path == '/standings') {
     include __DIR__ . '/pages/tables.php';
 } elseif (preg_match('/^\/category\/([^\/]+)$/', $path, $matches)) {
-    $_GET['category'] = $matches[1];
+    $cat_identifier = $matches[1];
+    // Check if it's a slug or name
+    $conn = get_db_connection();
+    if ($conn) {
+        $stmt = $conn->prepare("SELECT name FROM categories WHERE slug = ? OR name = ?");
+        $stmt->execute([$cat_identifier, urldecode($cat_identifier)]);
+        $cat = $stmt->fetch();
+        if ($cat) {
+            $_GET['category'] = $cat['name'];
+        } else {
+            $_GET['category'] = urldecode($cat_identifier);
+        }
+    } else {
+        $_GET['category'] = urldecode($cat_identifier);
+    }
     include __DIR__ . '/pages/home.php';
 } elseif ($path == '/subscribe' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
