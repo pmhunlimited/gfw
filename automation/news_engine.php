@@ -39,7 +39,10 @@ For each story, provide:
 1. 'title': Engaging, accurate and descriptive sports headline for $today.
 2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
 3. 'content': A comprehensive sports report (approx 400 words) in an engaging fan-blogger tone. Structure it with 3 to 4 detailed paragraphs. Use Markdown.
-4. 'image_keyword': EXTREMELY IMPORTANT: Provide a highly specific and UNIQUE search query for an image related ONLY to this specific story (e.g. 'Erling Haaland goal celebration vs Liverpool today'). Ensure each of the 10 stories has a DIFFERENT and HIGHLY SPECIFIC image_keyword.
+4. 'image_keyword': EXTREMELY IMPORTANT: Provide a highly specific, UNIQUE and VISUALLY DESCRIPTIVE search query for a photo related ONLY to this specific news story.
+   Include specific player names, team colors, or stadium names (e.g. 'Kylian Mbappe celebrating goal for Real Madrid vs Atletico in action shot photography').
+   Ensure each of the 10 stories has a COMPLETELY DIFFERENT and HIGHLY ACCURATE image_keyword.
+   STRICTLY PROHIBITED: Do not return generic images like a lone football, a generic grass field, or an empty stadium if the news is about a specific person or team.
 5. 'tags': 6-10 relevant and high-ranking SEO tags (comma separated).
 6. 'meta_title': High level SEO optimized title (max 60 chars) for maximum site ranking.
 7. 'meta_description': Compelling and high-level SEO description (max 160 chars).
@@ -77,28 +80,35 @@ foreach ($news_items as $item) {
     echo "Processing: " . $item['title'] . "\n";
 
     // 2. Fetch Image - Multi-Source Unique Discovery
-    $specific_keyword = urlencode($item['image_keyword']);
-    $category_keyword = urlencode($item['category'] . " football soccer");
+    $specific_keyword = urlencode($item['image_keyword'] . " " . rand(100, 999)); // Added entropy for unique results
+    $category_keyword = urlencode($item['category'] . " " . $item['title']);
 
     $image_sources = [
         "https://tse1.mm.bing.net/th?q=" . $specific_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
+        "https://tse1.mm.bing.net/th?q=" . urlencode($item['title'] . " sports photography") . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
         "https://loremflickr.com/1200/800/" . urlencode(str_replace(' ', ',', $item['image_keyword'])) . "/all?lock=" . rand(1, 99999),
-        "https://tse1.mm.bing.net/th?q=" . $category_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
-        "https://loremflickr.com/1200/800/football,soccer/all?lock=" . rand(1, 99999)
+        "https://tse1.mm.bing.net/th?q=" . $category_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api"
     ];
 
     $img_data = null;
     foreach ($image_sources as $source_url) {
+        echo "Attempting fetch from: " . substr($source_url, 0, 50) . "...\n";
         $temp_data = fetch_image($source_url);
-        if ($temp_data && strlen($temp_data) > 5000) { // Ensure it's a substantial image
+        if ($temp_data && strlen($temp_data) > 8000) { // Increased threshold to avoid small generic thumbnails
             $temp_hash = md5($temp_data);
             if (!in_array($temp_hash, $fetched_hashes)) {
                 $img_data = $temp_data;
                 $fetched_hashes[] = $temp_hash;
+                echo "Match found! Unique binary hash acquired.\n";
                 break;
+            } else {
+                echo "Duplicate binary detected, skipping source...\n";
             }
         }
     }
+
+    // Safety delay to prevent provider throttling and duplicate responses
+    sleep(1);
 
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $filename = $safe_title . "-" . time() . ".jpg";
