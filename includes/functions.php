@@ -72,6 +72,9 @@ function get_categories_with_counts() {
 }
 
 function sanitize($data) {
+    if (is_array($data)) {
+        $data = implode(', ', $data);
+    }
     return htmlspecialchars(strip_tags(trim($data)));
 }
 
