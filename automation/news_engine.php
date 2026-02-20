@@ -27,37 +27,27 @@ if (empty($available_categories)) {
 }
 $cat_list = implode(', ', $available_categories);
 
-// 1. Ask AI for trending stories
+// 1. Discovery Stage: Ask AI for trending story headlines
 $today = date('D d M Y');
-$prompt = "Act as a leading football news aggregator. Today's date is $today.
-CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major news stories that happened WITHIN THE LAST 24 HOURS (specifically on $today).
-Focus EXCLUSIVELY on: Latest match results from today, breaking transfers announced today, and major team news/press conferences from today.
-DO NOT include old news or general historical facts. Every story MUST be a 'featured news' item from the last 24 hours.
-Ensure you cover a variety of leagues: Premier League, La Liga, Serie A, Bundesliga, and Ligue 1. Each of the 10 stories must be distinct and relate to a different match or event.
+echo "Stage 1: Discovering trending football stories for $today...\n";
 
-For each story, provide:
-1. 'title': Engaging, accurate and descriptive sports headline for $today.
-2. 'category': Must be ONE of these exactly: ($cat_list). Choose the most appropriate one.
-3. 'content': A comprehensive sports report (approx 400 words) in an engaging fan-blogger tone. Structure it with 3 to 4 detailed paragraphs. Use Markdown.
-4. 'image_keyword': EXTREMELY IMPORTANT: Provide a highly specific, UNIQUE and VISUALLY DESCRIPTIVE search query for a photo related ONLY to this specific news story.
-   Include specific player names, team colors, or stadium names (e.g. 'Kylian Mbappe celebrating goal for Real Madrid vs Atletico in action shot photography').
-   Ensure each of the 10 stories has a COMPLETELY DIFFERENT and HIGHLY ACCURATE image_keyword.
-   STRICTLY PROHIBITED: Do not return generic images like a lone football, a generic grass field, or an empty stadium if the news is about a specific person or team.
-5. 'tags': 6-10 relevant and high-ranking SEO tags (comma separated).
-6. 'meta_title': High level SEO optimized title (max 60 chars) for maximum site ranking.
-7. 'meta_description': Compelling and high-level SEO description (max 160 chars).
-8. 'meta_keywords': High ranking, specific keywords for this news event.
-Return ONLY a valid JSON array of 10 objects. No other text, no markdown code blocks.";
+$discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (specifically on $today).
+Focus on: Latest match results, breaking transfers, and major team news.
+Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
 
-$raw_ai = get_ai_insight($prompt);
-if (!$raw_ai || strpos($raw_ai, 'AI Error:') === 0) {
-    die("Error: AI discovery failed. Raw: " . $raw_ai . "\n");
+Return ONLY a valid JSON array of objects with these keys:
+- 'title': Catchy sports headline.
+- 'category': Must be ONE of: ($cat_list).
+- 'image_keyword': Specific search query for a photo of the event/player.
+Return ONLY the JSON array. No other text.";
+
+$raw_discovery = get_ai_insight($discovery_prompt);
+if (!$raw_discovery || strpos($raw_discovery, 'AI Error:') === 0) {
+    die("Error: AI discovery failed. Raw: " . $raw_discovery . "\n");
 }
 
-// Extract JSON
-$news_items = extract_json($raw_ai, true);
-
-if (!$news_items) die("Error: Could not parse news data. Raw: " . substr($raw_ai, 0, 100) . "...\n");
+$discovered_items = extract_json($raw_discovery, true);
+if (!$discovered_items) die("Error: Could not parse discovery data. Raw: " . substr($raw_discovery, 0, 100) . "...\n");
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
@@ -66,7 +56,7 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
 $count = 0;
 $fetched_hashes = [];
-foreach ($news_items as $item) {
+foreach ($discovered_items as $item) {
     if ($count >= 10) break;
 
     // Skip if already exists
@@ -77,10 +67,35 @@ foreach ($news_items as $item) {
         continue;
     }
 
-    echo "Processing: " . $item['title'] . "\n";
+    echo "\n--- Processing Story " . ($count + 1) . ": " . $item['title'] . " ---\n";
 
-    // 2. Fetch Image - Multi-Source Unique Discovery
-    $specific_keyword = urlencode($item['image_keyword'] . " " . rand(100, 999)); // Added entropy for unique results
+    // Stage 2: Content Generation for this specific story
+    echo "Stage 2: Generating high-level content and SEO metadata...\n";
+    $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}' for the category '{$item['category']}'.
+
+    Requirements:
+    1. 'content': Comprehensive sports report (400-500 words) in an engaging fan-blogger tone. Use 3-4 paragraphs. Use Markdown.
+    2. 'tags': 6-10 high-ranking SEO tags.
+    3. 'meta_title': SEO optimized title (max 60 chars).
+    4. 'meta_description': Compelling SEO description (max 160 chars).
+    5. 'meta_keywords': High ranking specific keywords.
+
+    Return ONLY a valid JSON object. No extra text.";
+
+    $raw_content = get_ai_insight($content_prompt);
+    if (!$raw_content || strpos($raw_content, 'AI Error:') === 0) {
+        echo "Error: Content generation failed for this item. Skipping.\n";
+        continue;
+    }
+
+    $content_data = extract_json($raw_content, false);
+    if (!$content_data) {
+        echo "Error: Could not parse content data. Skipping.\n";
+        continue;
+    }
+
+    // 3. Fetch Image - Multi-Source Unique Discovery
+    $specific_keyword = urlencode($item['image_keyword'] . " " . rand(100, 999));
     $category_keyword = urlencode($item['category'] . " " . $item['title']);
 
     $image_sources = [
@@ -92,22 +107,19 @@ foreach ($news_items as $item) {
 
     $img_data = null;
     foreach ($image_sources as $source_url) {
-        echo "Attempting fetch from: " . substr($source_url, 0, 50) . "...\n";
+        echo "Attempting image fetch from source...\n";
         $temp_data = fetch_image($source_url);
-        if ($temp_data && strlen($temp_data) > 8000) { // Increased threshold to avoid small generic thumbnails
+        if ($temp_data && strlen($temp_data) > 8000) {
             $temp_hash = md5($temp_data);
             if (!in_array($temp_hash, $fetched_hashes)) {
                 $img_data = $temp_data;
                 $fetched_hashes[] = $temp_hash;
-                echo "Match found! Unique binary hash acquired.\n";
+                echo "Unique image binary acquired.\n";
                 break;
-            } else {
-                echo "Duplicate binary detected, skipping source...\n";
             }
         }
     }
 
-    // Safety delay to prevent provider throttling and duplicate responses
     sleep(1);
 
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
@@ -117,24 +129,24 @@ foreach ($news_items as $item) {
 
     if ($img_data) {
         file_put_contents($local_img_path, $img_data);
-        echo "Successfully fetched unique image for: " . $item['title'] . "\n";
+        echo "Saved unique image for: " . $item['title'] . "\n";
     } else {
-        echo "Failed to get relevant image for: " . $item['title'] . ". Using default.\n";
+        echo "Failed to get unique image. Using default.\n";
         $db_img_path = "/assets/img/default-news.jpg";
     }
 
-    // 3. Save to Database
+    // 4. Save to Database
     $title = sanitize($item['title']);
     $slug = $safe_title . '-' . time();
-    $content = $item['content']; // Markdown supported
+    $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $item['category'];
     $author = 'GFW';
 
-    $tags = sanitize($item['tags'] ?? '');
-    $meta_title = sanitize($item['meta_title'] ?? $title);
-    $meta_desc = sanitize($item['meta_description'] ?? $excerpt);
-    $meta_keys = sanitize($item['meta_keywords'] ?? '');
+    $tags = sanitize($content_data['tags'] ?? '');
+    $meta_title = sanitize($content_data['meta_title'] ?? $title);
+    $meta_desc = sanitize($content_data['meta_description'] ?? $excerpt);
+    $meta_keys = sanitize($content_data['meta_keywords'] ?? '');
     $publish_date = date('Y-m-d H:i:s');
 
     $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)");

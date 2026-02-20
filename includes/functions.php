@@ -232,24 +232,26 @@ function get_ai_insight($prompt) {
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 120); // Increased to 120 seconds to prevent timeouts
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 180); // Increased to 180 seconds to prevent timeouts
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 
     $response = curl_exec($ch);
-    $result = json_decode($response, true);
+    $curl_err = curl_error($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $result = json_decode($response, true);
     curl_close($ch);
 
-    // Auto-retry Gemini v1 failures with v1beta
-    if (strpos($model, 'gemini') !== false && $httpCode == 404 && $version == 'v1') {
+    // Auto-retry Gemini v1 failures with v1beta OR connection failures
+    if (strpos($model, 'gemini') !== false && ($httpCode == 404 && $version == 'v1' || !$response)) {
         $url = str_replace('/v1/', '/v1beta/', $url);
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 180);
         $response = curl_exec($ch);
+        $curl_err = curl_error($ch);
         $result = json_decode($response, true);
         curl_close($ch);
     }
@@ -270,11 +272,11 @@ function get_ai_insight($prompt) {
         }
     }
 
-    if (curl_errno($ch)) {
-        return "AI Error: Connection failed - " . curl_error($ch);
+    if (!empty($curl_err)) {
+        return "AI Error: Connection failed - " . $curl_err;
     }
 
-    return "AI Error: Intelligence gathering failed. Response: " . substr($response, 0, 100);
+    return "AI Error: Intelligence gathering failed (HTTP $httpCode). Response: " . substr($response, 0, 100);
 }
 
 function get_suggested_topics() {
