@@ -28,16 +28,24 @@ if (empty($available_categories)) {
 $cat_list = implode(', ', $available_categories);
 
 // 1. Discovery Stage: Ask AI for trending story headlines
-$today = date('D d M Y');
+$today = date('D d M Y H:i');
 echo "Stage 1: Discovering trending football stories for $today...\n";
 
-$discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (specifically on $today).
+$discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (Current time: $today).
+
+You MUST ONLY use information from the following official sources:
+- skysports.com
+- sky-sport.ch
+- espn.com
+- supersport.com
+- Sport - Scores, Fixtures, News - Live Sport
+
 Focus on: Latest match results, breaking transfers, and major team news.
 Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
 
 Return ONLY a valid JSON array of objects with these keys:
 - 'title': Catchy sports headline.
-- 'category': Must be ONE of: ($cat_list).
+- 'category': Must be ONE of: ($cat_list). Match the story to the most appropriate category.
 - 'image_keyword': Specific search query for a photo of the event/player.
 Return ONLY the JSON array. No other text.";
 
@@ -60,11 +68,12 @@ $published_posts = [];
 foreach ($discovered_items as $item) {
     if ($count >= 10) break;
 
-    // Skip if already exists
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ?");
-    $check_stmt->execute([$item['title']]);
+    // Skip if already exists or similar slug found (prevent duplicates)
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ?");
+    $check_stmt->execute([$item['title'], $safe_title . '%']);
     if ($check_stmt->fetch()) {
-        echo "Skipping existing post: " . $item['title'] . "\n";
+        echo "Skipping existing or duplicate post: " . $item['title'] . "\n";
         continue;
     }
 
@@ -123,7 +132,6 @@ foreach ($discovered_items as $item) {
 
     sleep(1);
 
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $filename = $safe_title . "-" . time() . ".jpg";
     $local_img_path = $upload_dir . $filename;
     $db_img_path = $web_dir . $filename;

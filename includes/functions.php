@@ -291,6 +291,7 @@ function get_ai_insight($prompt) {
         $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
         $data = [
             "contents" => [["parts" => [["text" => $prompt]]]],
+            "tools" => [["google_search" => (object)[]]],
             "generationConfig" => [
                 "maxOutputTokens" => 8192,
                 "temperature" => 0.7
