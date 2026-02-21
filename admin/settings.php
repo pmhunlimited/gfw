@@ -35,11 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, perplexity_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, perplexity_api_key = ?, groq_api_key = ?, tavily_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
         $_POST['perplexity_api_key'],
+        $_POST['groq_api_key'],
+        $_POST['tavily_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -194,6 +196,24 @@ $activeTab = $_GET['tab'] ?? 'general';
                         </ol>
                     </div>
                 </div>
+                <div class="row g-4 small mt-4 pt-4 border-top border-white border-opacity-10">
+                    <div class="col-md-6 border-end border-white border-opacity-10">
+                        <p class="mb-2"><strong>Groq Cloud API (Fast & Free):</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://console.groq.com/keys" target="_blank" class="text-info">Groq Console</a>.</li>
+                            <li>Create a free account and generate an API key.</li>
+                            <li>Copy the key into the field below.</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="mb-2"><strong>Tavily Search API (Precision Search):</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://tavily.com/" target="_blank" class="text-info">Tavily.com</a>.</li>
+                            <li>Sign up for a free plan (1,000 searches/mo).</li>
+                            <li>Generate an API key and copy it here.</li>
+                        </ol>
+                    </div>
+                </div>
             </div>
 
             <form method="POST" class="space-y-8">
@@ -217,18 +237,29 @@ $activeTab = $_GET['tab'] ?? 'general';
                             <input type="password" name="perplexity_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['perplexity_api_key'] ?? ''; ?>">
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Groq API Key</span>
+                            <input type="password" name="groq_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['groq_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Tavily Search API Key</span>
+                            <input type="password" name="tavily_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['tavily_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
                     <?php
                     $models = [
-                        ['id' => 'v1beta/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (Recommended)', 'provider' => 'Google'],
-                        ['id' => 'v1/gemini-1.5-flash-latest', 'name' => 'Gemini 1.5 Flash Latest (v1)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-flash-8b', 'name' => 'Gemini 1.5 Flash-8B', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'provider' => 'Google'],
+                        ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (Stable)', 'provider' => 'Google'],
                         ['id' => 'v1beta/gemini-2.0-flash-exp', 'name' => 'Gemini 2.0 Flash Exp', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-pro-exp-02-05', 'name' => 'Gemini 2.0 Pro Exp', 'provider' => 'Google'],
-                        ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1 Legacy)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-flash-8b', 'name' => 'Gemini 1.5 Flash-8B (Fast)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'provider' => 'Google'],
+                        ['id' => 'groq/llama-3.3-70b-versatile', 'name' => 'Llama 3.3 70B (Groq)', 'provider' => 'Groq'],
+                        ['id' => 'groq/mixtral-8x7b-32768', 'name' => 'Mixtral 8x7B (Groq)', 'provider' => 'Groq'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
                         ['id' => 'sonar', 'name' => 'Perplexity Sonar (Web Search)', 'provider' => 'Perplexity'],

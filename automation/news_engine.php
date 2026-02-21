@@ -33,28 +33,48 @@ if (empty($available_categories)) {
 }
 $cat_list = implode(', ', $available_categories);
 
-// 1. Discovery Stage: Ask AI for trending story headlines
+// 1. Discovery Stage: Fetch trending story headlines
 $today = date('D d M Y');
-echo "Stage 1: Discovering trending football stories for $today...\n";
+echo "Stage 1: Discovering trending sports stories for $today...\n";
 
-$discovery_prompt = "Act as an elite sports news aggregator with real-time web access. Today's date is $today.
-CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major sports news stories (covering ALL sports: football, basketball, tennis, golf, etc.) that were published WITHIN THE LAST 24 HOURS (on $today), specifically from these sources ONLY: skysports.com, sky-sport.ch, espn.com, and supersport.com.
-Focus on: Current scores, fixtures, breaking news, and live sport events from today.
-STRICTLY PROHIBITED: Do not include old news or stories from outside the specified 24-hour window or from any other sources.
+$discovered_items = [];
 
-Return ONLY a valid JSON array of objects with these keys:
-- 'title': Catchy and accurate sports headline.
-- 'category': Must be ONE of: ($cat_list). Choose the most appropriate one.
-- 'image_keyword': Specific search query for a photo of the event/player.
-Return ONLY the JSON array. No other text.";
+// Try Tavily Discovery first (Highest precision)
+if (!empty($settings['tavily_api_key'])) {
+    echo "Utilizing Tavily Search Protocol...\n";
+    $search_results = get_tavily_news("breaking sports news latest results scores $today sources:skysports.com, espn.com, supersport.com");
+    if ($search_results) {
+        $discovery_prompt = "Analyze these search results and extract exactly 10 distinct, major sports news stories from TODAY ($today).
+        Results: " . json_encode($search_results) . "
 
-$raw_discovery = get_ai_insight($discovery_prompt);
-if (!$raw_discovery || strpos($raw_discovery, 'AI Error:') === 0) {
-    die("Error: AI discovery failed. Raw: " . $raw_discovery . "\n");
+        Return ONLY a JSON array of objects:
+        - 'title': Catchy sports headline.
+        - 'category': Must be one of: ($cat_list).
+        - 'image_keyword': Specific photo search query.
+        Return ONLY the JSON array.";
+
+        $raw_discovery = get_ai_insight($discovery_prompt);
+        $discovered_items = extract_json($raw_discovery, true);
+    }
 }
 
-$discovered_items = extract_json($raw_discovery, true);
-if (!$discovered_items) die("Error: Could not parse discovery data. Raw: " . substr($raw_discovery, 0, 100) . "...\n");
+// Fallback to AI-Direct Discovery (Gemini/Sonar with native search)
+if (empty($discovered_items)) {
+    echo "Utilizing AI-Native Discovery Protocol...\n";
+    $discovery_prompt = "Act as an elite sports news aggregator with real-time web access. Today's date is $today.
+    CRITICAL: Identify exactly 10 of the LATEST major sports news stories (covering ALL sports) published WITHIN THE LAST 24 HOURS (on $today), specifically from: skysports.com, sky-sport.ch, espn.com, and supersport.com.
+    Focus on: Current scores, fixtures, and breaking news from today.
+    Return ONLY a valid JSON array of objects with keys: 'title', 'category', 'image_keyword'.
+    Category MUST be from: ($cat_list).";
+
+    $raw_discovery = get_ai_insight($discovery_prompt);
+    if (!$raw_discovery || strpos($raw_discovery, 'AI Error:') === 0) {
+        die("Error: AI discovery failed. Raw: " . $raw_discovery . "\n");
+    }
+    $discovered_items = extract_json($raw_discovery, true);
+}
+
+if (!$discovered_items) die("Error: Could not parse discovery data.\n");
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";

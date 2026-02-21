@@ -50,6 +50,18 @@ function get_settings() {
         }
     }
 
+    if ($settings && !array_key_exists('groq_api_key', $settings)) {
+        try {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN groq_api_key VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tavily_api_key VARCHAR(255)");
+            // Refetch settings after migration
+            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+            $settings = $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("Groq/Tavily migration failed: " . $e->getMessage());
+        }
+    }
+
     // Auto-migration for posts table (video_url)
     try {
         $stmt_post = $conn->query("SELECT * FROM posts LIMIT 1");
@@ -110,6 +122,39 @@ function sanitize($data) {
         $data = implode(', ', $data);
     }
     return htmlspecialchars(strip_tags(trim($data)));
+}
+
+/**
+ * Fetches high-precision news using Tavily Search API.
+ * @param string $query
+ * @return array|false
+ */
+function get_tavily_news($query) {
+    $settings = get_settings();
+    $apiKey = $settings['tavily_api_key'] ?? '';
+    if (empty($apiKey)) return false;
+
+    $url = "https://api.tavily.com/search";
+    $data = [
+        "api_key" => $apiKey,
+        "query" => $query,
+        "search_depth" => "advanced",
+        "include_domains" => ["skysports.com", "sky-sport.ch", "espn.com", "supersport.com"],
+        "max_results" => 15
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $result = json_decode($response, true);
+    return $result['results'] ?? false;
 }
 
 function is_admin() {
@@ -290,10 +335,18 @@ function get_ai_insight($prompt) {
     $settings = get_settings();
     $model = $settings['selected_model'];
 
-    if (strpos($model, 'sonar') !== false) {
-        $apiKey = $settings['perplexity_api_key'];
-        if (empty($apiKey)) return "Perplexity API Key missing.";
-        $url = "https://api.perplexity.ai/chat/completions";
+    if (strpos($model, 'sonar') !== false || strpos($model, 'groq/') === 0) {
+        if (strpos($model, 'sonar') !== false) {
+            $apiKey = $settings['perplexity_api_key'];
+            $url = "https://api.perplexity.ai/chat/completions";
+            if (empty($apiKey)) return "Perplexity API Key missing.";
+        } else {
+            $apiKey = $settings['groq_api_key'];
+            $url = "https://api.groq.com/openai/v1/chat/completions";
+            $model = substr($model, 5); // Remove groq/ prefix
+            if (empty($apiKey)) return "Groq API Key missing.";
+        }
+
         $data = [
             "model" => $model,
             "messages" => [["role" => "user", "content" => $prompt]],
@@ -377,7 +430,7 @@ function get_ai_insight($prompt) {
         curl_close($ch);
     }
 
-    if (strpos($model, 'gemini') !== false) {
+    if (strpos($settings['selected_model'], 'gemini') !== false) {
         if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
             return $result['candidates'][0]['content']['parts'][0]['text'];
         }
@@ -389,7 +442,8 @@ function get_ai_insight($prompt) {
             return $result['choices'][0]['message']['content'];
         }
         if (isset($result['error'])) {
-            $provider = (strpos($model, 'sonar') !== false) ? 'Perplexity' : 'DeepSeek';
+            $sel = $settings['selected_model'];
+            $provider = (strpos($sel, 'sonar') !== false) ? 'Perplexity' : ((strpos($sel, 'groq/') === 0) ? 'Groq' : 'DeepSeek');
             return "AI Error: $provider - " . ($result['error']['message'] ?? 'Unknown');
         }
     }
