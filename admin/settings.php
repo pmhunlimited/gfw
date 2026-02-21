@@ -14,8 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
     $whatsapp = sanitize($_POST['whatsapp_number']);
 
     $sharethis = sanitize($_POST['sharethis_property_id']);
-    $stmt = $conn->prepare("UPDATE site_settings SET name = ?, tagline = ?, admin_email = ?, whatsapp_number = ?, sharethis_property_id = ? WHERE id = 1");
-    $stmt->execute([$name, $tagline, $admin_email, $whatsapp, $sharethis]);
+    $header_code = $_POST['header_code'];
+    $footer_code = $_POST['footer_code'];
+    $stmt = $conn->prepare("UPDATE site_settings SET name = ?, tagline = ?, admin_email = ?, whatsapp_number = ?, sharethis_property_id = ?, header_code = ?, footer_code = ? WHERE id = 1");
+    $stmt->execute([$name, $tagline, $admin_email, $whatsapp, $sharethis, $header_code, $footer_code]);
 
     // Handle Logo Upload
     $logo_path = upload_image($_FILES['logo']);
@@ -132,6 +134,14 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">ShareThis Property ID</label>
                         <input type="text" name="sharethis_property_id" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value="<?php echo $settings['sharethis_property_id'] ?? ''; ?>" placeholder="e.g. 65xxx...">
+                    </div>
+                    <div class="col-12">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Custom Header Code (JS/CSS/Meta)</label>
+                        <textarea name="header_code" rows="5" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm" placeholder="Paste code here to appear in <head>"><?php echo htmlspecialchars($settings['header_code'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Custom Footer Code (JS/Tracking Pixels)</label>
+                        <textarea name="footer_code" rows="5" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-mono text-sm" placeholder="Paste code here to appear before </body>"><?php echo htmlspecialchars($settings['footer_code'] ?? ''); ?></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Site Logo (Any format)</label>

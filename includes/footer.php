@@ -99,5 +99,8 @@
             }
         });
     </script>
+    <?php if (!empty($settings['footer_code'])): ?>
+        <?php echo $settings['footer_code']; ?>
+    <?php endif; ?>
 </body>
 </html>

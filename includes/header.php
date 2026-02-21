@@ -71,6 +71,9 @@ $settings = get_settings();
       .navbar-collapse.collapse { visibility: visible !important; }
 
     </style>
+    <?php if (!empty($settings['header_code'])): ?>
+        <?php echo $settings['header_code']; ?>
+    <?php endif; ?>
 </head>
 <body>
     <!-- Main Navbar -->

@@ -27,6 +27,18 @@ function get_settings() {
         }
     }
 
+    if ($settings && !array_key_exists('header_code', $settings)) {
+        try {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN header_code TEXT");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN footer_code TEXT");
+            // Refetch settings after migration
+            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+            $settings = $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("Code injection migration failed: " . $e->getMessage());
+        }
+    }
+
     // Auto-migration for categories slug
     try {
         $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
