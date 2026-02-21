@@ -36,8 +36,7 @@ $rss_urls = [
     'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
     'https://supersport.com/rss/news', // SuperSport All News
     'https://sport.sky.ch/feed', // Sky Sport CH
-    'https://feeds.bbci.co.uk/sport/rss.xml', // BBC Sport Home
-    'https://www.goal.com/feeds/en/news' // Goal.com
+    'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
 ];
 
 $discovered_items = [];
@@ -57,7 +56,7 @@ if (!empty($rss_results)) {
     }
 } else {
     echo "RSS Discovery yielded no results. Falling back to Tavily Search...\n";
-    $tavily_query = "top breaking sports news headlines from skysports.com, espn.com, supersport.com, bbc.com/sport in the last 24 hours";
+    $tavily_query = "top breaking sports news headlines exclusively from skysports.com, sky-sport.ch, espn.com, supersport.com, bbc.com/sport in the last 24 hours";
     $tavily_results = get_tavily_news($tavily_query);
     if ($tavily_results) {
         foreach ($tavily_results as $res) {

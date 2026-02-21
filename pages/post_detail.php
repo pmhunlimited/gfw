@@ -50,10 +50,10 @@ $relatedPosts = $stmt_related->fetchAll();
         <img src="<?php echo $post['image']; ?>" class="absolute inset-0 w-full h-full object-cover opacity-70" alt="">
         <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
         <div class="absolute bottom-0 left-0 w-full p-6 md:p-12">
-            <div class="container mx-auto">
+            <div class="container mx-auto px-4 px-md-0">
                 <span class="bg-electric-red text-white px-4 py-2 font-condensed fw-black italic uppercase text-xs mb-4 inline-block tracking-widest shadow-2xl">GLOBAL EXCLUSIVE</span>
-                <h1 class="display-2 font-condensed fw-black italic text-white uppercase tracking-tighter leading-none mb-6"><?php echo $post['title']; ?></h1>
-                <div class="flex items-center gap-6 text-white-50 font-monospace text-xs uppercase tracking-widest">
+                <h1 class="display-4 display-md-2 font-condensed fw-black italic text-white uppercase tracking-tighter leading-none mb-6"><?php echo $post['title']; ?></h1>
+                <div class="flex flex-wrap items-center gap-4 md:gap-6 text-white-50 font-monospace text-xs uppercase tracking-widest">
                     <span>BY <span class="text-white fw-bold"><?php echo $post['author']; ?></span></span>
                     <span class="w-1 h-1 bg-white/20 rounded-full"></span>
                     <span><?php echo date('M d, Y', strtotime($post['created_at'])); ?></span>
@@ -62,11 +62,11 @@ $relatedPosts = $stmt_related->fetchAll();
         </div>
     </div>
 
-    <div class="container mx-auto px-6 py-12">
+    <div class="container mx-auto px-4 px-md-6 py-12">
         <div class="row g-5">
             <div class="col-lg-8">
                 <article class="prose prose-invert prose-red max-w-none">
-                    <p class="lead text-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-6"><?php echo $post['excerpt']; ?></p>
+                    <p class="lead text-lg text-md-xl text-white-50 font-medium italic mb-8 border-l-4 border-electric-red pl-4 md:pl-6"><?php echo $post['excerpt']; ?></p>
 
                     <?php if (!empty($post['video_url'])):
                         $video_id = '';
@@ -101,7 +101,7 @@ $relatedPosts = $stmt_related->fetchAll();
                         <div class="alert alert-success bg-green-900/20 border-green-500/50 text-green-500 rounded-0 font-condensed italic uppercase"><?php echo $comment_msg; ?></div>
                     <?php endif; ?>
 
-                    <form method="POST" class="mb-12 bg-[#0a0e17] p-8 border border-white/5 rounded-2xl shadow-2xl">
+                    <form method="POST" class="mb-12 bg-[#0a0e17] p-4 p-md-8 border border-white/5 rounded-2xl shadow-2xl">
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Author ID</label>
@@ -149,7 +149,7 @@ $relatedPosts = $stmt_related->fetchAll();
 
     <!-- Read Also Section -->
     <?php if (count($relatedPosts) > 0): ?>
-    <div class="container mx-auto px-6 py-12 border-t border-white/10">
+    <div class="container mx-auto px-4 px-md-6 py-12 border-t border-white/10">
         <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Read Also</h3>
         <div class="row g-4">
             <?php foreach ($relatedPosts as $rp): ?>

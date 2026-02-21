@@ -66,7 +66,7 @@ if ($category) {
                     <img src="<?php echo $hero['image']; ?>" class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover opacity-80 transition-all duration-1000 group-hover:scale-105" alt="">
                     <div class="position-absolute bottom-0 start-0 w-100 p-4 p-md-5 bg-gradient-to-t from-black via-black/70 to-transparent z-20">
                         <span class="badge bg-electric-red rounded-0 px-4 py-2 italic font-condensed fw-black shadow-2xl mb-4">FEATURED REPORT</span>
-                        <h1 class="display-2 font-condensed fw-black text-white italic text-uppercase lh-1 mb-4"><?php echo $hero['title']; ?></h1>
+                        <h1 class="display-4 display-md-2 font-condensed fw-black text-white italic text-uppercase lh-1 mb-4"><?php echo $hero['title']; ?></h1>
                         <p class="lead text-white text-opacity-70 fw-bold text-uppercase fs-4 mb-0 d-none d-md-block"><?php echo $hero['excerpt']; ?></p>
                     </div>
                 </a>
@@ -97,7 +97,7 @@ if ($category) {
 
         <!-- TOP NEWS SECTION -->
         <section class="py-10 bg-black">
-            <div class="container-fluid px-6">
+            <div class="container-fluid px-4 px-md-6">
                 <div class="d-flex align-items-center mb-8">
                     <div class="bg-electric-red me-3" style="width: 6px; height: 40px;"></div>
                     <h2 class="h2 font-condensed fw-black italic text-white mb-0 uppercase">TOP NEWS</h2>
@@ -122,7 +122,7 @@ if ($category) {
         <!-- WATCH LIVE SECTION -->
         <?php if (!empty($watchLive)): ?>
         <section class="py-10 bg-[#0a0e17] border-y border-white/5">
-            <div class="container-fluid px-6">
+            <div class="container-fluid px-4 px-md-6">
                 <div class="d-flex align-items-center mb-8">
                     <div class="bg-electric-red me-3" style="width: 6px; height: 40px;"></div>
                     <h2 class="h2 font-condensed fw-black italic text-white mb-0 uppercase">WATCH LIVE <span class="text-danger ms-2">●</span></h2>
@@ -150,7 +150,7 @@ if ($category) {
 
         <!-- CATEGORY BREAKDOWN -->
         <section class="py-10 bg-black">
-            <div class="container-fluid px-6">
+            <div class="container-fluid px-4 px-md-6">
                 <?php foreach ($categories as $cat):
                     $stmt_cat_posts = $conn->prepare("SELECT * FROM posts WHERE LOWER(category) = LOWER(?) AND (is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP) ORDER BY publish_date DESC LIMIT 2");
                     $stmt_cat_posts->execute([$cat['name']]);
@@ -187,7 +187,7 @@ if ($category) {
 
     <?php else: ?>
         <!-- CATEGORY PAGE CONTENT -->
-        <section class="p-6 p-md-10 bg-black min-h-screen">
+        <section class="p-4 p-md-10 bg-black min-h-screen">
             <div class="d-flex align-items-center mb-10">
                 <div class="bg-electric-red me-3" style="width: 6px; height: 40px;"></div>
                 <h1 class="display-5 font-condensed fw-black italic text-white mb-0 uppercase"><?php echo $category; ?></h1>
@@ -237,7 +237,7 @@ if ($category) {
 </div>
 
 <style>
-    .hero-height { min-height: 500px; }
+    .hero-height { min-height: 400px; }
     @media (min-width: 992px) {
         .hero-height { height: 70vh; }
     }

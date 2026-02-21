@@ -68,7 +68,8 @@ $settings = get_settings();
       .alert { border-radius: 15px; border-opacity: 0.2; }
 
       /* Fix Tailwind/Bootstrap .collapse conflict */
-      .navbar-collapse.collapse { visibility: visible !important; }
+      .collapse:not(.show) { display: none !important; }
+      .collapse.show { display: block !important; visibility: visible !important; }
 
     </style>
     <?php if (!empty($settings['header_code'])): ?>
@@ -77,8 +78,8 @@ $settings = get_settings();
 </head>
 <body>
     <!-- Main Navbar -->
-    <nav class="navbar navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
-        <div class="container-fluid px-4 d-flex align-items-center">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
+        <div class="container-fluid px-4">
             <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-4" href="/">
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
@@ -87,8 +88,12 @@ $settings = get_settings();
                 <?php endif; ?>
             </a>
 
-            <div class="d-flex align-items-center justify-content-between flex-grow-1">
-                <ul class="nav font-condensed fw-bold uppercase small italic align-items-center">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav font-condensed fw-bold uppercase small italic align-items-lg-center me-auto">
                     <?php $current_path = $_SERVER['REQUEST_URI']; ?>
                     <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/' || $current_path == '/index.php') ? 'active text-electric-red' : ''; ?>" href="/" style="color: #fff;">Home</a></li>
 
@@ -106,7 +111,7 @@ $settings = get_settings();
                     <li class="nav-item"><a class="nav-link px-2 <?php echo ($current_path == '/tables' || $current_path == '/standings') ? 'active text-electric-red' : ''; ?>" href="/tables" style="color: #fff;">Standings</a></li>
                 </ul>
 
-                <ul class="nav font-condensed fw-bold uppercase small align-items-center no-scrollbar flex-nowrap overflow-x-auto d-none d-lg-flex">
+                <ul class="navbar-nav font-condensed fw-bold uppercase small align-items-lg-center no-scrollbar flex-nowrap overflow-x-auto">
                     <?php
                     $categories = get_categories_with_counts();
                     foreach ($categories as $c) {

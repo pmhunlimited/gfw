@@ -20,9 +20,9 @@ $custom_meta_keywords = !empty($page['meta_keywords']) ? $page['meta_keywords'] 
 
 include __DIR__ . '/../includes/header.php';
 ?>
-<div class="container py-5">
-    <h1 class="font-condensed fw-black italic text-white display-3 mb-5 border-bottom border-white border-opacity-10 pb-3"><?php echo strtoupper($page['title']); ?></h1>
-    <div class="bg-[#0a0e17] p-5 rounded-4 border border-white border-opacity-5 shadow-2xl min-vh-60">
+<div class="container py-5 px-4">
+    <h1 class="font-condensed fw-black italic text-white display-5 display-md-3 mb-5 border-bottom border-white border-opacity-10 pb-3 uppercase"><?php echo $page['title']; ?></h1>
+    <div class="bg-[#0a0e17] p-4 p-md-5 rounded-4 border border-white border-opacity-5 shadow-2xl min-vh-60 overflow-x-hidden">
         <div class="markdown-content text-white opacity-90 fs-5 leading-relaxed">
             <?php echo parse_markdown($page['content']); ?>
         </div>

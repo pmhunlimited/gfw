@@ -41,20 +41,18 @@ function get_settings() {
 
     // Auto-migration for posts source_url
     try {
-        $stmt_post = $conn->query("SELECT * FROM posts LIMIT 1");
-        $first_post = $stmt_post->fetch();
-        if ($first_post && !array_key_exists('source_url', $first_post)) {
-            $conn->exec("ALTER TABLE posts ADD COLUMN source_url VARCHAR(255)");
-        }
+        $conn->query("SELECT source_url FROM posts LIMIT 1");
     } catch (Exception $e) {
-        // Handle case where table is empty or other errors
+        try {
+            $conn->exec("ALTER TABLE posts ADD COLUMN source_url VARCHAR(255)");
+        } catch (Exception $ex) {}
     }
 
     // Auto-migration for categories slug
     try {
-        $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
-        $first_cat = $stmt_cat->fetch();
-        if ($first_cat && !array_key_exists('slug', $first_cat)) {
+        $conn->query("SELECT slug FROM categories LIMIT 1");
+    } catch (Exception $e) {
+        try {
             $conn->exec("ALTER TABLE categories ADD COLUMN slug VARCHAR(100)");
             // Populate slugs for existing categories
             $all_cats = $conn->query("SELECT id, name FROM categories")->fetchAll();
@@ -62,9 +60,7 @@ function get_settings() {
                 $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $c['name'])));
                 $conn->prepare("UPDATE categories SET slug = ? WHERE id = ?")->execute([$slug, $c['id']]);
             }
-        }
-    } catch (Exception $e) {
-        // Handle case where table is empty or other errors
+        } catch (Exception $ex) {}
     }
 
     $settings = $settings ?: [

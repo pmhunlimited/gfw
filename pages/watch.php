@@ -15,8 +15,8 @@ $leagues = [
     ['id' => '557', 'name' => 'Saudi Pro League']
 ];
 ?>
-<div class="container py-5">
-    <h1 class="font-condensed fw-black italic text-white display-3 mb-5 border-bottom border-white border-opacity-10 pb-3 text-sharp uppercase">Live <span class="text-danger">Centre</span></h1>
+<div class="container py-5 px-4">
+    <h1 class="font-condensed fw-black italic text-white display-5 display-md-3 mb-5 border-bottom border-white border-opacity-10 pb-3 text-sharp uppercase">Live <span class="text-danger">Centre</span></h1>
 
     <div class="elite-tabs-container">
         <!-- Tabs Header -->
@@ -32,7 +32,7 @@ $leagues = [
         <div class="elite-tabs-content">
             <?php foreach ($leagues as $index => $league): ?>
                 <div class="elite-tab-pane <?php echo $index === 0 ? 'active' : ''; ?>" id="scores-<?php echo $league['id']; ?>">
-                    <div class="bg-[#0a0e17] p-2 p-md-4 rounded-4 border border-white border-opacity-5 shadow-2xl overflow-hidden">
+                    <div class="bg-[#0a0e17] p-2 p-md-4 rounded-4 border border-white border-opacity-5 shadow-2xl overflow-x-auto">
                         <div data-widget-type="entityScores"
                              data-entity-type="league"
                              data-entity-id="<?php echo $league['id']; ?>"
