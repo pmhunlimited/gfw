@@ -180,26 +180,64 @@ if ($count > 0) {
     if (!empty($subscribers)) {
         $subject = "Daily Sports Intelligence Digest - " . date('D d M Y');
 
-        $message = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;'>";
-        $message .= "<div style='background-color: #000; color: #ff3e3e; padding: 20px; text-align: center;'>";
-        $message .= "<h1 style='margin: 0; text-transform: uppercase;'>Daily Sports Digest</h1>";
-        $message .= "</div>";
-        $message .= "<div style='background-color: #fff; padding: 20px;'>";
-        $message .= "<p>Hello Intelligence Subscriber,</p>";
-        $message .= "<p>Here is your daily briefing on the latest sports news:</p>";
+        // Modern Responsive Email Template
+        $message = "
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset='utf-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <style>
+                body { margin: 0; padding: 0; background-color: #05070a; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+                .wrapper { width: 100%; table-layout: fixed; background-color: #05070a; padding-bottom: 40px; }
+                .main { background-color: #0a0e17; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #ffffff; }
+                .header { background-color: #000000; padding: 40px; text-align: center; border-bottom: 2px solid #ff3e3e; }
+                .content { padding: 40px; }
+                .news-item { margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 30px; }
+                .news-title { font-size: 24px; font-weight: bold; color: #ffffff; text-decoration: none; line-height: 1.3; text-transform: uppercase; font-style: italic; display: block; }
+                .news-excerpt { font-size: 16px; color: #a0aec0; line-height: 1.6; margin: 15px 0; }
+                .btn { display: inline-block; background-color: #ff3e3e; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+                .footer { padding: 30px; text-align: center; font-size: 12px; color: #4a5568; }
+            </style>
+        </head>
+        <body>
+            <center class='wrapper'>
+                <table class='main' width='100%'>
+                    <tr>
+                        <td class='header'>
+                            <h1 style='margin:0; color:#ffffff; letter-spacing:-1px; text-transform:uppercase; font-style:italic; font-size: 32px;'>".($settings['name'] ?? 'GLOBAL FOOTBALL WATCH')."</h1>
+                            <p style='margin:10px 0 0; color:#ff3e3e; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:2px;'>Intelligence Protocol Active</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class='content'>
+                            <p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>Daily Intelligence Digest: ".date('d M Y')."</p>
+        ";
 
         foreach ($published_posts as $post) {
             $post_url = SITE_URL . "/post/" . $post['slug'];
-            $message .= "<div style='margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;'>";
-            $message .= "<h2 style='color: #000; margin-bottom: 10px;'><a href='$post_url' style='color: #000; text-decoration: none;'>{$post['title']}</a></h2>";
-            $message .= "<p style='color: #666; font-size: 14px;'>{$post['excerpt']}</p>";
-            $message .= "<a href='$post_url' style='display: inline-block; background-color: #ff3e3e; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>READ FULL REPORT</a>";
-            $message .= "</div>";
+            $message .= "
+                            <div class='news-item'>
+                                <a href='$post_url' class='news-title'>{$post['title']}</a>
+                                <p class='news-excerpt'>{$post['excerpt']}</p>
+                                <a href='$post_url' class='btn'>Decrypt Full Report</a>
+                            </div>
+            ";
         }
 
-        $message .= "<p style='color: #999; font-size: 12px;'>You are receiving this because you subscribed to " . ($settings['name'] ?? 'GFW') . ".</p>";
-        $message .= "</div>";
-        $message .= "</div>";
+        $message .= "
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class='footer'>
+                            <p>&copy; ".date('Y')." ".($settings['name'] ?? 'GFW').". All Systems Secure.</p>
+                            <p>You are receiving this encrypted digest because you subscribed to our intelligence network.</p>
+                        </td>
+                    </tr>
+                </table>
+            </center>
+        </body>
+        </html>";
 
         foreach ($subscribers as $email) {
             send_mail($email, $subject, $message);
