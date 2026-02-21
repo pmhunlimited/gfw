@@ -79,8 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
 
             $settings = get_settings();
             $subject = "Password Changed for " . $settings['name'];
-            $msg = "Password has been changed for the admin user: [" . $user['username'] . "], If you are not the one that initiate this change, please login to cPanel immediately to stop the abuse of your website.";
-            send_mail($user['email'], $subject, $msg);
+            $msg = "Password has been changed for the admin user: <strong>[" . $user['username'] . "]</strong>. If you are not the one that initiated this change, please login to cPanel immediately to stop the abuse of your website.";
+            $html = render_email_template("<p>$msg</p>", "Security Alert: Password Changed");
+            send_mail($user['email'], $subject, $html);
 
             $success = "CIPHER UPDATED. ACCESS GRANTED.";
             $view = 'login';

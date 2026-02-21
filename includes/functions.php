@@ -192,10 +192,63 @@ function send_mail($to, $subject, $message) {
     }
 }
 
+function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
+    $settings = get_settings();
+    $site_name = $settings['name'] ?? 'GLOBAL FOOTBALL WATCH';
+    $year = date('Y');
+
+    return "
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <style>
+            body { margin: 0; padding: 0; background-color: #05070a; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+            .wrapper { width: 100%; table-layout: fixed; background-color: #05070a; padding-bottom: 40px; }
+            .main { background-color: #0a0e17; margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; color: #ffffff; }
+            .header { background-color: #000000; padding: 40px; text-align: center; border-bottom: 2px solid #ff3e3e; }
+            .content { padding: 40px; }
+            .news-item { margin-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 30px; }
+            .news-title { font-size: 24px; font-weight: bold; color: #ffffff; text-decoration: none; line-height: 1.3; text-transform: uppercase; font-style: italic; display: block; }
+            .news-excerpt { font-size: 16px; color: #a0aec0; line-height: 1.6; margin: 15px 0; }
+            .btn { display: inline-block; background-color: #ff3e3e; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+            .footer { padding: 30px; text-align: center; font-size: 12px; color: #4a5568; }
+            p { margin: 0 0 20px; }
+            a { color: #ff3e3e; text-decoration: none; }
+        </style>
+    </head>
+    <body>
+        <center class='wrapper'>
+            <table class='main' width='100%'>
+                <tr>
+                    <td class='header'>
+                        <h1 style='margin:0; color:#ffffff; letter-spacing:-1px; text-transform:uppercase; font-style:italic; font-size: 32px;'>$site_name</h1>
+                        <p style='margin:10px 0 0; color:#ff3e3e; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:2px;'>$subtitle</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td class='content'>
+                        $content
+                    </td>
+                </tr>
+                <tr>
+                    <td class='footer'>
+                        <p>&copy; $year $site_name. All Systems Secure.</p>
+                        <p>This is an automated encrypted transmission from the core network.</p>
+                    </td>
+                </tr>
+            </table>
+        </center>
+    </body>
+    </html>";
+}
+
 function log_activity($message) {
     $settings = get_settings();
     if (!empty($settings['admin_email'])) {
-        send_mail($settings['admin_email'], "GFW System Alert", $message);
+        $html = render_email_template("<p>$message</p>", "Security Alert");
+        send_mail($settings['admin_email'], "GFW System Alert", $html);
     }
 }
 
