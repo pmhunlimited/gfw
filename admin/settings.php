@@ -13,11 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
     $admin_email = sanitize($_POST['admin_email']);
     $whatsapp = sanitize($_POST['whatsapp_number']);
 
-    $sharethis = sanitize($_POST['sharethis_property_id']);
     $header_code = $_POST['header_code'];
     $footer_code = $_POST['footer_code'];
-    $stmt = $conn->prepare("UPDATE site_settings SET name = ?, tagline = ?, admin_email = ?, whatsapp_number = ?, sharethis_property_id = ?, header_code = ?, footer_code = ? WHERE id = 1");
-    $stmt->execute([$name, $tagline, $admin_email, $whatsapp, $sharethis, $header_code, $footer_code]);
+    $stmt = $conn->prepare("UPDATE site_settings SET name = ?, tagline = ?, admin_email = ?, whatsapp_number = ?, header_code = ?, footer_code = ? WHERE id = 1");
+    $stmt->execute([$name, $tagline, $admin_email, $whatsapp, $header_code, $footer_code]);
 
     // Handle Logo Upload
     $logo_path = upload_image($_FILES['logo']);
@@ -130,10 +129,6 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">WhatsApp Number</label>
                         <input type="text" name="whatsapp_number" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value="<?php echo $settings['whatsapp_number']; ?>">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">ShareThis Property ID</label>
-                        <input type="text" name="sharethis_property_id" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value="<?php echo $settings['sharethis_property_id'] ?? ''; ?>" placeholder="e.g. 65xxx...">
                     </div>
                     <div class="col-12">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Custom Header Code (JS/CSS/Meta)</label>

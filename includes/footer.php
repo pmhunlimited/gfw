@@ -63,21 +63,6 @@
         </div>
     </div>
 
-    <!-- ShareThis Sticky Buttons -->
-    <?php if (!empty($settings['sharethis_property_id'])): ?>
-    <div class="sharethis-sticky-share-buttons"></div>
-    <script type="text/javascript" src="https://platform-api.sharethis.com/js/sharethis.js#property=<?php echo $settings['sharethis_property_id']; ?>&product=sticky-share-buttons" async="async"></script>
-    <style>
-        /* Force ShareThis Sticky Buttons to Right Center */
-        #st-el-1, .st-sticky-share-buttons {
-            left: auto !important;
-            right: 0 !important;
-            top: 50% !important;
-            transform: translateY(-50%) !important;
-        }
-    </style>
-    <?php endif; ?>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {

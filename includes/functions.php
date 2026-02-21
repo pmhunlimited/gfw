@@ -15,18 +15,6 @@ function get_settings() {
     $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
     $settings = $stmt->fetch();
 
-    if ($settings && !array_key_exists('sharethis_property_id', $settings)) {
-        // Auto-migration: Add sharethis_property_id column if missing
-        try {
-            $conn->exec("ALTER TABLE site_settings ADD COLUMN sharethis_property_id VARCHAR(100)");
-            // Refetch settings after migration
-            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-            $settings = $stmt->fetch();
-        } catch (Exception $e) {
-            error_log("Migration failed: " . $e->getMessage());
-        }
-    }
-
     if ($settings && !array_key_exists('header_code', $settings)) {
         try {
             $conn->exec("ALTER TABLE site_settings ADD COLUMN header_code TEXT");
