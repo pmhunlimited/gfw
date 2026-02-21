@@ -349,14 +349,12 @@ function get_ai_insight($prompt) {
     curl_close($ch);
 
     // Auto-retry Gemini failures (404/Retired) with different versions or models
-    if (strpos($model, 'gemini') !== false && ($httpCode == 404 || $httpCode == 400 || !$response)) {
-        echo "Gemini attempt failed (HTTP $httpCode). Retrying with fallback...\n";
-
+    if (strpos($model, 'gemini') !== false && ($httpCode != 200 || !$response)) {
         $fallbacks = [
             str_replace(['/v1beta/', '/v1/'], ($version == 'v1' ? '/v1beta/' : '/v1/'), $url), // Switch version
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=$apiKey", // Stable 3.0
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey", // Stable 2.5
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey"  // Stable 2.0
+            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=$apiKey",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey"
         ];
 
         foreach ($fallbacks as $fallback_url) {

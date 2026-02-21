@@ -51,11 +51,23 @@ Return ONLY the JSON array. No other text.";
 
 $discovered_items = [];
 $discovery_source = $settings['discovery_source'] ?? 'ai';
-$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news("latest major football news headlines from goal.com, bbc.com, bbc.co.uk, espn.com, supersport.com last 24 hours") : null;
+$tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport, espn.com/soccer, supersport.com in the last 24 hours";
+$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news($tavily_query) : null;
 
 if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) > 0) {
     echo "Using Tavily for high-precision news discovery...\n";
     foreach ($tavily_results as $res) {
+        // Filter out generic homepage titles
+        $generic_titles = ['Goal.com', 'BBC Sport', 'ESPN', 'SuperSport', 'Latest Sports News', 'Football News'];
+        $is_generic = false;
+        foreach ($generic_titles as $gt) {
+            if (trim($res['title']) == $gt || strlen($res['title']) < 20) {
+                $is_generic = true;
+                break;
+            }
+        }
+        if ($is_generic) continue;
+
         $discovered_items[] = [
             'title' => $res['title'],
             'category' => 'MATCH ANALYSIS', // Default, will be refined by AI
@@ -80,9 +92,11 @@ $web_dir = "/assets/uploads/news/" . $date_path . "/";
 if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
 $count = 0;
+$loop_idx = 0;
 $fetched_hashes = [];
 $published_posts = [];
 foreach ($discovered_items as $item) {
+    $loop_idx++;
     if ($count >= 10) break;
 
     // Skip if already exists or similar slug found (prevent duplicates)
@@ -94,7 +108,7 @@ foreach ($discovered_items as $item) {
         continue;
     }
 
-    echo "\n--- Processing Story " . ($count + 1) . ": " . $item['title'] . " ---\n";
+    echo "\n--- Processing Story $loop_idx: " . $item['title'] . " ---\n";
 
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Generating high-level content and SEO metadata...\n";
@@ -104,10 +118,10 @@ foreach ($discovered_items as $item) {
     CRITICAL: Determine the best category for this story from this list: ($cat_list).
 
     STRICT GUIDELINES:
-    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.) in the article.
-    - Rewrite everything to ensure complete originality and a fan-blogger tone.
-    - DO NOT include any fiction; the report must be 100% accurate based on recent events.
-    - Ensure the story is within the last 24 hours.
+    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, Sky Sport, etc.) in the article.
+    - Rewrite everything to ensure 100% originality and an engaging fan-blogger tone.
+    - DO NOT include any fiction, rumors (unless they are major breaking news), or fabricated details. The report must be 100% accurate and factual based on real-world events that happened within the last 24 hours.
+    - Focus strictly on facts: match results, confirmed transfers, official team statements.
 
     Requirements:
     0. 'category': The chosen category from the list.
@@ -121,7 +135,7 @@ foreach ($discovered_items as $item) {
 
     $raw_content = get_ai_insight($content_prompt);
     if (!$raw_content || strpos($raw_content, 'AI Error:') === 0) {
-        echo "Error: Content generation failed for this item. Skipping.\n";
+        echo "Error: Content generation failed for this item. AI Response: " . ($raw_content ?: 'Empty') . ". Skipping.\n";
         continue;
     }
 
