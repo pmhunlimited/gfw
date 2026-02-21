@@ -278,12 +278,17 @@ function get_ai_insight($prompt) {
 
         $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
         $data = [
-            "contents" => [["parts" => [["text" => $prompt]]]],
-            "tools" => [["google_search" => (object)[]]],
-            "generationConfig" => [
-                "maxOutputTokens" => 8192,
-                "temperature" => 0.7
-            ]
+            "contents" => [["parts" => [["text" => $prompt]]]]
+        ];
+
+        // Enable Google Search grounding for recent models (typically on v1beta)
+        if ($version === 'v1beta' || strpos($model_id, 'gemini-2') !== false || strpos($model_id, 'gemini-3') !== false) {
+            $data["tools"] = [["google_search" => (object)[]]];
+        }
+
+        $data["generationConfig"] = [
+            "maxOutputTokens" => 8192,
+            "temperature" => 0.7
         ];
         $headers = ['Content-Type: application/json'];
     } else {
