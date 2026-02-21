@@ -31,6 +31,7 @@ function get_settings() {
         try {
             $conn->exec("ALTER TABLE site_settings ADD COLUMN groq_api_key VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tavily_api_key VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN discovery_source VARCHAR(50) DEFAULT 'ai'");
             // Refetch settings after migration
             $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
             $settings = $stmt->fetch();
@@ -280,8 +281,10 @@ function get_ai_insight($prompt) {
             $model_id = $model;
         }
 
-        // Ensure model name doesn't have duplicate models/ prefix
-        $model_id = (strpos($model_id, 'models/') === 0) ? substr($model_id, 7) : $model_id;
+        // Ensure model name has models/ prefix if required by the endpoint
+        if (strpos($model_id, 'models/') !== 0) {
+            $model_id = 'models/' . $model_id;
+        }
 
         // Special handling: if model contains '-latest', it's usually v1 compatible
         if (strpos($model_id, '-latest') !== false && $version === 'v1beta') {

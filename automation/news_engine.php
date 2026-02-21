@@ -50,9 +50,10 @@ Return ONLY a valid JSON array of objects with these keys:
 Return ONLY the JSON array. No other text.";
 
 $discovered_items = [];
-$tavily_results = get_tavily_news("latest major football news headlines from skysports.com, espn.com, supersport.com, sky-sport.ch last 24 hours");
+$discovery_source = $settings['discovery_source'] ?? 'ai';
+$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news("latest major football news headlines from skysports.com, espn.com, supersport.com, sky-sport.ch last 24 hours") : null;
 
-if ($tavily_results && count($tavily_results) > 0) {
+if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) > 0) {
     echo "Using Tavily for high-precision news discovery...\n";
     foreach ($tavily_results as $res) {
         $discovered_items[] = [
