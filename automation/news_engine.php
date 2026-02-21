@@ -77,6 +77,36 @@ if (empty($discovered_items)) {
     die("Error: News discovery failed. Please check your API keys.\n");
 }
 
+// 1.5 Deduplication Stage: Use AI to identify and remove redundant stories
+echo "Stage 1.5: Filtering redundant stories via AI...\n";
+$headlines_for_dedup = "";
+foreach ($discovered_items as $idx => $item) {
+    $headlines_for_dedup .= "$idx: {$item['title']}\n";
+}
+
+$dedup_prompt = "I have a list of sports news headlines from different sources. Some refer to the EXACT SAME match, transfer, or event.
+Identify the unique events and return a JSON array of the indices (integers) that I should KEEP.
+If multiple headlines refer to the same event, only keep the ONE index that has the most descriptive or complete headline.
+
+HEADLINES:
+$headlines_for_dedup
+
+Return ONLY a valid JSON array of integers. Example: [0, 2, 5]";
+
+$raw_dedup = get_ai_insight($dedup_prompt);
+$unique_indices = extract_json($raw_dedup, true);
+
+if (is_array($unique_indices) && !empty($unique_indices)) {
+    $filtered_items = [];
+    foreach ($unique_indices as $idx) {
+        if (isset($discovered_items[$idx])) {
+            $filtered_items[] = $discovered_items[$idx];
+        }
+    }
+    $discovered_items = $filtered_items;
+    echo "Deduplication complete. " . count($discovered_items) . " unique stories remaining.\n";
+}
+
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
 $web_dir = "/assets/uploads/news/" . $date_path . "/";
@@ -94,8 +124,11 @@ foreach ($discovered_items as $item) {
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $source_url = $item['source_link'] ?? '';
 
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?)");
-    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url]);
+    // Robust check: Exact title, Slug prefix, Source URL, or Title prefix (first 25 chars)
+    $title_prefix = substr($item['title'], 0, 25) . '%';
+
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ?");
+    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url, $title_prefix]);
     if ($check_stmt->fetch()) {
         echo "Skipping existing or duplicate post: " . $item['title'] . "\n";
         continue;
