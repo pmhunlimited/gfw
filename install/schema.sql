@@ -8,8 +8,6 @@ CREATE TABLE IF NOT EXISTS site_settings (
     whatsapp_number VARCHAR(50),
     header_code TEXT,
     footer_code TEXT,
-    tavily_api_key VARCHAR(255),
-    discovery_source VARCHAR(50) DEFAULT 'tavily',
     selected_model VARCHAR(50) DEFAULT 'deepseek-chat',
     deepseek_api_key VARCHAR(255),
     news_api_key VARCHAR(255),

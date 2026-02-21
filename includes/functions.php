@@ -27,17 +27,6 @@ function get_settings() {
         }
     }
 
-    if ($settings && !array_key_exists('tavily_api_key', $settings)) {
-        try {
-            $conn->exec("ALTER TABLE site_settings ADD COLUMN tavily_api_key VARCHAR(255)");
-            $conn->exec("ALTER TABLE site_settings ADD COLUMN discovery_source VARCHAR(50) DEFAULT 'tavily'");
-            // Refetch settings after migration
-            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-            $settings = $stmt->fetch();
-        } catch (Exception $e) {
-            error_log("API Key migration failed: " . $e->getMessage());
-        }
-    }
 
     // Auto-migration for posts source_url
     try {
@@ -384,44 +373,6 @@ function get_rss_news($urls) {
     return $all_items;
 }
 
-/**
- * Fetches latest sports news headlines from Tavily Search API.
- * @param string $query
- * @return array|null
- */
-function get_tavily_news($query = "latest major football news headlines last 24 hours") {
-    $settings = get_settings();
-    $apiKey = $settings['tavily_api_key'] ?? '';
-    if (empty($apiKey)) return null;
-
-    $url = "https://api.tavily.com/search";
-    $data = [
-        "api_key" => $apiKey,
-        "query" => $query,
-        "search_depth" => "advanced",
-        "include_answer" => false,
-        "include_images" => true,
-        "max_results" => 10,
-        "days" => 1
-    ];
-
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-
-    $response = curl_exec($ch);
-    $result = json_decode($response, true);
-    curl_close($ch);
-
-    if (isset($result['results'])) {
-        return $result['results'];
-    }
-
-    return null;
-}
 
 function get_suggested_topics() {
     $today = date('D d M Y');

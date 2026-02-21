@@ -114,12 +114,16 @@ define('INSTALLED', true);
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GFW Installer - Stage <?php echo $stage; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #05070a; color: #fff; font-family: 'Inter', sans-serif; }
+        body { background-color: #05070a; color: #fff; font-family: 'Inter', sans-serif; padding-bottom: 50px; }
         .installer-card { background: #0a0e17; border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 40px; margin-top: 50px; }
+        @media (max-width: 576px) {
+            .installer-card { padding: 30px 20px; margin-top: 20px; }
+        }
         .btn-primary { background-color: #ff3e3e; border: none; font-family: 'Barlow Condensed'; text-transform: uppercase; padding: 12px 30px; }
         .font-condensed { font-family: 'Barlow Condensed', sans-serif; text-transform: uppercase; }
         .text-electric-red { color: #ff3e3e; }

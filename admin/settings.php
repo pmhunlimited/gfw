@@ -34,12 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET deepseek_api_key = ?, tavily_api_key = ?, selected_model = ?, discovery_source = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET deepseek_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['deepseek_api_key'] ?? '',
-        $_POST['tavily_api_key'] ?? '',
-        $_POST['selected_model'] ?? $settings['selected_model'],
-        $_POST['discovery_source'] ?? 'tavily'
+        $_POST['selected_model'] ?? $settings['selected_model']
     ]);
     $success = "AI logic updated.";
 }
@@ -161,20 +159,12 @@ $activeTab = $_GET['tab'] ?? 'general';
             <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-5 p-4 rounded-3xl">
                 <h5 class="fw-black mb-3">Intelligence Acquisition Guide</h5>
                 <div class="row g-4 small">
-                    <div class="col-md-6 border-end border-white border-opacity-10">
+                    <div class="col-12">
                         <p class="mb-2"><strong>DeepSeek API:</strong></p>
                         <ol class="ps-3 opacity-75">
                             <li>Visit <a href="https://platform.deepseek.com/" target="_blank" class="text-info">DeepSeek Platform</a>.</li>
                             <li>Navigate to the "API Keys" section.</li>
                             <li>Generate a new key and add balance to your account.</li>
-                        </ol>
-                    </div>
-                    <div class="col-md-6">
-                        <p class="mb-2"><strong>Tavily Search:</strong></p>
-                        <ol class="ps-3 opacity-75">
-                            <li>Visit <a href="https://tavily.com/" target="_blank" class="text-info">Tavily AI</a>.</li>
-                            <li>Get your API key for high-precision real-time news discovery.</li>
-                            <li>Combined with DeepSeek, this provides the most accurate results.</li>
                         </ol>
                     </div>
                 </div>
@@ -183,30 +173,24 @@ $activeTab = $_GET['tab'] ?? 'general';
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4 mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
                             <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">DeepSeek API Key</span>
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Tavily Search API Key</span>
-                            <input type="password" name="tavily_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['tavily_api_key'] ?? ''; ?>">
-                        </div>
-                    </div>
                 </div>
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5 mb-8">
                     <h4 class="text-white font-black uppercase italic mb-4 small">News Discovery Protocol</h4>
-                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">Currently optimized to use Tavily for real-time news discovery.</p>
+                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">System is currently configured for autonomous factual news discovery via encrypted RSS channels.</p>
 
                     <div class="row g-4">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Discovery Source</label>
-                            <select name="discovery_source" class="w-full bg-black/40 border border-white/10 rounded-xl px-6 py-4 text-white font-bold">
-                                <option value="tavily" selected>TAVILY SEARCH API (Required for Real-time)</option>
-                            </select>
-                            <p class="text-[9px] text-white-50 mt-3 italic opacity-60">Ensures accurate sports news from Goal.com, BBC, and ESPN within the last 24 hours.</p>
+                            <div class="bg-black/40 border border-white/10 rounded-xl px-6 py-4 text-white font-bold opacity-60 cursor-not-allowed">
+                                GLOBAL RSS FEDERATION (Sky Sports, ESPN, SuperSport, BBC)
+                            </div>
+                            <p class="text-[9px] text-white-50 mt-3 italic opacity-60">Optimized for 100% factual accuracy from official sports broadcasting networks.</p>
                         </div>
                     </div>
                 </div>
@@ -283,7 +267,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
                         <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
                     </div>
-                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek and Tavily keys are configured in the "AI Core" tab.</p>
+                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek API key is configured in the "AI Core" tab.</p>
                 </div>
             </div>
 

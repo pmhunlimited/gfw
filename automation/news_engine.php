@@ -54,22 +54,6 @@ if (!empty($rss_results)) {
             'image_keyword' => $res['title']
         ];
     }
-} else {
-    echo "RSS Discovery yielded no results. Falling back to Tavily Search...\n";
-    $tavily_query = "top breaking sports news headlines exclusively from skysports.com, sky-sport.ch, espn.com, supersport.com, bbc.com/sport in the last 24 hours";
-    $tavily_results = get_tavily_news($tavily_query);
-    if ($tavily_results) {
-        foreach ($tavily_results as $res) {
-            $discovered_items[] = [
-                'title' => $res['title'],
-                'description' => $res['content'] ?? $res['title'],
-                'source_link' => $res['url'],
-                'category' => 'MATCH ANALYSIS',
-                'image_keyword' => $res['title'],
-                'image_url' => $res['image'] ?? null
-            ];
-        }
-    }
 }
 
 if (empty($discovered_items)) {

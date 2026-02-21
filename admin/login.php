@@ -95,12 +95,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GFW | CORE ACCESS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #05070a; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; }
-        .login-card { background: #0a0e17; border: 1px solid rgba(255,255,255,0.05); padding: 50px; border-radius: 30px; width: 100%; max-width: 450px; }
+        body { background-color: #05070a; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; padding: 20px; }
+        .login-card { background: #0a0e17; border: 1px solid rgba(255,255,255,0.05); padding: 40px; border-radius: 30px; width: 100%; max-width: 450px; }
+        @media (max-width: 576px) {
+            .login-card { padding: 30px 20px; }
+        }
         .font-condensed { font-family: 'Barlow Condensed'; text-transform: uppercase; }
         .btn-primary { background: #ff3e3e; border: none; font-weight: 900; letter-spacing: 2px; }
     </style>
