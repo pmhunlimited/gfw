@@ -2,6 +2,7 @@
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GFW | SYSTEM CONTROL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,11 +21,15 @@
         .bg-white, .modal-content, .alert-light { color: #000 !important; }
         .bg-white h1, .bg-white h2, .bg-white h3, .bg-white p { color: #000 !important; }
         .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
+
+        /* Fix Tailwind/Bootstrap .collapse conflict */
+        .collapse:not(.show) { display: none !important; }
+        .collapse.show { display: block !important; visibility: visible !important; }
     </style>
 </head>
 <body>
 <!-- Mobile Header -->
-<div class="d-md-none bg-black border-bottom border-white border-opacity-10 p-3 sticky-top">
+<div class="d-md-none bg-black border-bottom border-white border-opacity-10 p-3 sticky-top" style="z-index: 1050;">
     <div class="d-flex justify-content-between align-items-center">
         <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
             <?php if (!empty($settings['logo'])): ?>
@@ -55,7 +60,7 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block fixed-top h-100">
+        <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block position-fixed h-full bg-[#0a0e17] border-r border-white/5" style="z-index: 1000;">
             <div class="p-4 mb-4">
                 <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
                     <?php if (!empty($settings['logo'])): ?>
@@ -79,4 +84,4 @@
         </div>
 
         <!-- Main Content -->
-        <div class="col-md-9 col-lg-10 ms-sm-auto px-4 py-5">
+        <div class="col-12 col-md-9 col-lg-10 offset-md-3 offset-lg-2 px-4 py-5 min-vh-100">

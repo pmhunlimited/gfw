@@ -19,7 +19,7 @@ echo "Starting AI-Powered News Discovery...\n";
 $available_categories = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
 if (empty($available_categories)) {
     // Seed default categories if missing
-    $defaults = ['PREMIER LEAGUE', 'CHAMPIONS LEAGUE', 'TRANSFER NEWS', 'LA LIGA', 'SERIE A', 'BUNDESLIGA', 'MATCH ANALYSIS'];
+    $defaults = ['PREMIER LEAGUE', 'CHAMPIONS LEAGUE', 'TRANSFER NEWS', 'LA LIGA', 'SERIE A', 'BUNDESLIGA', 'MATCH ANALYSIS', 'CRICKET', 'TENNIS', 'BASKETBALL', 'GOLF', 'MOTOR SPORT', 'OTHER SPORTS'];
     foreach ($defaults as $d) {
         $conn->prepare("INSERT IGNORE INTO categories (name) VALUES (?)")->execute([$d]);
     }
@@ -29,15 +29,15 @@ $cat_list = implode(', ', $available_categories);
 
 // 1. Discovery Stage: Fetch factual news from RSS Feeds
 $today = date('D d M Y H:i');
-echo "Stage 1: Discovering factual football stories from RSS for $today...\n";
+echo "Stage 1: Discovering factual sports stories from RSS for $today...\n";
 
 $rss_urls = [
-    'https://www.skysports.com/rss/12040',
-    'https://www.espn.com/espn/rss/soccer/news',
-    'https://supersport.com/rss/news/football',
-    'https://feeds.bbci.co.uk/sport/football/rss.xml',
-    'https://www.goal.com/feeds/en/news',
-    'https://sport.sky.ch/feed'
+    'https://www.skysports.com/rss/12433', // Sky Sports Home
+    'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
+    'https://supersport.com/rss/news', // SuperSport All News
+    'https://sport.sky.ch/feed', // Sky Sport CH
+    'https://feeds.bbci.co.uk/sport/rss.xml', // BBC Sport Home
+    'https://www.goal.com/feeds/en/news' // Goal.com
 ];
 
 $discovered_items = [];
@@ -57,7 +57,7 @@ if (!empty($rss_results)) {
     }
 } else {
     echo "RSS Discovery yielded no results. Falling back to Tavily Search...\n";
-    $tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport in the last 24 hours";
+    $tavily_query = "top breaking sports news headlines from skysports.com, espn.com, supersport.com, bbc.com/sport in the last 24 hours";
     $tavily_results = get_tavily_news($tavily_query);
     if ($tavily_results) {
         foreach ($tavily_results as $res) {
@@ -148,13 +148,14 @@ foreach ($discovered_items as $item) {
     STRICT GUIDELINES:
     - Rewrite the 'Factual Summary' into a unique, detailed, and engaging sports report (minimum 300 words).
     - ABSOLUTELY NO FICTION OR HALLUCINATIONS. Use ONLY the provided information.
+    - NEWS MUST BE RECENT (Last 24 hours).
     - If your internal AI knowledge contradicts the 'Factual Summary' (e.g., about managers or player locations), IGNORE your internal knowledge and trust the Summary 100%.
     - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.).
     - Use an engaging fan-blogger tone with 3-4 paragraphs. Use Markdown.
-    - Determine the best category for this story from: ($cat_list).
+    - Determine the best category for this story from this list ONLY: ($cat_list).
 
     Requirements:
-    - 'category': The chosen category.
+    - 'category': The chosen category (must be from the provided list).
     - 'content': The rewritten report (Markdown).
     - 'tags': 6-10 high-ranking SEO tags.
     - 'meta_title': SEO optimized title (max 60 chars).
