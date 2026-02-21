@@ -34,11 +34,11 @@ echo "Stage 1: Discovering trending football stories for $today...\n";
 $discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (Current time: $today).
 
 You MUST ONLY use information from the following official sources:
-- skysports.com
-- sky-sport.ch
+- goal.com
+- bbc.com
+- bbc.co.uk
 - espn.com
 - supersport.com
-- Sport - Scores, Fixtures, News - Live Sport
 
 Focus on: Latest match results, breaking transfers, and major team news.
 Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
@@ -51,7 +51,7 @@ Return ONLY the JSON array. No other text.";
 
 $discovered_items = [];
 $discovery_source = $settings['discovery_source'] ?? 'ai';
-$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news("latest major football news headlines from skysports.com, espn.com, supersport.com, sky-sport.ch last 24 hours") : null;
+$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news("latest major football news headlines from goal.com, bbc.com, bbc.co.uk, espn.com, supersport.com last 24 hours") : null;
 
 if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) > 0) {
     echo "Using Tavily for high-precision news discovery...\n";
@@ -102,6 +102,12 @@ foreach ($discovered_items as $item) {
     $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}'.
 
     CRITICAL: Determine the best category for this story from this list: ($cat_list).
+
+    STRICT GUIDELINES:
+    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.) in the article.
+    - Rewrite everything to ensure complete originality and a fan-blogger tone.
+    - DO NOT include any fiction; the report must be 100% accurate based on recent events.
+    - Ensure the story is within the last 24 hours.
 
     Requirements:
     0. 'category': The chosen category from the list.

@@ -1,8 +1,0 @@
-[Sat Feb 21 17:23:20 2026] PHP 8.3.6 Development Server (http://localhost:8000) started
-[Sat Feb 21 17:23:47 2026] [::1]:41524 Accepted
-[Sat Feb 21 17:23:47 2026] [::1]:41524 Closing
-[Sat Feb 21 17:23:47 2026] [::1]:41532 Accepted
-[Sat Feb 21 17:24:47 2026] API Key migration failed: SQLSTATE[HY000]: General error: 5 database is locked
-[Sat Feb 21 17:25:47 2026] [::1]:41532 Closing
-[Sat Feb 21 17:25:47 2026] [::1]:40544 Accepted
-[Sat Feb 21 17:25:47 2026] [::1]:40544 Closing

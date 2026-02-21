@@ -281,9 +281,9 @@ function get_ai_insight($prompt) {
             $model_id = $model;
         }
 
-        // Ensure model name has models/ prefix if required by the endpoint
-        if (strpos($model_id, 'models/') !== 0) {
-            $model_id = 'models/' . $model_id;
+        // Ensure model name does NOT have models/ prefix because it is already in the URL
+        if (strpos($model_id, 'models/') === 0) {
+            $model_id = substr($model_id, 7);
         }
 
         // Special handling: if model contains '-latest', it's usually v1 compatible

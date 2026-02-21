@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
         $_POST['deepseek_api_key'],
         $_POST['groq_api_key'],
         $_POST['tavily_api_key'],
-        $_POST['selected_model'],
+        $_POST['selected_model'] ?? $settings['selected_model'],
         $_POST['discovery_source']
     ]);
     $success = "AI logic updated.";
@@ -233,13 +233,10 @@ $activeTab = $_GET['tab'] ?? 'general';
                     // Note: These models are current as of Feb 2026.
                     // Older Gemini 1.5 models have been deprecated or moved to legacy endpoints.
                     $models = [
-                        ['id' => 'v1beta/gemini-3-flash', 'name' => 'Gemini 3 Flash (Recommended)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-3.1-pro', 'name' => 'Gemini 3.1 Pro', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-3-pro', 'name' => 'Gemini 3 Pro', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.5-flash-lite', 'name' => 'Gemini 2.5 Flash-Lite', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.5-pro', 'name' => 'Gemini 2.5 Pro', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash (Recommended)', 'provider' => 'Google'],
+                        ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (Stable v1)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1beta)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'provider' => 'Google'],
                         ['id' => 'groq/compound', 'name' => 'Groq Compound (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'groq/compound-mini', 'name' => 'Groq Compound Mini (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
