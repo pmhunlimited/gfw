@@ -31,13 +31,14 @@ $cat_list = implode(', ', $available_categories);
 $today = date('D d M Y');
 echo "Stage 1: Discovering trending football stories for $today...\n";
 
-$discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (specifically on $today).
-Focus on: Latest match results, breaking transfers, and major team news.
-Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
+$discovery_prompt = "Act as an elite sports news aggregator. Today's date is $today.
+CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major sports news stories (covering ALL sports: football, basketball, tennis, golf, etc.) that were published TODAY, $today, specifically from these sources ONLY: skysports.com, sky-sport.ch, espn.com, and supersport.com.
+Focus on: Current scores, fixtures, breaking news, and live sport events from today.
+DO NOT include old news. Each story must be a 'featured news' item from the last 24 hours.
 
 Return ONLY a valid JSON array of objects with these keys:
-- 'title': Catchy sports headline.
-- 'category': Must be ONE of: ($cat_list).
+- 'title': Catchy and accurate sports headline.
+- 'category': Must be ONE of: ($cat_list). Choose the most appropriate one.
 - 'image_keyword': Specific search query for a photo of the event/player.
 Return ONLY the JSON array. No other text.";
 
@@ -72,12 +73,14 @@ foreach ($discovered_items as $item) {
 
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Generating high-level content and SEO metadata...\n";
-    $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}' for the category '{$item['category']}'.
+    $content_prompt = "Act as an expert sports journalist and elite copywriter. Write a detailed breaking news article about this story: '{$item['title']}' for the category '{$item['category']}'.
+
+    CRITICAL: You MUST perform a COMPLETE AND UNIQUE REWRITE of the news story to avoid copyright issues. Do not copy sentences from the original sources. Use an engaging, high-energy fan-blogger tone.
 
     Requirements:
-    1. 'content': Comprehensive sports report (400-500 words) in an engaging fan-blogger tone. Use 3-4 paragraphs. Use Markdown.
+    1. 'content': Comprehensive sports report (400-500 words) with analysis, context, and flair. Use 3-4 detailed paragraphs. Use Markdown.
     2. 'tags': 6-10 high-ranking SEO tags.
-    3. 'meta_title': SEO optimized title (max 60 chars).
+    3. 'meta_title': High-level SEO optimized title (max 60 chars).
     4. 'meta_description': Compelling SEO description (max 160 chars).
     5. 'meta_keywords': High ranking specific keywords.
 
