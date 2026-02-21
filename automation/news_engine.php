@@ -56,6 +56,7 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 
 $count = 0;
 $fetched_hashes = [];
+$published_posts = [];
 foreach ($discovered_items as $item) {
     if ($count >= 10) break;
 
@@ -157,6 +158,12 @@ foreach ($discovered_items as $item) {
         echo "Broadcasting to social media...\n";
         broadcast_to_social($post_id);
 
+        $published_posts[] = [
+            'title' => $title,
+            'slug' => $slug,
+            'excerpt' => $excerpt
+        ];
+
         $count++;
     } else {
         echo "Database error.\n";
@@ -164,4 +171,40 @@ foreach ($discovered_items as $item) {
 }
 
 echo "\nAI Automation complete. $count posts published.\n";
+
+// 5. Notify Subscribers
+if ($count > 0) {
+    echo "Notifying subscribers...\n";
+    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
+
+    if (!empty($subscribers)) {
+        $subject = "Daily Sports Intelligence Digest - " . date('D d M Y');
+
+        $message = "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;'>";
+        $message .= "<div style='background-color: #000; color: #ff3e3e; padding: 20px; text-align: center;'>";
+        $message .= "<h1 style='margin: 0; text-transform: uppercase;'>Daily Sports Digest</h1>";
+        $message .= "</div>";
+        $message .= "<div style='background-color: #fff; padding: 20px;'>";
+        $message .= "<p>Hello Intelligence Subscriber,</p>";
+        $message .= "<p>Here is your daily briefing on the latest sports news:</p>";
+
+        foreach ($published_posts as $post) {
+            $post_url = SITE_URL . "/post/" . $post['slug'];
+            $message .= "<div style='margin-bottom: 30px; border-bottom: 1px solid #eee; padding-bottom: 20px;'>";
+            $message .= "<h2 style='color: #000; margin-bottom: 10px;'><a href='$post_url' style='color: #000; text-decoration: none;'>{$post['title']}</a></h2>";
+            $message .= "<p style='color: #666; font-size: 14px;'>{$post['excerpt']}</p>";
+            $message .= "<a href='$post_url' style='display: inline-block; background-color: #ff3e3e; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;'>READ FULL REPORT</a>";
+            $message .= "</div>";
+        }
+
+        $message .= "<p style='color: #999; font-size: 12px;'>You are receiving this because you subscribed to " . ($settings['name'] ?? 'GFW') . ".</p>";
+        $message .= "</div>";
+        $message .= "</div>";
+
+        foreach ($subscribers as $email) {
+            send_mail($email, $subject, $message);
+        }
+        echo "Notification sent to " . count($subscribers) . " subscribers.\n";
+    }
+}
 ?>
