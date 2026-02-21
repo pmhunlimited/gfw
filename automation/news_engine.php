@@ -27,57 +27,49 @@ if (empty($available_categories)) {
 }
 $cat_list = implode(', ', $available_categories);
 
-// 1. Discovery Stage: Ask AI for trending story headlines
+// 1. Discovery Stage: Fetch factual news from RSS Feeds
 $today = date('D d M Y H:i');
-echo "Stage 1: Discovering trending football stories for $today...\n";
+echo "Stage 1: Discovering factual football stories from RSS for $today...\n";
 
-$discovery_prompt = "Identify exactly 10 of the LATEST and MOST ACCURATE major football news headlines that happened WITHIN THE LAST 24 HOURS (Current time: $today).
-
-You MUST ONLY use information from the following official sources:
-- goal.com
-- bbc.com
-- bbc.co.uk
-
-Focus on: Latest match results, breaking transfers, and major team news.
-Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
-
-Return ONLY a valid JSON array of objects with these keys:
-- 'title': Catchy sports headline.
-- 'category': Must be ONE of: ($cat_list). Match the story to the most appropriate category.
-- 'image_keyword': Specific search query for a photo of the event/player.
-Return ONLY the JSON array. No other text.";
+$rss_urls = [
+    'https://www.skysports.com/rss/12040',
+    'https://www.espn.com/espn/rss/soccer/news',
+    'https://supersport.com/rss/news/football',
+    'https://feeds.bbci.co.uk/sport/football/rss.xml',
+    'https://www.goal.com/feeds/en/news',
+    'https://sport.sky.ch/feed'
+];
 
 $discovered_items = [];
-$discovery_source = $settings['discovery_source'] ?? 'tavily';
-$tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport in the last 24 hours";
-$tavily_results = ($discovery_source === 'tavily') ? get_tavily_news($tavily_query) : null;
+$rss_results = get_rss_news($rss_urls);
 
-if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) > 0) {
-    echo "Using Tavily for high-precision news discovery...\n";
-    foreach ($tavily_results as $res) {
-        // Filter out generic homepage titles
-        $generic_titles = ['Goal.com', 'BBC Sport', 'ESPN', 'SuperSport', 'Latest Sports News', 'Football News'];
-        $is_generic = false;
-        foreach ($generic_titles as $gt) {
-            if (trim($res['title']) == $gt || strlen($res['title']) < 20) {
-                $is_generic = true;
-                break;
-            }
-        }
-        if ($is_generic) continue;
-
+if (!empty($rss_results)) {
+    echo "Using RSS Feeds for 100% factual discovery...\n";
+    foreach ($rss_results as $res) {
+        if (count($discovered_items) >= 20) break;
         $discovered_items[] = [
             'title' => $res['title'],
-            'category' => 'MATCH ANALYSIS', // Default, will be refined by AI
-            'image_keyword' => $res['title'],
-            'image_url' => $res['image'] ?? ($res['raw_content'] ? null : null) // Tavily structure
+            'description' => $res['description'],
+            'source_link' => $res['link'],
+            'category' => 'MATCH ANALYSIS', // Default, refined by AI
+            'image_keyword' => $res['title']
         ];
     }
 } else {
-    echo "Using AI-powered news discovery (DeepSeek)...\n";
-    $raw_discovery = get_ai_insight($discovery_prompt);
-    if ($raw_discovery && strpos($raw_discovery, 'AI Error:') !== 0) {
-        $discovered_items = extract_json($raw_discovery, true);
+    echo "RSS Discovery yielded no results. Falling back to Tavily Search...\n";
+    $tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport in the last 24 hours";
+    $tavily_results = get_tavily_news($tavily_query);
+    if ($tavily_results) {
+        foreach ($tavily_results as $res) {
+            $discovered_items[] = [
+                'title' => $res['title'],
+                'description' => $res['content'] ?? $res['title'],
+                'source_link' => $res['url'],
+                'category' => 'MATCH ANALYSIS',
+                'image_keyword' => $res['title'],
+                'image_url' => $res['image'] ?? null
+            ];
+        }
     }
 }
 
@@ -100,8 +92,10 @@ foreach ($discovered_items as $item) {
 
     // Skip if already exists or similar slug found (prevent duplicates)
     $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ?");
-    $check_stmt->execute([$item['title'], $safe_title . '%']);
+    $source_url = $item['source_link'] ?? '';
+
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?)");
+    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url]);
     if ($check_stmt->fetch()) {
         echo "Skipping existing or duplicate post: " . $item['title'] . "\n";
         continue;
@@ -110,27 +104,31 @@ foreach ($discovered_items as $item) {
     echo "\n--- Processing Story $loop_idx: " . $item['title'] . " ---\n";
 
     // Stage 2: Content Generation for this specific story
-    echo "Stage 2: Generating high-level content and SEO metadata...\n";
+    echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}'.
+    $content_prompt = "Act as a Factual Sports News Rewriter.
 
-    CRITICAL: Determine the best category for this story from this list: ($cat_list).
+    SOURCE DATA:
+    Headline: '{$item['title']}'
+    Factual Summary: '{$item['description']}'
 
     STRICT GUIDELINES:
-    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, Sky Sport, etc.) in the article.
-    - Rewrite everything to ensure 100% originality and an engaging fan-blogger tone.
-    - DO NOT include any fiction, rumors (unless they are major breaking news), or fabricated details. The report must be 100% accurate and factual based on real-world events that happened within the last 24 hours.
-    - Focus strictly on facts: match results, confirmed transfers, official team statements.
+    - Rewrite the 'Factual Summary' into a unique, detailed, and engaging sports report (minimum 300 words).
+    - ABSOLUTELY NO FICTION OR HALLUCINATIONS. Use ONLY the provided information.
+    - If your internal AI knowledge contradicts the 'Factual Summary' (e.g., about managers or player locations), IGNORE your internal knowledge and trust the Summary 100%.
+    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.).
+    - Use an engaging fan-blogger tone with 3-4 paragraphs. Use Markdown.
+    - Determine the best category for this story from: ($cat_list).
 
     Requirements:
-    0. 'category': The chosen category from the list.
-    1. 'content': Comprehensive sports report (400-500 words) in an engaging fan-blogger tone. Use 3-4 paragraphs. Use Markdown.
-    2. 'tags': 6-10 high-ranking SEO tags.
-    3. 'meta_title': SEO optimized title (max 60 chars).
-    4. 'meta_description': Compelling SEO description (max 160 chars).
-    5. 'meta_keywords': High ranking specific keywords.
+    - 'category': The chosen category.
+    - 'content': The rewritten report (Markdown).
+    - 'tags': 6-10 high-ranking SEO tags.
+    - 'meta_title': SEO optimized title (max 60 chars).
+    - 'meta_description': Compelling SEO description (max 160 chars).
+    - 'meta_keywords': High ranking keywords.
 
-    Return ONLY a valid JSON object. No extra text.";
+    Return ONLY a valid JSON object. No other text.";
 
     $raw_content = get_ai_insight($content_prompt);
     if (!$raw_content || strpos($raw_content, 'AI Error:') === 0) {
@@ -199,8 +197,8 @@ foreach ($discovered_items as $item) {
     $meta_keys = sanitize($content_data['meta_keywords'] ?? '');
     $publish_date = date('Y-m-d H:i:s');
 
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)");
-    if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, source_url, is_top_story, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)");
+    if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path, $source_url, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
         $post_id = $conn->lastInsertId();
         echo "Successfully published: $title\n";
 

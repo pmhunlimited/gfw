@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS posts (
     author VARCHAR(100),
     image VARCHAR(255),
     video_url VARCHAR(255),
+    source_url VARCHAR(255),
     is_top_story BOOLEAN DEFAULT FALSE,
     is_scheduled BOOLEAN DEFAULT FALSE,
     publish_date DATETIME,

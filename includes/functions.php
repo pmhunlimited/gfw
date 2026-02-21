@@ -39,6 +39,17 @@ function get_settings() {
         }
     }
 
+    // Auto-migration for posts source_url
+    try {
+        $stmt_post = $conn->query("SELECT * FROM posts LIMIT 1");
+        $first_post = $stmt_post->fetch();
+        if ($first_post && !array_key_exists('source_url', $first_post)) {
+            $conn->exec("ALTER TABLE posts ADD COLUMN source_url VARCHAR(255)");
+        }
+    } catch (Exception $e) {
+        // Handle case where table is empty or other errors
+    }
+
     // Auto-migration for categories slug
     try {
         $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
@@ -314,6 +325,67 @@ function get_ai_insight($prompt) {
     }
 
     return "AI Error: Intelligence gathering failed (HTTP $httpCode). Response: " . substr($response, 0, 100);
+}
+
+/**
+ * Fetches and parses RSS feeds from multiple sources.
+ * @param array $urls
+ * @return array
+ */
+function get_rss_news($urls) {
+    $all_items = [];
+    $seen_links = [];
+
+    foreach ($urls as $url) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+        $xml_data = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$xml_data) continue;
+
+        try {
+            // Suppress errors for malformed XML
+            $xml = @simplexml_load_string($xml_data);
+            if ($xml === false) continue;
+
+            $items = $xml->xpath('//item');
+            if (!$items) continue;
+
+            foreach ($items as $item) {
+                $link = (string)$item->link;
+                if (in_array($link, $seen_links)) continue;
+
+                $pubDate = (string)$item->pubDate;
+                $timestamp = strtotime($pubDate);
+
+                // Only within last 24 hours
+                if ($timestamp > (time() - 86400)) {
+                    $all_items[] = [
+                        'title' => (string)$item->title,
+                        'description' => strip_tags((string)$item->description),
+                        'link' => $link,
+                        'pubDate' => $pubDate,
+                        'timestamp' => $timestamp,
+                        'source' => parse_url($url, PHP_URL_HOST)
+                    ];
+                    $seen_links[] = $link;
+                }
+            }
+        } catch (Exception $e) {
+            error_log("RSS Parse Error ($url): " . $e->getMessage());
+        }
+    }
+
+    // Sort by newest first
+    usort($all_items, function($a, $b) {
+        return $b['timestamp'] - $a['timestamp'];
+    });
+
+    return $all_items;
 }
 
 /**

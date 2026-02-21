@@ -227,6 +227,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Report</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Taxonomy</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Operator</th>
+                    <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Source</th>
                     <th class="px-4 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0">Timestamp</th>
                     <th class="px-5 py-4 text-[10px] font-black uppercase text-secondary tracking-widest border-0 text-end">Actions</th>
                 </tr>
@@ -253,6 +254,13 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <span class="text-white-50 small font-bold italic"><?php echo $post['author']; ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
+                        <?php if (!empty($post['source_url'])): ?>
+                            <a href="<?php echo $post['source_url']; ?>" target="_blank" class="text-info small font-monospace" style="font-size: 9px;">LINK</a>
+                        <?php else: ?>
+                            <span class="text-white-50 small italic opacity-30">INTERNAL</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="px-4 py-4 border-white border-opacity-5">
                         <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d', strtotime($post['publish_date'] ?: $post['created_at'])); ?></span>
                         <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()): ?>
                             <div class="text-danger font-black uppercase italic" style="font-size: 8px;">SCHEDULED</div>
@@ -272,6 +280,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-mdesc="<?php echo htmlspecialchars($post['meta_description'] ?? ''); ?>"
                             data-mkeys="<?php echo htmlspecialchars($post['meta_keywords'] ?? ''); ?>"
                             data-top="<?php echo $post['is_top_story']; ?>"
+                            data-source="<?php echo htmlspecialchars($post['source_url'] ?? ''); ?>"
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
@@ -444,6 +453,10 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             <label class="form-label text-white-50 small uppercase font-black">Schedule Deployment</label>
                             <input type="datetime-local" name="publish_date" id="edit_date" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl">
                         </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-white-50 small uppercase font-black">Source URL (Factual Origin)</label>
+                            <input type="text" name="source_url" id="edit_source" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl" readonly>
+                        </div>
                         <div class="col-md-6 d-flex align-items-end">
                             <div class="form-check mb-2">
                                 <input type="checkbox" name="is_top_story" class="form-check-input bg-black border-white border-opacity-10" id="edit_top">
@@ -527,6 +540,7 @@ document.querySelectorAll('.edit-post').forEach(btn => {
         document.getElementById('edit_mtitle').value = this.dataset.mtitle;
         document.getElementById('edit_mdesc').value = this.dataset.mdesc;
         document.getElementById('edit_mkeys').value = this.dataset.mkeys;
+        document.getElementById('edit_source').value = this.dataset.source;
         document.getElementById('edit_top').checked = this.dataset.top == "1";
     };
 });
