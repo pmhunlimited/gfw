@@ -286,8 +286,8 @@ function get_ai_insight($prompt) {
             $model_id = substr($model_id, 7);
         }
 
-        // Special handling: if model contains '-latest', it's usually v1 compatible
-        if (strpos($model_id, '-latest') !== false && $version === 'v1beta') {
+        // Default to v1 for stable models (no -exp, no -preview) unless explicitly v1beta
+        if ($version === 'v1beta' && strpos($model_id, '-exp') === false && strpos($model_id, '-preview') === false) {
             $version = 'v1';
         }
 
@@ -353,8 +353,8 @@ function get_ai_insight($prompt) {
         $fallbacks = [
             str_replace(['/v1beta/', '/v1/'], ($version == 'v1' ? '/v1beta/' : '/v1/'), $url), // Switch version
             "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=$apiKey",
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey",
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey"
+            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=$apiKey",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey"
         ];
 
         foreach ($fallbacks as $fallback_url) {

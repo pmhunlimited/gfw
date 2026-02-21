@@ -37,8 +37,6 @@ You MUST ONLY use information from the following official sources:
 - goal.com
 - bbc.com
 - bbc.co.uk
-- espn.com
-- supersport.com
 
 Focus on: Latest match results, breaking transfers, and major team news.
 Ensure coverage of Premier League, La Liga, Serie A, Bundesliga, and Ligue 1.
@@ -51,7 +49,7 @@ Return ONLY the JSON array. No other text.";
 
 $discovered_items = [];
 $discovery_source = $settings['discovery_source'] ?? 'ai';
-$tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport, espn.com/soccer, supersport.com in the last 24 hours";
+$tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport in the last 24 hours";
 $tavily_results = ($discovery_source === 'tavily') ? get_tavily_news($tavily_query) : null;
 
 if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) > 0) {

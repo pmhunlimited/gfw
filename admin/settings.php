@@ -36,12 +36,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
     $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, groq_api_key = ?, tavily_api_key = ?, selected_model = ?, discovery_source = ? WHERE id = 1");
     $stmt->execute([
-        $_POST['gemini_api_key'],
-        $_POST['deepseek_api_key'],
-        $_POST['groq_api_key'],
-        $_POST['tavily_api_key'],
+        $_POST['gemini_api_key'] ?? '',
+        $_POST['deepseek_api_key'] ?? '',
+        $_POST['groq_api_key'] ?? '',
+        $_POST['tavily_api_key'] ?? '',
         $_POST['selected_model'] ?? $settings['selected_model'],
-        $_POST['discovery_source']
+        $_POST['discovery_source'] ?? 'ai'
     ]);
     $success = "AI logic updated.";
 }
@@ -234,9 +234,8 @@ $activeTab = $_GET['tab'] ?? 'general';
                     // Older Gemini 1.5 models have been deprecated or moved to legacy endpoints.
                     $models = [
                         ['id' => 'v1/gemini-1.5-flash-latest', 'name' => 'Gemini 1.5 Flash (Recommended - Stable)', 'provider' => 'Google'],
+                        ['id' => 'v1/gemini-1.5-pro-latest', 'name' => 'Gemini 1.5 Pro (Stable)', 'provider' => 'Google'],
                         ['id' => 'v1beta/gemini-2.0-flash-exp', 'name' => 'Gemini 2.0 Flash Exp', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1beta)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-1.5-pro', 'name' => 'Gemini 1.5 Pro', 'provider' => 'Google'],
                         ['id' => 'groq/compound', 'name' => 'Groq Compound (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'groq/compound-mini', 'name' => 'Groq Compound Mini (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
