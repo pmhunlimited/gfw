@@ -7,10 +7,10 @@ require_once __DIR__ . '/../includes/functions.php';
 $conn = get_db_connection();
 $settings = get_settings();
 
-$apiKey = (strpos($settings['selected_model'], 'gemini') !== false) ? $settings['gemini_api_key'] : $settings['deepseek_api_key'];
+$apiKey = $settings['deepseek_api_key'] ?? '';
 
 if (empty($apiKey)) {
-    die("Error: AI API Key missing. Configure it in Admin -> Parameters -> AI Core.\n");
+    die("Error: DeepSeek API Key missing. Configure it in Admin -> Settings.\n");
 }
 
 echo "Starting AI-Powered News Discovery...\n";
@@ -48,7 +48,7 @@ Return ONLY a valid JSON array of objects with these keys:
 Return ONLY the JSON array. No other text.";
 
 $discovered_items = [];
-$discovery_source = $settings['discovery_source'] ?? 'ai';
+$discovery_source = $settings['discovery_source'] ?? 'tavily';
 $tavily_query = "top breaking football news headlines from goal.com, bbc.com/sport, bbc.co.uk/sport in the last 24 hours";
 $tavily_results = ($discovery_source === 'tavily') ? get_tavily_news($tavily_query) : null;
 
@@ -69,11 +69,12 @@ if ($discovery_source === 'tavily' && $tavily_results && count($tavily_results) 
         $discovered_items[] = [
             'title' => $res['title'],
             'category' => 'MATCH ANALYSIS', // Default, will be refined by AI
-            'image_keyword' => $res['title']
+            'image_keyword' => $res['title'],
+            'image_url' => $res['image'] ?? ($res['raw_content'] ? null : null) // Tavily structure
         ];
     }
 } else {
-    echo "Using AI-powered news discovery...\n";
+    echo "Using AI-powered news discovery (DeepSeek)...\n";
     $raw_discovery = get_ai_insight($discovery_prompt);
     if ($raw_discovery && strpos($raw_discovery, 'AI Error:') !== 0) {
         $discovered_items = extract_json($raw_discovery, true);
@@ -147,12 +148,13 @@ foreach ($discovered_items as $item) {
     $specific_keyword = urlencode($item['image_keyword'] . " " . rand(100, 999));
     $category_keyword = urlencode($item['category'] . " " . $item['title']);
 
-    $image_sources = [
-        "https://tse1.mm.bing.net/th?q=" . $specific_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
-        "https://tse1.mm.bing.net/th?q=" . urlencode($item['title'] . " sports photography") . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api",
-        "https://loremflickr.com/1200/800/" . urlencode(str_replace(' ', ',', $item['image_keyword'])) . "/all?lock=" . rand(1, 99999),
-        "https://tse1.mm.bing.net/th?q=" . $category_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api"
-    ];
+    $image_sources = [];
+    if (!empty($item['image_url'])) $image_sources[] = $item['image_url'];
+
+    $image_sources[] = "https://tse1.mm.bing.net/th?q=" . $specific_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
+    $image_sources[] = "https://tse1.mm.bing.net/th?q=" . urlencode($item['title'] . " sports photography") . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
+    $image_sources[] = "https://loremflickr.com/1200/800/" . urlencode(str_replace(' ', ',', $item['image_keyword'])) . "/all?lock=" . rand(1, 99999);
+    $image_sources[] = "https://tse1.mm.bing.net/th?q=" . $category_keyword . "&w=1200&h=800&c=7&rs=1&p=0&dpr=1&pid=Api";
 
     $img_data = null;
     foreach ($image_sources as $source_url) {

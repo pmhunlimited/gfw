@@ -27,11 +27,10 @@ function get_settings() {
         }
     }
 
-    if ($settings && !array_key_exists('groq_api_key', $settings)) {
+    if ($settings && !array_key_exists('tavily_api_key', $settings)) {
         try {
-            $conn->exec("ALTER TABLE site_settings ADD COLUMN groq_api_key VARCHAR(255)");
             $conn->exec("ALTER TABLE site_settings ADD COLUMN tavily_api_key VARCHAR(255)");
-            $conn->exec("ALTER TABLE site_settings ADD COLUMN discovery_source VARCHAR(50) DEFAULT 'ai'");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN discovery_source VARCHAR(50) DEFAULT 'tavily'");
             // Refetch settings after migration
             $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
             $settings = $stmt->fetch();
@@ -267,79 +266,33 @@ function log_activity($message) {
 
 function get_ai_insight($prompt) {
     $settings = get_settings();
-    $model = $settings['selected_model'];
+    $model = $settings['selected_model'] ?? 'deepseek-chat';
+    $apiKey = $settings['deepseek_api_key'] ?? '';
 
-    if (strpos($model, 'gemini') !== false) {
-        $apiKey = $settings['gemini_api_key'];
-        if (empty($apiKey)) return "Gemini API Key missing.";
-
-        // Handle version/model format
-        if (strpos($model, '/') !== false) {
-            list($version, $model_id) = explode('/', $model, 2);
-        } else {
-            $version = 'v1beta';
-            $model_id = $model;
-        }
-
-        // Ensure model name does NOT have models/ prefix because it is already in the URL
-        if (strpos($model_id, 'models/') === 0) {
-            $model_id = substr($model_id, 7);
-        }
-
-        // Default to v1 for stable models (no -exp, no -preview) unless explicitly v1beta
-        if ($version === 'v1beta' && strpos($model_id, '-exp') === false && strpos($model_id, '-preview') === false) {
-            $version = 'v1';
-        }
-
-        $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
-        $data = [
-            "contents" => [["parts" => [["text" => $prompt]]]]
-        ];
-
-        // Enable Google Search grounding for recent models (typically on v1beta)
-        if ($version === 'v1beta' || strpos($model_id, 'gemini-2') !== false || strpos($model_id, 'gemini-3') !== false) {
-            $data["tools"] = [["google_search" => (object)[]]];
-        }
-
-        $data["generationConfig"] = [
-            "maxOutputTokens" => 8192,
-            "temperature" => 0.7
-        ];
-        $headers = ['Content-Type: application/json'];
-    } elseif (strpos($model, 'groq/') === 0) {
-        $apiKey = $settings['groq_api_key'];
-        if (empty($apiKey)) return "Groq API Key missing.";
-        $url = "https://api.groq.com/openai/v1/chat/completions";
-        $data = [
-            "model" => $model,
-            "messages" => [["role" => "user", "content" => $prompt]],
-            "max_tokens" => 8192
-        ];
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey
-        ];
-    } else {
-        $apiKey = $settings['deepseek_api_key'];
-        if (empty($apiKey)) return "DeepSeek API Key missing.";
-        $url = "https://api.deepseek.com/chat/completions";
-        $data = [
-            "model" => $model,
-            "messages" => [["role" => "user", "content" => $prompt]],
-            "max_tokens" => 8192
-        ];
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Bearer ' . $apiKey
-        ];
+    // If model is legacy (Gemini/Groq), force to DeepSeek
+    if (strpos($model, 'gemini') !== false || strpos($model, 'groq') !== false) {
+        $model = 'deepseek-chat';
     }
+
+    if (empty($apiKey)) return "DeepSeek API Key missing.";
+
+    $url = "https://api.deepseek.com/chat/completions";
+    $data = [
+        "model" => $model,
+        "messages" => [["role" => "user", "content" => $prompt]],
+        "max_tokens" => 8192
+    ];
+    $headers = [
+        'Content-Type: application/json',
+        'Authorization: Bearer ' . $apiKey
+    ];
 
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 180); // Increased to 180 seconds to prevent timeouts
+    curl_setopt($ch, CURLOPT_TIMEOUT, 180);
     curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 
     $response = curl_exec($ch);
@@ -348,49 +301,12 @@ function get_ai_insight($prompt) {
     $result = json_decode($response, true);
     curl_close($ch);
 
-    // Auto-retry Gemini failures (404/Retired) with different versions or models
-    if (strpos($model, 'gemini') !== false && ($httpCode != 200 || !$response)) {
-        $fallbacks = [
-            str_replace(['/v1beta/', '/v1/'], ($version == 'v1' ? '/v1beta/' : '/v1/'), $url), // Switch version
-            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash-latest:generateContent?key=$apiKey",
-            "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro-latest:generateContent?key=$apiKey",
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=$apiKey"
-        ];
-
-        foreach ($fallbacks as $fallback_url) {
-            if ($fallback_url == $url) continue;
-
-            $ch = curl_init($fallback_url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 180);
-            $response = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $result = json_decode($response, true);
-            curl_close($ch);
-
-            if ($httpCode == 200 && isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-                return $result['candidates'][0]['content']['parts'][0]['text'];
-            }
-        }
+    if (isset($result['choices'][0]['message']['content'])) {
+        return $result['choices'][0]['message']['content'];
     }
 
-    if (strpos($model, 'gemini') !== false) {
-        if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-            return $result['candidates'][0]['content']['parts'][0]['text'];
-        }
-        if (isset($result['error'])) {
-            return "AI Error: Gemini HTTP " . ($result['error']['code'] ?? '???') . " - " . ($result['error']['message'] ?? 'Unknown');
-        }
-    } else {
-        if (isset($result['choices'][0]['message']['content'])) {
-            return $result['choices'][0]['message']['content'];
-        }
-        if (isset($result['error'])) {
-            return "AI Error: DeepSeek - " . ($result['error']['message'] ?? 'Unknown');
-        }
+    if (isset($result['error'])) {
+        return "AI Error: DeepSeek - " . ($result['error']['message'] ?? 'Unknown');
     }
 
     if (!empty($curl_err)) {
@@ -417,7 +333,8 @@ function get_tavily_news($query = "latest major football news headlines last 24 
         "search_depth" => "advanced",
         "include_answer" => false,
         "include_images" => true,
-        "max_results" => 10
+        "max_results" => 10,
+        "days" => 1
     ];
 
     $ch = curl_init($url);

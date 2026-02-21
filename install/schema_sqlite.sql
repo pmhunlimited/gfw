@@ -8,8 +8,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
     whatsapp_number VARCHAR(50),
     header_code TEXT,
     footer_code TEXT,
-    selected_model VARCHAR(50) DEFAULT 'gemini-1.5-flash',
-    gemini_api_key VARCHAR(255),
+    tavily_api_key VARCHAR(255),
+    discovery_source VARCHAR(50) DEFAULT 'tavily',
+    selected_model VARCHAR(50) DEFAULT 'deepseek-chat',
     deepseek_api_key VARCHAR(255),
     news_api_key VARCHAR(255),
     smtp_host VARCHAR(255),
@@ -106,6 +107,6 @@ CREATE TABLE IF NOT EXISTS categories (
     name VARCHAR(100) UNIQUE NOT NULL
 );
 
-INSERT INTO site_settings (name, tagline, selected_model) VALUES ('GLOBAL FOOTBALL WATCH', 'Intelligence in Football', 'gemini-1.5-flash');
+INSERT INTO site_settings (name, tagline, selected_model, discovery_source) VALUES ('GLOBAL FOOTBALL WATCH', 'Intelligence in Football', 'deepseek-chat', 'tavily');
 INSERT INTO categories (name) VALUES ('PREMIER LEAGUE'), ('TRANSFER NEWS'), ('MATCH ANALYSIS'), ('LA LIGA'), ('CHAMPIONS LEAGUE');
 INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main');

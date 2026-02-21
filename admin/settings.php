@@ -34,14 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, groq_api_key = ?, tavily_api_key = ?, selected_model = ?, discovery_source = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET deepseek_api_key = ?, tavily_api_key = ?, selected_model = ?, discovery_source = ? WHERE id = 1");
     $stmt->execute([
-        $_POST['gemini_api_key'] ?? '',
         $_POST['deepseek_api_key'] ?? '',
-        $_POST['groq_api_key'] ?? '',
         $_POST['tavily_api_key'] ?? '',
         $_POST['selected_model'] ?? $settings['selected_model'],
-        $_POST['discovery_source'] ?? 'ai'
+        $_POST['discovery_source'] ?? 'tavily'
     ]);
     $success = "AI logic updated.";
 }
@@ -164,20 +162,19 @@ $activeTab = $_GET['tab'] ?? 'general';
                 <h5 class="fw-black mb-3">Intelligence Acquisition Guide</h5>
                 <div class="row g-4 small">
                     <div class="col-md-6 border-end border-white border-opacity-10">
-                        <p class="mb-2"><strong>Google Gemini API:</strong></p>
+                        <p class="mb-2"><strong>DeepSeek API:</strong></p>
                         <ol class="ps-3 opacity-75">
-                            <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-info">Google AI Studio</a>.</li>
-                            <li>Sign in with your Google Account.</li>
-                            <li>Click "Create API key" and copy the value.</li>
-                            <li>Note: Use Gemini 2.0+ for best search reliability.</li>
+                            <li>Visit <a href="https://platform.deepseek.com/" target="_blank" class="text-info">DeepSeek Platform</a>.</li>
+                            <li>Navigate to the "API Keys" section.</li>
+                            <li>Generate a new key and add balance to your account.</li>
                         </ol>
                     </div>
                     <div class="col-md-6">
-                        <p class="mb-2"><strong>Groq vs Grok:</strong></p>
+                        <p class="mb-2"><strong>Tavily Search:</strong></p>
                         <ol class="ps-3 opacity-75">
-                            <li><strong>Groq:</strong> High-speed inference with a generous <a href="https://console.groq.com/keys" target="_blank" class="text-info">free tier</a> for developers.</li>
-                            <li><strong>Grok (xAI):</strong> Paid service from X/Twitter.</li>
-                            <li>Our system uses <strong>Groq</strong> for ultra-fast, free-tier compatible intelligence.</li>
+                            <li>Visit <a href="https://tavily.com/" target="_blank" class="text-info">Tavily AI</a>.</li>
+                            <li>Get your API key for high-precision real-time news discovery.</li>
+                            <li>Combined with DeepSeek, this provides the most accurate results.</li>
                         </ol>
                     </div>
                 </div>
@@ -186,43 +183,30 @@ $activeTab = $_GET['tab'] ?? 'general';
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4 mb-4">
-                    <div class="col-md-4">
-                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Gemini API Key</span>
-                            <input type="password" name="gemini_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['gemini_api_key']; ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
                             <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">DeepSeek API Key</span>
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
                         </div>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Groq API Key</span>
-                            <input type="password" name="groq_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['groq_api_key'] ?? ''; ?>">
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
-                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Tavily Search API Key (Optional)</span>
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Tavily Search API Key</span>
                             <input type="password" name="tavily_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['tavily_api_key'] ?? ''; ?>">
                         </div>
                     </div>
                 </div>
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5 mb-8">
                     <h4 class="text-white font-black uppercase italic mb-4 small">News Discovery Protocol</h4>
-                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">Choose how the engine finds the latest sports stories before writing them.</p>
+                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">Currently optimized to use Tavily for real-time news discovery.</p>
 
                     <div class="row g-4">
                         <div class="col-md-6">
                             <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Discovery Source</label>
                             <select name="discovery_source" class="w-full bg-black/40 border border-white/10 rounded-xl px-6 py-4 text-white font-bold">
-                                <option value="ai" <?php echo ($settings['discovery_source'] ?? 'ai') == 'ai' ? 'selected' : ''; ?>>AI INTERNAL SEARCH (Uses Gemini/Groq Search)</option>
-                                <option value="tavily" <?php echo ($settings['discovery_source'] ?? '') == 'tavily' ? 'selected' : ''; ?>>TAVILY SEARCH API (Recommended for Accuracy)</option>
+                                <option value="tavily" selected>TAVILY SEARCH API (Required for Real-time)</option>
                             </select>
-                            <p class="text-[9px] text-white-50 mt-3 italic opacity-60">Tavily requires an API key above. AI Internal Search requires a Search-capable model selected below.</p>
+                            <p class="text-[9px] text-white-50 mt-3 italic opacity-60">Ensures accurate sports news from Goal.com, BBC, and ESPN within the last 24 hours.</p>
                         </div>
                     </div>
                 </div>
@@ -230,14 +214,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                 <div class="mb-4">
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Article Drafting Model (Writing Engine)</span>
                     <?php
-                    // Note: These models are current as of Feb 2026.
-                    // Older Gemini 1.5 models have been deprecated or moved to legacy endpoints.
                     $models = [
-                        ['id' => 'v1/gemini-1.5-flash-latest', 'name' => 'Gemini 1.5 Flash (Recommended - Stable)', 'provider' => 'Google'],
-                        ['id' => 'v1/gemini-1.5-pro-latest', 'name' => 'Gemini 1.5 Pro (Stable)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-flash-exp', 'name' => 'Gemini 2.0 Flash Exp', 'provider' => 'Google'],
-                        ['id' => 'groq/compound', 'name' => 'Groq Compound (Web Search)', 'provider' => 'Groq'],
-                        ['id' => 'groq/compound-mini', 'name' => 'Groq Compound Mini (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
                     ];
@@ -306,7 +283,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
                         <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
                     </div>
-                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your Gemini or DeepSeek keys are configured in the "AI Core" tab.</p>
+                    <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek and Tavily keys are configured in the "AI Core" tab.</p>
                 </div>
             </div>
 
