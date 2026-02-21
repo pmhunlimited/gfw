@@ -27,6 +27,18 @@ function get_settings() {
         }
     }
 
+    if ($settings && !array_key_exists('groq_api_key', $settings)) {
+        try {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN groq_api_key VARCHAR(255)");
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN tavily_api_key VARCHAR(255)");
+            // Refetch settings after migration
+            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+            $settings = $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("API Key migration failed: " . $e->getMessage());
+        }
+    }
+
     // Auto-migration for categories slug
     try {
         $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
@@ -291,6 +303,19 @@ function get_ai_insight($prompt) {
             "temperature" => 0.7
         ];
         $headers = ['Content-Type: application/json'];
+    } elseif (strpos($model, 'groq/') === 0) {
+        $apiKey = $settings['groq_api_key'];
+        if (empty($apiKey)) return "Groq API Key missing.";
+        $url = "https://api.groq.com/openai/v1/chat/completions";
+        $data = [
+            "model" => $model,
+            "messages" => [["role" => "user", "content" => $prompt]],
+            "max_tokens" => 8192
+        ];
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $apiKey
+        ];
     } else {
         $apiKey = $settings['deepseek_api_key'];
         if (empty($apiKey)) return "DeepSeek API Key missing.";
@@ -320,19 +345,35 @@ function get_ai_insight($prompt) {
     $result = json_decode($response, true);
     curl_close($ch);
 
-    // Auto-retry Gemini v1 failures with v1beta OR connection failures
-    if (strpos($model, 'gemini') !== false && ($httpCode == 404 && $version == 'v1' || !$response)) {
-        $url = str_replace('/v1/', '/v1beta/', $url);
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 180);
-        $response = curl_exec($ch);
-        $curl_err = curl_error($ch);
-        $result = json_decode($response, true);
-        curl_close($ch);
+    // Auto-retry Gemini failures (404/Retired) with different versions or models
+    if (strpos($model, 'gemini') !== false && ($httpCode == 404 || $httpCode == 400 || !$response)) {
+        echo "Gemini attempt failed (HTTP $httpCode). Retrying with fallback...\n";
+
+        $fallbacks = [
+            str_replace(['/v1beta/', '/v1/'], ($version == 'v1' ? '/v1beta/' : '/v1/'), $url), // Switch version
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=$apiKey", // Stable 3.0
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey", // Stable 2.5
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey"  // Stable 2.0
+        ];
+
+        foreach ($fallbacks as $fallback_url) {
+            if ($fallback_url == $url) continue;
+
+            $ch = curl_init($fallback_url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 180);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $result = json_decode($response, true);
+            curl_close($ch);
+
+            if ($httpCode == 200 && isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+                return $result['candidates'][0]['content']['parts'][0]['text'];
+            }
+        }
     }
 
     if (strpos($model, 'gemini') !== false) {
@@ -356,6 +397,44 @@ function get_ai_insight($prompt) {
     }
 
     return "AI Error: Intelligence gathering failed (HTTP $httpCode). Response: " . substr($response, 0, 100);
+}
+
+/**
+ * Fetches latest sports news headlines from Tavily Search API.
+ * @param string $query
+ * @return array|null
+ */
+function get_tavily_news($query = "latest major football news headlines last 24 hours") {
+    $settings = get_settings();
+    $apiKey = $settings['tavily_api_key'] ?? '';
+    if (empty($apiKey)) return null;
+
+    $url = "https://api.tavily.com/search";
+    $data = [
+        "api_key" => $apiKey,
+        "query" => $query,
+        "search_depth" => "advanced",
+        "include_answer" => false,
+        "include_images" => true,
+        "max_results" => 10
+    ];
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+    $response = curl_exec($ch);
+    $result = json_decode($response, true);
+    curl_close($ch);
+
+    if (isset($result['results'])) {
+        return $result['results'];
+    }
+
+    return null;
 }
 
 function get_suggested_topics() {

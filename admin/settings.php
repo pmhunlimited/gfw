@@ -34,10 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, groq_api_key = ?, tavily_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
+        $_POST['groq_api_key'],
+        $_POST['tavily_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -196,6 +198,18 @@ $activeTab = $_GET['tab'] ?? 'general';
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Groq API Key</span>
+                            <input type="password" name="groq_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['groq_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Tavily Search API Key (Optional)</span>
+                            <input type="password" name="tavily_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['tavily_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
@@ -203,13 +217,15 @@ $activeTab = $_GET['tab'] ?? 'general';
                     // Note: These models are current as of Feb 2026.
                     // Older Gemini 1.5 models have been deprecated or moved to legacy endpoints.
                     $models = [
-                        ['id' => 'v1beta/gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash (Recommended)', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-3-flash', 'name' => 'Gemini 3 Flash (Recommended)', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-3.1-pro', 'name' => 'Gemini 3.1 Pro', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-3-pro', 'name' => 'Gemini 3 Pro', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'provider' => 'Google'],
                         ['id' => 'v1beta/gemini-2.5-flash-lite', 'name' => 'Gemini 2.5 Flash-Lite', 'provider' => 'Google'],
                         ['id' => 'v1beta/gemini-2.5-pro', 'name' => 'Gemini 2.5 Pro', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-3.1-pro-preview', 'name' => 'Gemini 3.1 Pro Preview', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-3-pro-preview', 'name' => 'Gemini 3 Pro Preview', 'provider' => 'Google'],
-                        ['id' => 'v1beta/gemini-3-flash-preview', 'name' => 'Gemini 3 Flash Preview', 'provider' => 'Google'],
+                        ['id' => 'v1beta/gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'provider' => 'Google'],
+                        ['id' => 'groq/compound', 'name' => 'Groq Compound (Web Search)', 'provider' => 'Groq'],
+                        ['id' => 'groq/compound-mini', 'name' => 'Groq Compound Mini (Web Search)', 'provider' => 'Groq'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
                     ];

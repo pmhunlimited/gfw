@@ -49,13 +49,29 @@ Return ONLY a valid JSON array of objects with these keys:
 - 'image_keyword': Specific search query for a photo of the event/player.
 Return ONLY the JSON array. No other text.";
 
-$raw_discovery = get_ai_insight($discovery_prompt);
-if (!$raw_discovery || strpos($raw_discovery, 'AI Error:') === 0) {
-    die("Error: AI discovery failed. Raw: " . $raw_discovery . "\n");
+$discovered_items = [];
+$tavily_results = get_tavily_news("latest major football news headlines from skysports.com, espn.com, supersport.com, sky-sport.ch last 24 hours");
+
+if ($tavily_results && count($tavily_results) > 0) {
+    echo "Using Tavily for high-precision news discovery...\n";
+    foreach ($tavily_results as $res) {
+        $discovered_items[] = [
+            'title' => $res['title'],
+            'category' => 'MATCH ANALYSIS', // Default, will be refined by AI
+            'image_keyword' => $res['title']
+        ];
+    }
+} else {
+    echo "Using AI-powered news discovery...\n";
+    $raw_discovery = get_ai_insight($discovery_prompt);
+    if ($raw_discovery && strpos($raw_discovery, 'AI Error:') !== 0) {
+        $discovered_items = extract_json($raw_discovery, true);
+    }
 }
 
-$discovered_items = extract_json($raw_discovery, true);
-if (!$discovered_items) die("Error: Could not parse discovery data. Raw: " . substr($raw_discovery, 0, 100) . "...\n");
+if (empty($discovered_items)) {
+    die("Error: News discovery failed. Please check your API keys.\n");
+}
 
 $date_path = date('Y/m/d');
 $upload_dir = __DIR__ . "/../assets/uploads/news/" . $date_path . "/";
@@ -81,9 +97,13 @@ foreach ($discovered_items as $item) {
 
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Generating high-level content and SEO metadata...\n";
-    $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}' for the category '{$item['category']}'.
+    $target_cat = $item['category'];
+    $content_prompt = "Act as an expert football journalist. Write a detailed breaking news article about this story: '{$item['title']}'.
+
+    CRITICAL: Determine the best category for this story from this list: ($cat_list).
 
     Requirements:
+    0. 'category': The chosen category from the list.
     1. 'content': Comprehensive sports report (400-500 words) in an engaging fan-blogger tone. Use 3-4 paragraphs. Use Markdown.
     2. 'tags': 6-10 high-ranking SEO tags.
     3. 'meta_title': SEO optimized title (max 60 chars).
@@ -149,7 +169,7 @@ foreach ($discovered_items as $item) {
     $slug = $safe_title . '-' . time();
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
-    $category = $item['category'];
+    $category = $content_data['category'] ?? $item['category'];
     $author = 'GFW';
 
     $tags = sanitize($content_data['tags'] ?? '');
