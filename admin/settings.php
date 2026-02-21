@@ -35,10 +35,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_general'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_ai'])) {
-    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, selected_model = ? WHERE id = 1");
+    $stmt = $conn->prepare("UPDATE site_settings SET gemini_api_key = ?, deepseek_api_key = ?, perplexity_api_key = ?, selected_model = ? WHERE id = 1");
     $stmt->execute([
         $_POST['gemini_api_key'],
         $_POST['deepseek_api_key'],
+        $_POST['perplexity_api_key'],
         $_POST['selected_model']
     ]);
     $success = "AI logic updated.";
@@ -201,6 +202,12 @@ $activeTab = $_GET['tab'] ?? 'general';
                             <input type="password" name="deepseek_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['deepseek_api_key']; ?>">
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="bg-white/5 p-6 rounded-2xl border border-white/10 shadow-inner">
+                            <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest mb-3 block">Perplexity API Key</span>
+                            <input type="password" name="perplexity_api_key" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white" value="<?php echo $settings['perplexity_api_key'] ?? ''; ?>">
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
                     <span class="text-[10px] font-black uppercase text-gray-500 tracking-widest block mb-4">Central Intelligence Model</span>
@@ -215,6 +222,8 @@ $activeTab = $_GET['tab'] ?? 'general';
                         ['id' => 'v1/gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash (v1 Legacy)', 'provider' => 'Google'],
                         ['id' => 'deepseek-chat', 'name' => 'DeepSeek-V3 (Chat)', 'provider' => 'DeepSeek'],
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
+                        ['id' => 'sonar', 'name' => 'Perplexity Sonar (Web Search)', 'provider' => 'Perplexity'],
+                        ['id' => 'sonar-pro', 'name' => 'Perplexity Sonar Pro (Deep Search)', 'provider' => 'Perplexity'],
                     ];
                     foreach ($models as $m):
                     ?>

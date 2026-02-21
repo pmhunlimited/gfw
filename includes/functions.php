@@ -39,6 +39,28 @@ function get_settings() {
         }
     }
 
+    if ($settings && !array_key_exists('perplexity_api_key', $settings)) {
+        try {
+            $conn->exec("ALTER TABLE site_settings ADD COLUMN perplexity_api_key VARCHAR(255)");
+            // Refetch settings after migration
+            $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
+            $settings = $stmt->fetch();
+        } catch (Exception $e) {
+            error_log("Perplexity migration failed: " . $e->getMessage());
+        }
+    }
+
+    // Auto-migration for posts table (video_url)
+    try {
+        $stmt_post = $conn->query("SELECT * FROM posts LIMIT 1");
+        $first_post = $stmt_post->fetch();
+        if ($first_post && !array_key_exists('video_url', $first_post)) {
+            $conn->exec("ALTER TABLE posts ADD COLUMN video_url VARCHAR(255)");
+        }
+    } catch (Exception $e) {
+        // Table might be empty or not exist yet
+    }
+
     // Auto-migration for categories slug
     try {
         $stmt_cat = $conn->query("SELECT * FROM categories LIMIT 1");
@@ -268,7 +290,20 @@ function get_ai_insight($prompt) {
     $settings = get_settings();
     $model = $settings['selected_model'];
 
-    if (strpos($model, 'gemini') !== false) {
+    if (strpos($model, 'sonar') !== false) {
+        $apiKey = $settings['perplexity_api_key'];
+        if (empty($apiKey)) return "Perplexity API Key missing.";
+        $url = "https://api.perplexity.ai/chat/completions";
+        $data = [
+            "model" => $model,
+            "messages" => [["role" => "user", "content" => $prompt]],
+            "max_tokens" => 4000
+        ];
+        $headers = [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $apiKey
+        ];
+    } elseif (strpos($model, 'gemini') !== false) {
         $apiKey = $settings['gemini_api_key'];
         if (empty($apiKey)) return "Gemini API Key missing.";
 
@@ -291,6 +326,7 @@ function get_ai_insight($prompt) {
         $url = "https://generativelanguage.googleapis.com/$version/models/$model_id:generateContent?key=$apiKey";
         $data = [
             "contents" => [["parts" => [["text" => $prompt]]]],
+            "tools" => [["google_search" => new stdClass()]],
             "generationConfig" => [
                 "maxOutputTokens" => 8192,
                 "temperature" => 0.7
@@ -353,7 +389,8 @@ function get_ai_insight($prompt) {
             return $result['choices'][0]['message']['content'];
         }
         if (isset($result['error'])) {
-            return "AI Error: DeepSeek - " . ($result['error']['message'] ?? 'Unknown');
+            $provider = (strpos($model, 'sonar') !== false) ? 'Perplexity' : 'DeepSeek';
+            return "AI Error: $provider - " . ($result['error']['message'] ?? 'Unknown');
         }
     }
 

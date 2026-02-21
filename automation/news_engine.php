@@ -7,10 +7,16 @@ require_once __DIR__ . '/../includes/functions.php';
 $conn = get_db_connection();
 $settings = get_settings();
 
-$apiKey = (strpos($settings['selected_model'], 'gemini') !== false) ? $settings['gemini_api_key'] : $settings['deepseek_api_key'];
+if (strpos($settings['selected_model'], 'sonar') !== false) {
+    $apiKey = $settings['perplexity_api_key'];
+} elseif (strpos($settings['selected_model'], 'gemini') !== false) {
+    $apiKey = $settings['gemini_api_key'];
+} else {
+    $apiKey = $settings['deepseek_api_key'];
+}
 
 if (empty($apiKey)) {
-    die("Error: AI API Key missing. Configure it in Admin -> Parameters -> AI Core.\n");
+    die("Error: AI API Key missing for " . $settings['selected_model'] . ". Configure it in Admin -> Settings -> AI Core.\n");
 }
 
 echo "Starting AI-Powered News Discovery...\n";
@@ -31,10 +37,10 @@ $cat_list = implode(', ', $available_categories);
 $today = date('D d M Y');
 echo "Stage 1: Discovering trending football stories for $today...\n";
 
-$discovery_prompt = "Act as an elite sports news aggregator. Today's date is $today.
-CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major sports news stories (covering ALL sports: football, basketball, tennis, golf, etc.) that were published TODAY, $today, specifically from these sources ONLY: skysports.com, sky-sport.ch, espn.com, and supersport.com.
+$discovery_prompt = "Act as an elite sports news aggregator with real-time web access. Today's date is $today.
+CRITICAL: Identify exactly 10 of the LATEST and MOST ACCURATE major sports news stories (covering ALL sports: football, basketball, tennis, golf, etc.) that were published WITHIN THE LAST 24 HOURS (on $today), specifically from these sources ONLY: skysports.com, sky-sport.ch, espn.com, and supersport.com.
 Focus on: Current scores, fixtures, breaking news, and live sport events from today.
-DO NOT include old news. Each story must be a 'featured news' item from the last 24 hours.
+STRICTLY PROHIBITED: Do not include old news or stories from outside the specified 24-hour window or from any other sources.
 
 Return ONLY a valid JSON array of objects with these keys:
 - 'title': Catchy and accurate sports headline.
@@ -61,11 +67,14 @@ $published_posts = [];
 foreach ($discovered_items as $item) {
     if ($count >= 10) break;
 
-    // Skip if already exists
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ?");
-    $check_stmt->execute([$item['title']]);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $slug_prefix = substr($safe_title, 0, 30); // Use first 30 chars for robust duplicate detection
+
+    // Skip if already exists (using slug-based prefix matching for better accuracy)
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE slug LIKE ? OR title = ?");
+    $check_stmt->execute([$slug_prefix . '%', $item['title']]);
     if ($check_stmt->fetch()) {
-        echo "Skipping existing post: " . $item['title'] . "\n";
+        echo "Skipping potential duplicate: " . $item['title'] . "\n";
         continue;
     }
 
@@ -126,7 +135,6 @@ foreach ($discovered_items as $item) {
 
     sleep(1);
 
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $filename = $safe_title . "-" . time() . ".jpg";
     $local_img_path = $upload_dir . $filename;
     $db_img_path = $web_dir . $filename;
@@ -153,7 +161,7 @@ foreach ($discovered_items as $item) {
     $meta_keys = sanitize($content_data['meta_keywords'] ?? '');
     $publish_date = date('Y-m-d H:i:s');
 
-    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story, publish_date, tags, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)");
+    $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_top_story, publish_date, tags, meta_title, meta_description, meta_keywords, video_url) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, NULL)");
     if ($stmt->execute([$title, $slug, $excerpt, $content, $category, $author, $db_img_path, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys])) {
         $post_id = $conn->lastInsertId();
         echo "Successfully published: $title\n";

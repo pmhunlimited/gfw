@@ -7,6 +7,9 @@ CREATE TABLE IF NOT EXISTS site_settings (
     admin_email VARCHAR(255),
     whatsapp_number VARCHAR(50),
     sharethis_property_id VARCHAR(100),
+    header_code TEXT,
+    footer_code TEXT,
+    perplexity_api_key VARCHAR(255),
     selected_model VARCHAR(50) DEFAULT 'gemini-1.5-flash',
     gemini_api_key VARCHAR(255),
     deepseek_api_key VARCHAR(255),
@@ -102,5 +105,6 @@ CREATE TABLE IF NOT EXISTS pages (
 
 CREATE TABLE IF NOT EXISTS categories (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    slug VARCHAR(100)
 );
