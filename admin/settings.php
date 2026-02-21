@@ -166,7 +166,7 @@ $activeTab = $_GET['tab'] ?? 'general';
             <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-5 p-4 rounded-3xl">
                 <h5 class="fw-black mb-3">Intelligence Acquisition Guide</h5>
                 <div class="row g-4 small">
-                    <div class="col-md-6 border-end border-white border-opacity-10">
+                    <div class="col-md-4 border-end border-white border-opacity-10">
                         <p class="mb-2"><strong>Google Gemini API:</strong></p>
                         <ol class="ps-3 opacity-75">
                             <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-info">Google AI Studio</a>.</li>
@@ -175,12 +175,21 @@ $activeTab = $_GET['tab'] ?? 'general';
                             <li>Ensure billing is active if you expect high traffic.</li>
                         </ol>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4 border-end border-white border-opacity-10">
                         <p class="mb-2"><strong>DeepSeek API:</strong></p>
                         <ol class="ps-3 opacity-75">
                             <li>Visit <a href="https://platform.deepseek.com/" target="_blank" class="text-info">DeepSeek Platform</a>.</li>
                             <li>Navigate to the "API Keys" section.</li>
                             <li>Generate a new key and add balance to your account.</li>
+                            <li>Copy and secure the key.</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-4">
+                        <p class="mb-2"><strong>Perplexity API:</strong></p>
+                        <ol class="ps-3 opacity-75">
+                            <li>Visit <a href="https://www.perplexity.ai/settings/api" target="_blank" class="text-info">Perplexity Settings</a>.</li>
+                            <li>Generate a new API key.</li>
+                            <li>Add balance to your account if required.</li>
                             <li>Copy and secure the key.</li>
                         </ol>
                     </div>
