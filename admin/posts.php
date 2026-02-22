@@ -203,7 +203,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
-        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">MANUAL ENTRY</button>
+        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>
 
@@ -336,12 +336,12 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 }
 </style>
 
-<!-- Manual Entry Modal -->
+<!-- Create New Post Modal -->
 <div class="modal fade" id="manualModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary rounded-4">
             <div class="modal-header border-white border-opacity-10">
-                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Manual Post Entry</h5>
+                <h5 class="modal-title font-condensed fw-black italic text-white uppercase">Create New Post</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" enctype="multipart/form-data">

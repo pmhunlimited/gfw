@@ -52,7 +52,7 @@
             <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
             <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
             <hr class="border-white border-opacity-5 mx-4 my-2">
-            <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> DEAUTHORIZE</a>
+            <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> LOGOUT</a>
         </nav>
     </div>
 </div>
@@ -79,7 +79,7 @@
                 <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
                 <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
                 <hr class="border-white border-opacity-5 mx-4 my-4">
-                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> DEAUTHORIZE</a>
+                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> LOGOUT</a>
             </nav>
         </div>
 
