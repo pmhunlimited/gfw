@@ -1,4 +1,5 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
 $slug = $_GET['slug'] ?? null;
@@ -26,12 +27,25 @@ include __DIR__ . '/../includes/header.php';
 
 // Handle Comment Submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['comment_text'])) {
-    $author = sanitize($_POST['comment_author']);
-    $text = sanitize($_POST['comment_text']);
-    $stmt = $conn->prepare("INSERT INTO comments (post_id, author, text, status) VALUES (?, ?, ?, 'pending')");
-    $stmt->execute([$post['id'], $author, $text]);
-    $comment_msg = "Comment submitted for review.";
+    $user_captcha = (int)($_POST['captcha_answer'] ?? 0);
+    $saved_captcha = (int)($_SESSION['captcha_sum'] ?? -1);
+
+    if ($user_captcha !== $saved_captcha) {
+        $comment_error = "INCIDENT REPORTED: Security challenge failed. Pulse-check required.";
+    } else {
+        $author = sanitize($_POST['comment_author']);
+        $text = sanitize($_POST['comment_text']);
+        $stmt = $conn->prepare("INSERT INTO comments (post_id, author, text, status) VALUES (?, ?, ?, 'pending')");
+        $stmt->execute([$post['id'], $author, $text]);
+        $comment_msg = "Intelligence report received. Awaiting clearance.";
+        unset($_SESSION['captcha_sum']);
+    }
 }
+
+// Generate Arithmetic Captcha
+$c_num1 = rand(2, 9);
+$c_num2 = rand(2, 9);
+$_SESSION['captcha_sum'] = $c_num1 + $c_num2;
 
 // Get Approved Comments
 $stmt = $conn->prepare("SELECT * FROM comments WHERE post_id = ? AND status = 'approved' ORDER BY created_at DESC");
@@ -125,18 +139,26 @@ $relatedPosts = $stmt_related->fetchAll();
                     <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Comments</h3>
 
                     <?php if (isset($comment_msg)): ?>
-                        <div class="alert alert-success bg-green-900/20 border-green-500/50 text-green-500 rounded-0 font-condensed italic uppercase"><?php echo $comment_msg; ?></div>
+                        <div class="alert alert-success bg-green-900/20 border-green-500/50 text-green-500 rounded-xl font-condensed italic uppercase"><?php echo $comment_msg; ?></div>
+                    <?php endif; ?>
+
+                    <?php if (isset($comment_error)): ?>
+                        <div class="alert alert-danger bg-red-900/20 border-red-500/50 text-danger rounded-xl font-condensed italic uppercase"><?php echo $comment_error; ?></div>
                     <?php endif; ?>
 
                     <form method="POST" class="mb-12 bg-[#0a0e17] p-4 p-md-8 border border-white/5 rounded-2xl shadow-2xl">
                         <div class="row g-4">
                             <div class="col-md-6">
                                 <label class="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Author ID</label>
-                                <input type="text" name="comment_author" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold" required>
+                                <input type="text" name="comment_author" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold" required placeholder="Codename or Identity">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Security Verification: <?php echo $c_num1; ?> + <?php echo $c_num2; ?> = ?</label>
+                                <input type="number" name="captcha_answer" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-bold" required placeholder="Prove you are human">
                             </div>
                             <div class="col-12">
                                 <label class="block text-[10px] font-black uppercase text-gray-500 tracking-widest mb-2">Message Payload</label>
-                                <textarea name="comment_text" rows="4" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" required></textarea>
+                                <textarea name="comment_text" rows="4" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white" required placeholder="Input tactical assessment..."></textarea>
                             </div>
                         </div>
                         <button type="submit" class="mt-6 bg-electric-red text-white px-10 py-3 rounded-xl font-black uppercase italic tracking-widest hover:bg-white hover:text-electric-red transition-all">Transmit Message</button>
