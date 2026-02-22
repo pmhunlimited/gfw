@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
                 </div>
                 <div class="mb-4">
                     <label class="form-label text-white-50 small uppercase font-black">Security PIN</label>
-                    <input type="password" name="pin" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3" required>
+                    <input type="password" name="pin" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3" required inputmode="numeric" pattern="[0-9]*">
                 </div>
                 <button type="submit" name="reset_request" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic mb-3">REQUEST RESET</button>
                 <a href="?view=login" class="btn btn-link w-100 text-white-50 font-condensed italic text-decoration-none">CANCEL</a>

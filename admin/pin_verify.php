@@ -61,13 +61,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small font-bold italic"><?php echo $error; ?></div>
         <?php endif; ?>
 
-        <form method="POST">
+        <form method="POST" id="pinForm">
             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
-            <div class="mb-5">
-                <input type="password" name="pin" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3 text-center tracking-[1em] fs-4" placeholder="••••" required autofocus maxlength="10">
+            <div class="mb-4">
+                <input type="password" name="pin" id="pinInput" class="form-control bg-black border-white border-opacity-10 text-white rounded-xl py-3 text-center tracking-[1em] fs-4" placeholder="••••" required autofocus maxlength="10" inputmode="numeric" pattern="[0-9]*">
             </div>
+
+            <!-- Digital Keypad -->
+            <div class="pin-keypad mb-5">
+                <div class="row g-2">
+                    <?php for($i=1; $i<=9; $i++): ?>
+                        <div class="col-4"><button type="button" class="btn btn-dark w-100 py-3 fw-bold keypad-btn" data-val="<?php echo $i; ?>"><?php echo $i; ?></button></div>
+                    <?php endfor; ?>
+                    <div class="col-4"><button type="button" class="btn btn-outline-danger w-100 py-3 fw-bold keypad-clear">CLR</button></div>
+                    <div class="col-4"><button type="button" class="btn btn-dark w-100 py-3 fw-bold keypad-btn" data-val="0">0</button></div>
+                    <div class="col-4"><button type="button" class="btn btn-outline-secondary w-100 py-3 fw-bold keypad-del"><i class="bi bi-backspace"></i></button></div>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic">VERIFY IDENTITY</button>
         </form>
+
+        <script>
+            document.querySelectorAll('.keypad-btn').forEach(btn => {
+                btn.onclick = function() {
+                    const input = document.getElementById('pinInput');
+                    if (input.value.length < 10) {
+                        input.value += this.dataset.val;
+                    }
+                };
+            });
+            document.querySelector('.keypad-clear').onclick = function() {
+                document.getElementById('pinInput').value = '';
+            };
+            document.querySelector('.keypad-del').onclick = function() {
+                const input = document.getElementById('pinInput');
+                input.value = input.value.slice(0, -1);
+            };
+            // Prevent non-numeric input
+            document.getElementById('pinInput').onkeydown = function(e) {
+                if (e.key.length === 1 && !/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            };
+        </script>
     </div>
 </body>
 </html>

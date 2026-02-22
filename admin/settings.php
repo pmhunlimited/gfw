@@ -233,7 +233,7 @@ $activeTab = $_GET['tab'] ?? 'general';
 
                     <div class="mb-4">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Set New Security PIN</label>
-                        <input type="password" name="admin_pin" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-mono tracking-[1em]" placeholder="••••">
+                        <input type="password" name="admin_pin" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white font-mono tracking-[1em]" placeholder="••••" inputmode="numeric" pattern="[0-9]*">
                         <p class="text-[9px] text-white-50 mt-2 italic opacity-40">Only required if enabling for the first time or changing the PIN.</p>
                     </div>
                 </div>
