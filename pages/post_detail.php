@@ -80,8 +80,35 @@ $relatedPosts = $stmt_related->fetchAll();
                         </div>
                     <?php endif; endif; ?>
 
-                    <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90">
+                    <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90 mb-12">
                         <?php echo parse_markdown($post['content']); ?>
+                    </div>
+
+                    <!-- Social Share Buttons -->
+                    <div class="border-t border-b border-white/5 py-8 mb-10">
+                        <h4 class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-4">Share Intelligence</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <?php
+                                $post_url = SITE_URL . "/post/" . $post['slug'];
+                                $encoded_url = urlencode($post_url);
+                                $encoded_title = urlencode($post['title']);
+                            ?>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $encoded_url; ?>" target="_blank" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all">
+                                <i class="bi bi-facebook fs-5"></i>
+                            </a>
+                            <a href="https://twitter.com/intent/tweet?url=<?php echo $encoded_url; ?>&text=<?php echo $encoded_title; ?>" target="_blank" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-black hover:text-white hover:border-black transition-all">
+                                <i class="bi bi-twitter-x fs-5"></i>
+                            </a>
+                            <a href="https://api.whatsapp.com/send?text=<?php echo $encoded_title . '%20' . $encoded_url; ?>" target="_blank" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all">
+                                <i class="bi bi-whatsapp fs-5"></i>
+                            </a>
+                            <a href="https://t.me/share/url?url=<?php echo $encoded_url; ?>&text=<?php echo $encoded_title; ?>" target="_blank" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all">
+                                <i class="bi bi-telegram fs-5"></i>
+                            </a>
+                            <a href="mailto:?subject=<?php echo $encoded_title; ?>&body=Check this out: <?php echo $encoded_url; ?>" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-electric-red hover:text-white hover:border-electric-red transition-all">
+                                <i class="bi bi-envelope-fill fs-5"></i>
+                            </a>
+                        </div>
                     </div>
 
                     <?php if (!empty($post['tags'])): ?>

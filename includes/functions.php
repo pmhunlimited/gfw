@@ -28,12 +28,20 @@ function get_settings() {
     }
 
 
-    // Auto-migration for posts source_url
+    // Auto-migration for posts source_url and video_url
     try {
         $conn->query("SELECT source_url FROM posts LIMIT 1");
     } catch (Exception $e) {
         try {
             $conn->exec("ALTER TABLE posts ADD COLUMN source_url VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
+    try {
+        $conn->query("SELECT video_url FROM posts LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE posts ADD COLUMN video_url VARCHAR(255)");
         } catch (Exception $ex) {}
     }
 
