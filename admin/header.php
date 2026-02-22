@@ -23,9 +23,11 @@
         .text-sharp { text-shadow: 0 0 1px rgba(255,255,255,0.1); }
 
         /* Fix Tailwind/Bootstrap .collapse conflict */
-        .collapse:not(.show) { display: none !important; }
-        .collapse.show { display: block !important; visibility: visible !important; }
+        .collapse.show { visibility: visible !important; }
     </style>
+    <?php if (!empty($settings['header_code'])): ?>
+        <?php echo $settings['header_code']; ?>
+    <?php endif; ?>
 </head>
 <body>
 <!-- Mobile Header -->

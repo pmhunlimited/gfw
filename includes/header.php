@@ -68,8 +68,7 @@ $settings = get_settings();
       .alert { border-radius: 15px; border-opacity: 0.2; }
 
       /* Fix Tailwind/Bootstrap .collapse conflict */
-      .collapse:not(.show) { display: none !important; }
-      .collapse.show { display: block !important; visibility: visible !important; }
+      .navbar-collapse.collapse { visibility: visible !important; }
 
     </style>
     <?php if (!empty($settings['header_code'])): ?>
