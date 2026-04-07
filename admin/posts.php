@@ -57,6 +57,7 @@ if (isset($_POST['save_manual'])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
+            notify_subscribers([$post_id]);
             $success = "Intelligence report deployed and broadcasted.";
         } else {
             $success = "Intelligence report scheduled for $publish_date.";
@@ -155,6 +156,7 @@ if (isset($_POST['generate_ai'])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
+                notify_subscribers([$post_id]);
                 $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
                 $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;

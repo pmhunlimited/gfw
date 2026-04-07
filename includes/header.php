@@ -129,3 +129,18 @@ $settings = get_settings();
         </div>
     </nav>
     <main>
+        <?php if (isset($_GET['subscribed'])): ?>
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase">
+                    <i class="bi bi-check-circle-fill me-2"></i> Intelligence feed subscription successful. System linked.
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['error']) && $_GET['error'] == 'invalid_email'): ?>
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-danger bg-red-900 bg-opacity-10 border-red-500 border-opacity-20 text-red-500 font-condensed italic uppercase">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Invalid communication address. Subscription failed.
+                </div>
+            </div>
+        <?php endif; ?>

@@ -529,4 +529,48 @@ function parse_markdown($text) {
     }
     return nl2br($text);
 }
+
+/**
+ * Notifies all subscribers about new posts.
+ * @param array $post_ids Array of post IDs
+ */
+function notify_subscribers($post_ids) {
+    if (empty($post_ids)) return;
+
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($subscribers)) return;
+
+    $placeholders = implode(',', array_fill(0, count($post_ids), '?'));
+    $stmt = $conn->prepare("SELECT title, slug, excerpt FROM posts WHERE id IN ($placeholders)");
+    $stmt->execute($post_ids);
+    $posts = $stmt->fetchAll();
+
+    if (empty($posts)) return;
+
+    $settings = get_settings();
+    $site_url = defined('SITE_URL') ? rtrim(SITE_URL, '/') : '';
+
+    $subject = "Intelligence Alert: New Reports Published - " . date('D d M Y');
+    $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>New Intelligence Reports: ".date('d M Y')."</p>";
+
+    foreach ($posts as $post) {
+        $post_url = $site_url . "/post/" . $post['slug'];
+        $content .= "
+            <div class='news-item'>
+                <a href='$post_url' class='news-title'>{$post['title']}</a>
+                <p class='news-excerpt'>{$post['excerpt']}</p>
+                <a href='$post_url' class='btn'>Decrypt Full Report</a>
+            </div>
+        ";
+    }
+
+    $message = render_email_template($content, "Intelligence Alert");
+
+    foreach ($subscribers as $email) {
+        send_mail($email, $subject, $message);
+    }
+}
 ?>

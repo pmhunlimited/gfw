@@ -51,7 +51,11 @@ if ($path == '/' || $path == '' || empty($path)) {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $conn = get_db_connection();
-        $stmt = $conn->prepare("INSERT IGNORE INTO subscribers (email) VALUES (?)");
+        if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
+            $stmt = $conn->prepare("INSERT OR IGNORE INTO subscribers (email) VALUES (?)");
+        } else {
+            $stmt = $conn->prepare("INSERT IGNORE INTO subscribers (email) VALUES (?)");
+        }
         $stmt->execute([$email]);
         header('Location: /?subscribed=true');
         exit;

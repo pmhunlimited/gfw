@@ -60,6 +60,28 @@ if (empty($discovered_items)) {
     die("Error: News discovery failed. Please check your API keys.\n");
 }
 
+// 1.1 Pre-filtering Stage: Remove stories that already exist in the database to save AI tokens
+echo "Stage 1.1: Pre-filtering existing stories from database...\n";
+$filtered_discovery = [];
+foreach ($discovered_items as $item) {
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $source_url = $item['source_link'] ?? '';
+    $title_prefix = substr($item['title'], 0, 25) . '%';
+
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ?");
+    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url, $title_prefix]);
+    if ($check_stmt->fetch()) {
+        echo "Pre-filtering existing or duplicate post: " . $item['title'] . "\n";
+        continue;
+    }
+    $filtered_discovery[] = $item;
+}
+$discovered_items = $filtered_discovery;
+
+if (empty($discovered_items)) {
+    die("Intelligence status: All discovered news are already published. No new reports to generate.\n");
+}
+
 // 1.5 Deduplication Stage: Use AI to identify and remove redundant stories
 echo "Stage 1.5: Filtering redundant stories via AI...\n";
 $headlines_for_dedup = "";
@@ -98,24 +120,11 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 $count = 0;
 $loop_idx = 0;
 $fetched_hashes = [];
-$published_posts = [];
+$published_post_ids = [];
 foreach ($discovered_items as $item) {
     $loop_idx++;
     if ($count >= 10) break;
 
-    // Skip if already exists or similar slug found (prevent duplicates)
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
-    $source_url = $item['source_link'] ?? '';
-
-    // Robust check: Exact title, Slug prefix, Source URL, or Title prefix (first 25 chars)
-    $title_prefix = substr($item['title'], 0, 25) . '%';
-
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ?");
-    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url, $title_prefix]);
-    if ($check_stmt->fetch()) {
-        echo "Skipping existing or duplicate post: " . $item['title'] . "\n";
-        continue;
-    }
 
     echo "\n--- Processing Story $loop_idx: " . $item['title'] . " ---\n";
 
@@ -202,6 +211,7 @@ foreach ($discovered_items as $item) {
 
     // 4. Save to Database
     $title = sanitize($item['title']);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
     $slug = $safe_title . '-' . time();
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
@@ -222,11 +232,7 @@ foreach ($discovered_items as $item) {
         echo "Broadcasting to social media...\n";
         broadcast_to_social($post_id);
 
-        $published_posts[] = [
-            'title' => $title,
-            'slug' => $slug,
-            'excerpt' => $excerpt
-        ];
+        $published_post_ids[] = $post_id;
 
         $count++;
     } else {
@@ -237,32 +243,9 @@ foreach ($discovered_items as $item) {
 echo "\nAI Automation complete. $count posts published.\n";
 
 // 5. Notify Subscribers
-if ($count > 0) {
+if (!empty($published_post_ids)) {
     echo "Notifying subscribers...\n";
-    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
-
-    if (!empty($subscribers)) {
-        $subject = "Daily Sports Intelligence Digest - " . date('D d M Y');
-
-        $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>Daily Intelligence Digest: ".date('d M Y')."</p>";
-
-        foreach ($published_posts as $post) {
-            $post_url = SITE_URL . "/post/" . $post['slug'];
-            $content .= "
-                <div class='news-item'>
-                    <a href='$post_url' class='news-title'>{$post['title']}</a>
-                    <p class='news-excerpt'>{$post['excerpt']}</p>
-                    <a href='$post_url' class='btn'>Decrypt Full Report</a>
-                </div>
-            ";
-        }
-
-        $message = render_email_template($content, "Daily Intelligence Digest");
-
-        foreach ($subscribers as $email) {
-            send_mail($email, $subject, $message);
-        }
-        echo "Notification sent to " . count($subscribers) . " subscribers.\n";
-    }
+    notify_subscribers($published_post_ids);
+    echo "Notification process complete.\n";
 }
 ?>
