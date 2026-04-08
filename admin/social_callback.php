@@ -10,13 +10,14 @@ $platform = $_GET['platform'] ?? '';
 $code = $_GET['code'] ?? '';
 $state = $_GET['state'] ?? '';
 $settings = get_settings();
+$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
 
 // Verify state
 if (empty($state) || $state !== ($_SESSION['oauth_state'] ?? '')) {
     // die("Invalid OAuth state. Please try again.");
 }
 
-$callback_url = SITE_URL . "/admin/social_callback.php?platform=" . $platform;
+$callback_url = $admin_base . "/social_callback.php?platform=" . $platform;
 
 if ($platform == 'facebook' && $code) {
     // 1. Exchange code for user token
@@ -78,7 +79,7 @@ if ($platform == 'facebook_final' && $_SERVER['REQUEST_METHOD'] == 'POST') {
     $stmt = $conn->prepare("UPDATE site_settings SET fb_page_id = ?, fb_access_token = ?, ig_account_id = ?, ig_access_token = ? WHERE id = 1");
     $stmt->execute([$page_id, $page_token, $ig_id, $page_token]);
 
-    redirect("/admin/settings?tab=social&success=fb_linked");
+    redirect($admin_base . "/settings?tab=social&success=fb_linked");
 }
 
 if ($platform == 'x' && $code) {
@@ -105,7 +106,7 @@ if ($platform == 'x' && $code) {
 
     if (isset($data['access_token'])) {
         $conn->prepare("UPDATE site_settings SET tw_access_token = ? WHERE id = 1")->execute([$data['access_token']]);
-        redirect("/admin/settings?tab=social&success=x_linked");
+        redirect($admin_base . "/settings?tab=social&success=x_linked");
     } else {
         die("X Token Error: " . $resp);
     }
@@ -132,11 +133,11 @@ if ($platform == 'tiktok' && $code) {
 
     if (isset($data['access_token'])) {
         $conn->prepare("UPDATE site_settings SET tt_access_token = ? WHERE id = 1")->execute([$data['access_token']]);
-        redirect("/admin/settings?tab=social&success=tt_linked");
+        redirect($admin_base . "/settings?tab=social&success=tt_linked");
     } else {
         die("TikTok Token Error: " . $resp);
     }
 }
 
-redirect("/admin/settings?tab=social&error=callback_failed");
+redirect($admin_base . "/settings?tab=social&error=callback_failed");
 ?>

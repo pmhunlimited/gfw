@@ -63,8 +63,6 @@ if ($path == '/' || $path == '' || empty($path)) {
         header('Location: /?error=invalid_email');
         exit;
     }
-} elseif ($path == '/admin/login' || $path == '/admin/login.php') {
-    include __DIR__ . '/admin/login.php';
 } elseif (strpos($path, '/admin') === 0) {
     include __DIR__ . '/admin/index.php';
 } elseif ($path == '/install' || strpos($path, '/install/') === 0) {

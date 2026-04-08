@@ -2,12 +2,23 @@
 session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
-if (!is_admin()) {
-    redirect('/admin/login');
+$request_uri = $_SERVER['REQUEST_URI'];
+$base_path = strtok($request_uri, '?');
+$path = '/';
+if (strpos($base_path, '/admin') === 0) {
+    $path = substr($base_path, 6);
+}
+$path = '/' . trim($path, '/');
+
+if (!is_admin() && $path !== '/login') {
+    $admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
+    redirect($admin_base . '/login');
 }
 
 $conn = get_db_connection();
 $settings = get_settings();
+
+$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
 
 // Security PIN enforcement
 if (!empty($settings['pin_enabled'])) {
@@ -15,24 +26,15 @@ if (!empty($settings['pin_enabled'])) {
         (time() - ($_SESSION['pin_verified_at'] ?? 0)) > 86400) {
 
         // Don't redirect if already on pin_verify page
-        $request = $_SERVER['REQUEST_URI'];
-        if (strpos($request, '/admin/pin_verify') === false) {
-            redirect('/admin/pin_verify');
+        if ($path !== '/pin_verify') {
+            redirect($admin_base . '/pin_verify');
         }
     }
 }
 
-// Admin Routing
-$request = $_SERVER['REQUEST_URI'];
-$path = rtrim(strtok($request, '?'), '/');
-if (strpos($path, '/admin') === 0) {
-    $path = substr($path, 6);
-}
-if (empty($path)) $path = '/';
-
 // Layout helper
 function admin_header($title = "Dashboard") {
-    global $settings, $path;
+    global $settings, $path, $admin_base;
     include __DIR__ . '/header.php';
 }
 
@@ -56,12 +58,14 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/profile.php';
 } elseif ($path == '/pin_verify') {
     include __DIR__ . '/pin_verify.php';
+} elseif ($path == '/login') {
+    include __DIR__ . '/login.php';
 } elseif ($path == '/ajax_suggest.php' || $path == '/ajax_suggest') {
     include __DIR__ . '/ajax_suggest.php';
 } elseif ($path == '/logout') {
     session_destroy();
-    redirect('/admin/login');
+    redirect($admin_base . '/login');
 } else {
-    redirect('/admin/');
+    redirect($admin_base . '/');
 }
 ?>

@@ -2,15 +2,17 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
+$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
+
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
-    redirect('/admin/login');
+    redirect($admin_base . '/login');
 }
 
 $settings = get_settings();
 if (!$settings['pin_enabled']) {
     $_SESSION['pin_verified'] = true;
     $_SESSION['pin_verified_at'] = time();
-    redirect('/admin/');
+    redirect($admin_base . '/');
 }
 
 $error = '';
@@ -22,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (password_verify($pin, $settings['admin_pin'])) {
             $_SESSION['pin_verified'] = true;
             $_SESSION['pin_verified_at'] = time();
-            redirect('/admin/');
+            redirect($admin_base . '/');
         } else {
             $error = "INVALID SECURITY PIN. ACCESS DENIED.";
             log_activity("Failed admin PIN attempt.");

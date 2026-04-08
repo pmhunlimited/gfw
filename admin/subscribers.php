@@ -31,7 +31,7 @@ $subs = $conn->query("SELECT * FROM subscribers ORDER BY created_at DESC")->fetc
                         <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d H:i', strtotime($s['created_at'])); ?></span>
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
-                        <a href="?delete=<?php echo $s['id']; ?>" class="text-danger" onclick="return confirm('Decommission target?')"><i class="bi bi-trash fs-5"></i></a>
+                        <a href="<?php echo $admin_base; ?>/subscribers?delete=<?php echo $s['id']; ?>" class="text-danger" onclick="return confirm('Decommission target?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

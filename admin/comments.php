@@ -47,10 +47,10 @@ $comments = $conn->query("SELECT c.*, p.title as post_title FROM comments c JOIN
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
                         <?php if ($c['status'] == 'pending'): ?>
-                            <a href="?approve=<?php echo $c['id']; ?>" class="text-success me-3"><i class="bi bi-check-circle fs-5"></i></a>
-                            <a href="?reject=<?php echo $c['id']; ?>" class="text-warning me-3"><i class="bi bi-x-circle fs-5"></i></a>
+                            <a href="<?php echo $admin_base; ?>/comments?approve=<?php echo $c['id']; ?>" class="text-success me-3"><i class="bi bi-check-circle fs-5"></i></a>
+                            <a href="<?php echo $admin_base; ?>/comments?reject=<?php echo $c['id']; ?>" class="text-warning me-3"><i class="bi bi-x-circle fs-5"></i></a>
                         <?php endif; ?>
-                        <a href="?delete=<?php echo $c['id']; ?>" class="text-danger" onclick="return confirm('Purge this comment?')"><i class="bi bi-trash fs-5"></i></a>
+                        <a href="<?php echo $admin_base; ?>/comments?delete=<?php echo $c['id']; ?>" class="text-danger" onclick="return confirm('Purge this comment?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
                 <?php endforeach; ?>

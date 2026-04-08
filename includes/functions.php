@@ -6,14 +6,42 @@ function get_settings() {
     static $settings = null;
     if ($settings !== null) return $settings;
 
-    $conn = get_db_connection();
-    if (!$conn) return [
+    $defaults = [
         'name' => 'GLOBAL FOOTBALL WATCH',
+        'tagline' => 'Intelligence in Football',
         'logo' => '',
-        'favicon' => ''
+        'favicon' => '',
+        'admin_email' => '',
+        'whatsapp_number' => '',
+        'header_code' => '',
+        'footer_code' => '',
+        'selected_model' => 'deepseek-chat',
+        'deepseek_api_key' => '',
+        'smtp_host' => '',
+        'smtp_port' => '587',
+        'smtp_user' => '',
+        'smtp_pass' => '',
+        'smtp_sender_email' => '',
+        'smtp_sender_name' => '',
+        'pin_enabled' => 0,
+        'admin_pin' => ''
     ];
-    $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-    $settings = $stmt->fetch();
+
+    $conn = get_db_connection();
+    if (!$conn) return $defaults;
+
+    try {
+        $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
+        $fetched = $stmt->fetch();
+        if (!$fetched) {
+            $conn->exec("INSERT INTO site_settings (name) VALUES ('GLOBAL FOOTBALL WATCH')");
+            $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
+            $fetched = $stmt->fetch();
+        }
+        $settings = array_merge($defaults, $fetched ?: []);
+    } catch (Exception $e) {
+        $settings = $defaults;
+    }
 
     if ($settings && !array_key_exists('header_code', $settings)) {
         try {

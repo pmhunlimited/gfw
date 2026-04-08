@@ -1,0 +1,196 @@
+[Wed Apr  8 13:34:53 2026] PHP 8.3.6 Development Server (http://localhost:3000) started
+[Wed Apr  8 13:34:58 2026] [::1]:34524 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34524 [302]: GET /admin/
+[Wed Apr  8 13:34:58 2026] [::1]:34524 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34526 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34526 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34526 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34532 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34532 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34532 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34542 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34542 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34542 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34544 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34544 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34544 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34550 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34550 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34550 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34564 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34564 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34564 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34580 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34580 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34580 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34592 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34592 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34592 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34594 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34594 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34594 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34600 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34600 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34600 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34612 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34612 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34612 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34618 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34618 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34618 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34620 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34620 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34620 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34624 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34624 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34624 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34640 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34640 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34640 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34652 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34652 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34652 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34660 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34660 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34660 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34662 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34662 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34662 Closing
+[Wed Apr  8 13:34:58 2026] [::1]:34664 Accepted
+[Wed Apr  8 13:34:58 2026] [::1]:34664 [302]: GET /admin/login
+[Wed Apr  8 13:34:58 2026] [::1]:34664 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40778 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40778 [302]: GET /admin/
+[Wed Apr  8 13:36:55 2026] [::1]:40778 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40782 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40782 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40782 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40798 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40798 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40798 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40802 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40802 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40802 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40812 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40812 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40812 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40826 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40826 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40826 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40836 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40836 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40836 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40846 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40846 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40846 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40848 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40848 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40848 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40854 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40854 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40854 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40868 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40868 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40868 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40874 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40874 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40874 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40888 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40888 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40888 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40892 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40892 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40892 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40902 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40902 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40902 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40916 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40916 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40916 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40918 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40918 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40918 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40928 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40928 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40928 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40942 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40942 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40942 Closing
+[Wed Apr  8 13:36:55 2026] [::1]:40956 Accepted
+[Wed Apr  8 13:36:55 2026] [::1]:40956 [302]: GET /admin/login
+[Wed Apr  8 13:36:55 2026] [::1]:40956 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52224 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52224 [302]: GET /admin/
+[Wed Apr  8 13:38:40 2026] [::1]:52224 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52236 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52236 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52236 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52240 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52240 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52240 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52248 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52248 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52248 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52254 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52254 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52254 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52268 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52268 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52268 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52274 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52274 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52274 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52286 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52286 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52286 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52298 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52298 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52298 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52314 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52314 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52314 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52322 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52322 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52322 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52330 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52330 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52330 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52334 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52334 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52334 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52340 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52340 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52340 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52348 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52348 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52348 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52362 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52362 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52362 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52366 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52366 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52366 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52368 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52368 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52368 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52372 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52372 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52372 Closing
+[Wed Apr  8 13:38:40 2026] [::1]:52382 Accepted
+[Wed Apr  8 13:38:40 2026] [::1]:52382 [302]: GET /admin/login
+[Wed Apr  8 13:38:40 2026] [::1]:52382 Closing
+[Wed Apr  8 13:39:44 2026] [::1]:53418 Accepted
+[Wed Apr  8 13:39:44 2026] [::1]:53418 [302]: GET /admin/
+[Wed Apr  8 13:39:44 2026] [::1]:53418 Closing
+[Wed Apr  8 13:39:44 2026] [::1]:53426 Accepted
+[Wed Apr  8 13:39:44 2026] PHP Fatal error:  Uncaught Error: Undefined constant "DB_HOST" in /app/includes/db.php:15
+Stack trace:
+#0 /app/admin/index.php(18): get_db_connection()
+#1 {main}
+  thrown in /app/includes/db.php on line 15
+[Wed Apr  8 13:39:44 2026] [::1]:53426 [500]: GET /admin/login - Uncaught Error: Undefined constant "DB_HOST" in /app/includes/db.php:15
+Stack trace:
+#0 /app/admin/index.php(18): get_db_connection()
+#1 {main}
+  thrown in /app/includes/db.php on line 15
+[Wed Apr  8 13:39:44 2026] [::1]:53426 Closing

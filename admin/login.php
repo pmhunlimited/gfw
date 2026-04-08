@@ -2,8 +2,10 @@
 session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
+$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
+
 if (is_admin()) {
-    redirect('/admin/');
+    redirect($admin_base . '/');
 }
 
 $error = '';
@@ -32,11 +34,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['login'])) {
 
                 $settings = get_settings();
                 if (!empty($settings['pin_enabled'])) {
-                    redirect('/admin/pin_verify');
+                    redirect($admin_base . '/pin_verify');
                 } else {
                     $_SESSION['pin_verified'] = true;
                     $_SESSION['pin_verified_at'] = time();
-                    redirect('/admin/');
+                    redirect($admin_base . '/');
                 }
             } else {
                 $error = "INVALID CREDENTIALS. SYSTEM SECURE.";
