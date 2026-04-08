@@ -31,13 +31,7 @@ $cat_list = implode(', ', $available_categories);
 $today = date('D d M Y H:i');
 echo "Stage 1: Discovering factual sports stories from RSS for $today...\n";
 
-$rss_urls = [
-    'https://www.skysports.com/rss/12433', // Sky Sports Home
-    'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
-    'https://supersport.com/rss/news', // SuperSport All News
-    'https://sport.sky.ch/feed', // Sky Sport CH
-    'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
-];
+$rss_urls = get_rss_feed_urls();
 
 $discovered_items = [];
 $rss_results = get_rss_news($rss_urls);

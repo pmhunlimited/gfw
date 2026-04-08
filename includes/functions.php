@@ -573,4 +573,18 @@ function notify_subscribers($post_ids) {
         send_mail($email, $subject, $message);
     }
 }
+
+/**
+ * Returns the list of active RSS feed URLs used for news discovery.
+ * @return array
+ */
+function get_rss_feed_urls() {
+    return [
+        'https://www.skysports.com/rss/12433', // Sky Sports Home
+        'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
+        'https://supersport.com/rss/news', // SuperSport All News
+        'https://sport.sky.ch/feed', // Sky Sport CH
+        'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
+    ];
+}
 ?>

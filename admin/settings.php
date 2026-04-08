@@ -261,13 +261,30 @@ $activeTab = $_GET['tab'] ?? 'general';
                     </ol>
                 </div>
 
-                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5 mb-8">
                     <h4 class="text-white font-black uppercase italic mb-3 small">Operational Status</h4>
                     <div class="d-flex align-items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
                         <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
                     </div>
                     <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek API key is configured in the "AI Core" tab.</p>
+                </div>
+
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-4 small">Intelligence Feed Registry</h4>
+                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">The system is actively monitoring the following encrypted RSS channels for tactical data discovery.</p>
+
+                    <div class="space-y-3">
+                        <?php
+                        $feeds = get_rss_feed_urls();
+                        foreach ($feeds as $url):
+                        ?>
+                            <div class="bg-black/40 border border-white/10 rounded-xl px-4 py-3 d-flex align-items-center justify-content-between">
+                                <code class="text-info small"><?php echo $url; ?></code>
+                                <span class="badge bg-green-500/10 text-green-500 font-condensed italic uppercase text-[8px] tracking-widest">ACTIVE MONITOR</span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
 
