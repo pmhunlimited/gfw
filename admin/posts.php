@@ -108,17 +108,27 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
-               Write in an engaging first-person 'fan blogger' perspective.
-               Return JSON with:
-               - 'title': Catchy headline.
-               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
-               - 'tags': 5-8 relevant SEO tags (comma separated).
+    $prompt = "Act as a Passionate Football Fan Blogger. Generate a news article about '$topic' in the category '$cat'.
+               Your goal is to write in a way that sounds 100% human and passes all AI detection checks.
+
+               STRICT HUMAN-LIKE GUIDELINES:
+               - Write like a real person sharing news on a fan forum or blog.
+               - Use varied sentence lengths and structures.
+               - Use colloquial football language (e.g., 'gaffer', 'clean sheet', 'top bins', 'clinical finish').
+               - AVOID AI-typical words: 'delve', 'tapestry', 'testament', 'unveils', 'pivotal', 'comprehensive', 'game-changer'.
+               - Use occasional contractions (don't, can't) and informal transitions.
+               - Start paragraphs with different parts of speech to break AI patterns.
+
+               Requirements:
+               - 'title': Catchy, human-sounding headline.
+               - 'content': A unique 500-word report structured with 4-5 paragraphs in Markdown.
+               - 'image_keyword': 3-5 specific keywords for image search.
+               - 'tags': 5-8 relevant SEO tags.
                - 'meta_title': SEO optimized title (max 60 chars).
                - 'meta_description': Compelling SEO description (max 160 chars).
-               - 'meta_keywords': High ranking keywords for this specific news.
-               Ensure the response is a valid JSON object.";
+               - 'meta_keywords': High ranking keywords.
+
+               Return ONLY a valid JSON object.";
     $raw = get_ai_insight($prompt);
 
     $data = extract_json($raw, false);

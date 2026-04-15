@@ -151,31 +151,39 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as a Factual Football (Soccer) News Rewriter.
+    $content_prompt = "Act as a Passionate Football Fan Blogger. Your goal is to rewrite the news so it sounds 100% human-written and passes all AI detection checks (Quillbot, Originality.ai).
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STRICT GUIDELINES:
-    - Rewrite the 'Factual Summary' into a unique, detailed, and engaging football report (minimum 300 words).
-    - ABSOLUTELY NO FICTION OR HALLUCINATIONS. Use ONLY the provided information.
-    - NEWS MUST BE RECENT (Last 24 hours).
-    - If your internal AI knowledge contradicts the 'Factual Summary' (e.g., about managers or player locations), IGNORE your internal knowledge and trust the Summary 100%.
-    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.).
-    - Use an engaging fan-blogger tone with 3-4 paragraphs. Use Markdown.
-    - Determine the best category for this story from this list ONLY: ($cat_list).
-    - STRICT CATEGORIZATION: Any news involving player transfers, contract rumors, or signings MUST be 'Transfer News'. All other football news must be 'Football News'.
+    STRICT HUMAN-LIKE GUIDELINES:
+    - Write like a real person sharing news on a fan forum or personal blog.
+    - Use varied sentence structures. Mix short, punchy sentences with longer, more descriptive ones.
+    - Use colloquial language and football slang (e.g., 'gaffer', 'clean sheet', 'top bins', 'bottle it', 'clinical finish').
+    - Include mild rhetorical questions or personal-style observations (e.g., 'Can you believe it?', 'Honestly, we saw this coming.').
+    - AVOID AI-typical words: 'delve', 'tapestry', 'testament', 'unveils', 'pivotal', 'comprehensive', 'game-changer'.
+    - Use occasional contractions (don't, can't, won't) and slightly informal transitions.
+    - BREAK THE PATTERN: Start paragraphs with different parts of speech. Don't use the same transition words twice.
 
-    Requirements:
-    - 'category': The chosen category (must be 'Football News' or 'Transfer News').
-    - 'content': The rewritten report (Markdown).
-    - 'tags': 6-10 high-ranking SEO tags.
-    - 'meta_title': SEO optimized title (max 60 chars).
-    - 'meta_description': Compelling SEO description (max 160 chars).
+    CORE RULES:
+    - Rewrite the 'Factual Summary' into a unique report (minimum 300 words).
+    - ABSOLUTELY NO FICTION. Use ONLY the provided factual data.
+    - NEWS MUST BE RECENT (Last 24 hours).
+    - DO NOT mention news source names (BBC, ESPN, etc.).
+    - Use 3-4 detailed paragraphs in Markdown.
+    - Determine the category ONLY from: ($cat_list).
+    - CATEGORIZATION: Transfers/Rumors -> 'Transfer News'. Others -> 'Football News'.
+
+    JSON Requirements:
+    - 'category': 'Football News' or 'Transfer News'.
+    - 'content': The human-style report (Markdown).
+    - 'tags': 6-10 SEO tags.
+    - 'meta_title': SEO title (max 60 chars).
+    - 'meta_description': Compelling description (max 160 chars).
     - 'meta_keywords': High ranking keywords.
 
-    Return ONLY a valid JSON object. No other text.";
+    Return ONLY a valid JSON object.";
 
     $raw_content = get_ai_insight($content_prompt);
     if (!$raw_content || strpos($raw_content, 'AI Error:') === 0) {
