@@ -2,23 +2,37 @@
 session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
+// Accurate Path Detection for Admin
+$script_name = dirname($_SERVER['SCRIPT_NAME']); // Usually /admin or /
 $request_uri = $_SERVER['REQUEST_URI'];
 $base_path = strtok($request_uri, '?');
-$path = '/';
-if (strpos($base_path, '/admin') === 0) {
-    $path = substr($base_path, 6);
+
+// If SITE_URL is defined, use it to determine relative path
+if (defined('SITE_URL')) {
+    $site_path = parse_url(SITE_URL, PHP_URL_PATH) ?: '';
+    $admin_root = rtrim($site_path, '/') . '/admin';
+} else {
+    $admin_root = '/admin';
+}
+
+if (strpos($base_path, $admin_root) === 0) {
+    $path = substr($base_path, strlen($admin_root));
+} else {
+    $path = $base_path;
 }
 $path = '/' . trim($path, '/');
 
 if (!is_admin() && $path !== '/login') {
-    $admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
-    redirect($admin_base . '/login');
+    // Avoid re-calculation if possible
+    $redir_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . (isset($admin_root) ? $admin_root : '/admin');
+    redirect($redir_base . '/login');
 }
 
 $conn = get_db_connection();
 $settings = get_settings();
 
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
+// Ensure admin_base is always defined correctly for all uses
+$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . (isset($admin_root) ? $admin_root : '/admin');
 
 // Security PIN enforcement
 if (!empty($settings['pin_enabled'])) {

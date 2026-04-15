@@ -16,15 +16,7 @@ if (empty($apiKey)) {
 echo "Starting AI-Powered News Discovery...\n";
 
 // Fetch current categories from DB
-$available_categories = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
-if (empty($available_categories)) {
-    // Seed default categories if missing
-    $defaults = ['PREMIER LEAGUE', 'CHAMPIONS LEAGUE', 'TRANSFER NEWS', 'LA LIGA', 'SERIE A', 'BUNDESLIGA', 'MATCH ANALYSIS', 'CRICKET', 'TENNIS', 'BASKETBALL', 'GOLF', 'MOTOR SPORT', 'OTHER SPORTS'];
-    foreach ($defaults as $d) {
-        $conn->prepare("INSERT IGNORE INTO categories (name) VALUES (?)")->execute([$d]);
-    }
-    $available_categories = $defaults;
-}
+$available_categories = ['Football News', 'Transfer News'];
 $cat_list = implode(', ', $available_categories);
 
 // 1. Discovery Stage: Fetch factual news from RSS Feeds
@@ -76,6 +68,40 @@ if (empty($discovered_items)) {
     die("Intelligence status: All discovered news are already published. No new reports to generate.\n");
 }
 
+// 1.2 Football-Only Filtering: Use AI to prune non-football stories
+echo "Stage 1.2: Restricting discovery to football and transfers...\n";
+$headlines_for_filter = "";
+foreach ($discovered_items as $idx => $item) {
+    $headlines_for_filter .= "$idx: {$item['title']}\n";
+}
+
+$filter_prompt = "I have a list of sports headlines. Some are about football (soccer), some are about other sports (cricket, tennis, etc).
+Identify the headlines that are STRICTLY about football (soccer) or football transfer news.
+Return a JSON array of the indices (integers) that are football-related.
+
+HEADLINES:
+$headlines_for_filter
+
+Return ONLY a valid JSON array of integers. Example: [0, 1, 4]";
+
+$raw_filter = get_ai_insight($filter_prompt);
+$football_indices = extract_json($raw_filter, true);
+
+if (is_array($football_indices)) {
+    $filtered_items = [];
+    foreach ($football_indices as $idx) {
+        if (isset($discovered_items[$idx])) {
+            $filtered_items[] = $discovered_items[$idx];
+        }
+    }
+    $discovered_items = $filtered_items;
+    echo "Football filter complete. " . count($discovered_items) . " football stories identified.\n";
+}
+
+if (empty($discovered_items)) {
+    die("Intelligence status: No new football-related reports discovered in this cycle.\n");
+}
+
 // 1.5 Deduplication Stage: Use AI to identify and remove redundant stories
 echo "Stage 1.5: Filtering redundant stories via AI...\n";
 $headlines_for_dedup = "";
@@ -125,23 +151,24 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as a Factual Sports News Rewriter.
+    $content_prompt = "Act as a Factual Football (Soccer) News Rewriter.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
     STRICT GUIDELINES:
-    - Rewrite the 'Factual Summary' into a unique, detailed, and engaging sports report (minimum 300 words).
+    - Rewrite the 'Factual Summary' into a unique, detailed, and engaging football report (minimum 300 words).
     - ABSOLUTELY NO FICTION OR HALLUCINATIONS. Use ONLY the provided information.
     - NEWS MUST BE RECENT (Last 24 hours).
     - If your internal AI knowledge contradicts the 'Factual Summary' (e.g., about managers or player locations), IGNORE your internal knowledge and trust the Summary 100%.
     - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.).
     - Use an engaging fan-blogger tone with 3-4 paragraphs. Use Markdown.
     - Determine the best category for this story from this list ONLY: ($cat_list).
+    - STRICT CATEGORIZATION: Any news involving player transfers, contract rumors, or signings MUST be 'Transfer News'. All other football news must be 'Football News'.
 
     Requirements:
-    - 'category': The chosen category (must be from the provided list).
+    - 'category': The chosen category (must be 'Football News' or 'Transfer News').
     - 'content': The rewritten report (Markdown).
     - 'tags': 6-10 high-ranking SEO tags.
     - 'meta_title': SEO optimized title (max 60 chars).

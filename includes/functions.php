@@ -43,6 +43,38 @@ function get_settings() {
         $settings = $defaults;
     }
 
+    // Category Taxonomy Refactoring
+    if ($conn) {
+        try {
+            $required_cats = ['Football News', 'Transfer News'];
+            $existing_cats = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
+
+            // 1. Ensure required categories exist
+            foreach ($required_cats as $cat_name) {
+                if (!in_array($cat_name, $existing_cats)) {
+                    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $cat_name)));
+                    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
+                        $conn->prepare("INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)")->execute([$cat_name, $slug]);
+                    } else {
+                        $conn->prepare("INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)")->execute([$cat_name, $slug]);
+                    }
+                }
+            }
+
+            // 2. Migrate existing posts to 'Football News' if they are in obsolete categories
+            $placeholders = implode(',', array_fill(0, count($required_cats), '?'));
+            $stmt = $conn->prepare("UPDATE posts SET category = 'Football News' WHERE category NOT IN ($placeholders) OR category IS NULL");
+            $stmt->execute($required_cats);
+
+            // 3. Remove obsolete categories
+            $stmt_del = $conn->prepare("DELETE FROM categories WHERE name NOT IN ($placeholders)");
+            $stmt_del->execute($required_cats);
+
+        } catch (Exception $e) {
+            error_log("Taxonomy refactoring failed: " . $e->getMessage());
+        }
+    }
+
     if ($settings && !array_key_exists('header_code', $settings)) {
         try {
             $conn->exec("ALTER TABLE site_settings ADD COLUMN header_code TEXT");
