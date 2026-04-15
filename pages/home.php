@@ -52,7 +52,7 @@ if ($conn) {
 }
 
 if ($category) {
-    $custom_meta_title = "Category: " . htmlspecialchars($category) . " | GFW";
+    $custom_meta_title = "Category: " . htmlspecialchars($category) . " | " . ($settings['name'] ?? 'GFW');
 }
 ?>
 

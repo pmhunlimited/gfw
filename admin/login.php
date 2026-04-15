@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GFW | CORE ACCESS</title>
+    <title><?php echo $settings['name'] ?? 'GFW'; ?> | CORE ACCESS</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -111,7 +111,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
 </head>
 <body>
     <div class="login-card shadow-2xl">
-        <h1 class="font-condensed italic text-center text-white mb-2">CORE <span class="text-danger">ACCESS</span></h1>
+        <div class="text-center mb-4">
+            <?php if (!empty($settings['logo'])): ?>
+                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 60px;" class="mx-auto">
+            <?php else: ?>
+                <h1 class="font-condensed italic text-white mb-0">
+                    <?php
+                        $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
+                        echo $site_name_parts[0];
+                        echo ' <span class="text-danger">ACCESS</span>';
+                    ?>
+                </h1>
+            <?php endif; ?>
+        </div>
 
         <?php if ($error): ?>
             <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small font-bold italic mb-4"><?php echo $error; ?></div>

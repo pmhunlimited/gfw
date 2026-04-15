@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GFW | SYSTEM CONTROL</title>
+    <title><?php echo $settings['name'] ?? 'GFW'; ?> | SYSTEM CONTROL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Barlow+Condensed:wght@700;900&display=swap" rel="stylesheet">
@@ -37,7 +37,11 @@
             <?php if (!empty($settings['logo'])): ?>
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 30px;">
             <?php else: ?>
-                <?php echo explode(' ', $settings['name'] ?? 'GFW')[0]; ?> <span class="text-danger">CORE</span>
+                <?php
+                    $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
+                    echo $site_name_parts[0];
+                    echo ' <span class="text-danger">CORE</span>';
+                ?>
             <?php endif; ?>
         </a>
         <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminSidebar">
@@ -68,7 +72,11 @@
                     <?php if (!empty($settings['logo'])): ?>
                         <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;">
                     <?php else: ?>
-                        <?php echo explode(' ', $settings['name'] ?? 'GFW')[0]; ?> <span class="text-danger">CORE</span>
+                        <?php
+                            $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
+                            echo $site_name_parts[0];
+                            echo ' <span class="text-danger">CORE</span>';
+                        ?>
                     <?php endif; ?>
                 </a>
             </div>

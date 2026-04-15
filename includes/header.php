@@ -83,7 +83,13 @@ $settings = get_settings();
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                    <?php
+                        $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
+                        echo $site_name_parts[0];
+                        if (isset($site_name_parts[1])) {
+                            echo ' <span class="text-electric-red">' . $site_name_parts[1] . '</span>';
+                        }
+                    ?>
                 <?php endif; ?>
             </a>
 

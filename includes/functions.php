@@ -7,8 +7,8 @@ function get_settings() {
     if ($settings !== null) return $settings;
 
     $defaults = [
-        'name' => 'GLOBAL FOOTBALL WATCH',
-        'tagline' => 'Intelligence in Football',
+        'name' => 'GFW Intelligence',
+        'tagline' => 'Global Football Insights',
         'logo' => '',
         'favicon' => '',
         'admin_email' => '',
@@ -34,7 +34,7 @@ function get_settings() {
         $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
         $fetched = $stmt->fetch();
         if (!$fetched) {
-            $conn->exec("INSERT INTO site_settings (name) VALUES ('GLOBAL FOOTBALL WATCH')");
+            $conn->exec("INSERT INTO site_settings (name) VALUES ('GFW Intelligence')");
             $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
             $fetched = $stmt->fetch();
         }
@@ -129,7 +129,7 @@ function get_settings() {
     }
 
     $settings = $settings ?: [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'GFW Intelligence',
         'logo' => '',
         'favicon' => ''
     ];
@@ -278,7 +278,7 @@ function send_mail($to, $subject, $message) {
 
 function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GLOBAL FOOTBALL WATCH';
+    $site_name = $settings['name'] ?? 'GFW';
     $year = date('Y');
 
     return "
@@ -332,7 +332,7 @@ function log_activity($message) {
     $settings = get_settings();
     if (!empty($settings['admin_email'])) {
         $html = render_email_template("<p>$message</p>", "Security Alert");
-        send_mail($settings['admin_email'], "GFW System Alert", $html);
+        send_mail($settings['admin_email'], ($settings['name'] ?? 'GFW') . " System Alert", $html);
     }
 }
 

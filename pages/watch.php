@@ -1,5 +1,5 @@
 <?php
-$custom_meta_title = "Live Centre | GFW Intelligence";
+$custom_meta_title = "Live Centre | " . ($settings['name'] ?? 'GFW') . " Intelligence";
 include __DIR__ . '/../includes/header.php';
 
 $leagues = [

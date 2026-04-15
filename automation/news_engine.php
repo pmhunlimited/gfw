@@ -50,14 +50,23 @@ if (empty($discovered_items)) {
 echo "Stage 1.1: Pre-filtering existing stories from database...\n";
 $filtered_discovery = [];
 foreach ($discovered_items as $item) {
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $title = trim($item['title']);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $source_url = $item['source_link'] ?? '';
-    $title_prefix = substr($item['title'], 0, 25) . '%';
+    $title_prefix = substr($title, 0, 20) . '%'; // Slightly shorter prefix for better matching
 
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ?");
-    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url, $title_prefix]);
+    // Robust check: exact title, similar slug, same source URL, or similar title start
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ? OR excerpt LIKE ?");
+    $check_stmt->execute([
+        $title,
+        $safe_title . '%',
+        $source_url,
+        $title_prefix,
+        '%' . substr($title, 0, 30) . '%'
+    ]);
+
     if ($check_stmt->fetch()) {
-        echo "Pre-filtering existing or duplicate post: " . $item['title'] . "\n";
+        echo "Pre-filtering existing or duplicate post: " . $title . "\n";
         continue;
     }
     $filtered_discovery[] = $item;
@@ -158,16 +167,18 @@ foreach ($discovered_items as $item) {
     Factual Summary: '{$item['description']}'
 
     STRICT HUMAN-LIKE GUIDELINES:
-    - Write like a real person sharing news on a fan forum or personal blog.
+    - Write like a real person sharing news on a fan forum or personal blog. Ensure the content feels organic and spontaneous.
     - Use varied sentence structures. Mix short, punchy sentences with longer, more descriptive ones.
     - Use colloquial language and football slang (e.g., 'gaffer', 'clean sheet', 'top bins', 'bottle it', 'clinical finish').
     - Include mild rhetorical questions or personal-style observations (e.g., 'Can you believe it?', 'Honestly, we saw this coming.').
     - AVOID AI-typical words: 'delve', 'tapestry', 'testament', 'unveils', 'pivotal', 'comprehensive', 'game-changer'.
     - Use occasional contractions (don't, can't, won't) and slightly informal transitions.
     - BREAK THE PATTERN: Start paragraphs with different parts of speech. Don't use the same transition words twice.
+    - DO NOT use predictable AI structures like 'In conclusion', 'Furthermore', or 'Firstly'. Just flow like a human conversation.
 
     CORE RULES:
     - Rewrite the 'Factual Summary' into a unique report (minimum 300 words).
+    - ENSURE TOTAL UNIQUENESS: The article must be a complete, original rewrite that shares NO significant phrasing with the source summary.
     - ABSOLUTELY NO FICTION. Use ONLY the provided factual data.
     - NEWS MUST BE RECENT (Last 24 hours).
     - DO NOT mention news source names (BBC, ESPN, etc.).
@@ -245,7 +256,7 @@ foreach ($discovered_items as $item) {
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
-    $author = 'GFW';
+    $author = $settings['name'] ?? 'GFW';
 
     $tags = sanitize($content_data['tags'] ?? '');
     $meta_title = sanitize($content_data['meta_title'] ?? $title);
