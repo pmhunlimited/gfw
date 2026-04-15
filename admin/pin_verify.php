@@ -2,8 +2,6 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
-
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'admin') {
     redirect($admin_base . '/login');
 }

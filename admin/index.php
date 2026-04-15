@@ -2,46 +2,39 @@
 session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
-// Accurate Path Detection for Admin
-$script_name = dirname($_SERVER['SCRIPT_NAME']); // Usually /admin or /
+// Accurate Path Detection for Admin (Handles root or subfolder installs)
 $request_uri = $_SERVER['REQUEST_URI'];
 $base_path = strtok($request_uri, '?');
 
-// If SITE_URL is defined, use it to determine relative path
-if (defined('SITE_URL')) {
-    $site_path = parse_url(SITE_URL, PHP_URL_PATH) ?: '';
-    $admin_root = rtrim($site_path, '/') . '/admin';
+if (preg_match('/^(.*\/admin)(\/.*|$)/', $base_path, $matches)) {
+    $admin_base = $matches[1];
+    $path = $matches[2];
 } else {
-    $admin_root = '/admin';
+    // Fallback if regex fails (should not happen if routed correctly)
+    $admin_base = (defined('SITE_URL') ? parse_url(SITE_URL, PHP_URL_PATH) : '') ?: '';
+    $admin_base = rtrim($admin_base, '/') . '/admin';
+    $path = str_replace($admin_base, '', $base_path);
 }
 
-if (strpos($base_path, $admin_root) === 0) {
-    $path = substr($base_path, strlen($admin_root));
-} else {
-    $path = $base_path;
-}
 $path = '/' . trim($path, '/');
 
 if (!is_admin() && $path !== '/login') {
-    // Avoid re-calculation if possible
-    $redir_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . (isset($admin_root) ? $admin_root : '/admin');
-    redirect($redir_base . '/login');
+    redirect($admin_base . '/login');
+    exit;
 }
 
 $conn = get_db_connection();
 $settings = get_settings();
 
-// Ensure admin_base is always defined correctly for all uses
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . (isset($admin_root) ? $admin_root : '/admin');
-
-// Security PIN enforcement
-if (!empty($settings['pin_enabled'])) {
+// Security PIN enforcement - ONLY for authenticated admins
+if (is_admin() && !empty($settings['pin_enabled'])) {
     if (!isset($_SESSION['pin_verified']) || $_SESSION['pin_verified'] !== true ||
         (time() - ($_SESSION['pin_verified_at'] ?? 0)) > 86400) {
 
         // Don't redirect if already on pin_verify page
         if ($path !== '/pin_verify') {
             redirect($admin_base . '/pin_verify');
+            exit;
         }
     }
 }
@@ -79,7 +72,9 @@ if ($path == '/' || $path == '') {
 } elseif ($path == '/logout') {
     session_destroy();
     redirect($admin_base . '/login');
+    exit;
 } else {
     redirect($admin_base . '/');
+    exit;
 }
 ?>

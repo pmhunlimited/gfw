@@ -10,7 +10,6 @@ $platform = $_GET['platform'] ?? '';
 $code = $_GET['code'] ?? '';
 $state = $_GET['state'] ?? '';
 $settings = get_settings();
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
 
 // Verify state
 if (empty($state) || $state !== ($_SESSION['oauth_state'] ?? '')) {

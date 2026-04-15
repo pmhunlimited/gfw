@@ -2,8 +2,6 @@
 session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
-
 if (is_admin()) {
     redirect($admin_base . '/');
 }

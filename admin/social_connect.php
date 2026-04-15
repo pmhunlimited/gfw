@@ -10,7 +10,6 @@ $platform = $_GET['platform'] ?? '';
 $settings = get_settings();
 
 // Base URL for callback
-$admin_base = (defined('SITE_URL') ? rtrim(SITE_URL, '/') : '') . '/admin';
 $callback_url = $admin_base . "/social_callback.php?platform=" . $platform;
 
 if ($platform == 'facebook') {

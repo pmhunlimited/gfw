@@ -43,21 +43,22 @@ function get_settings() {
         $settings = $defaults;
     }
 
-    // Category Taxonomy Refactoring
-    if ($conn) {
+    // Category Taxonomy Refactoring (One-time migration)
+    if ($conn && empty($settings['taxonomy_migrated'])) {
         try {
             $required_cats = ['Football News', 'Transfer News'];
             $existing_cats = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
+
+            $is_sqlite = ($conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
 
             // 1. Ensure required categories exist
             foreach ($required_cats as $cat_name) {
                 if (!in_array($cat_name, $existing_cats)) {
                     $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $cat_name)));
-                    if (defined('DB_TYPE') && DB_TYPE === 'sqlite') {
-                        $conn->prepare("INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)")->execute([$cat_name, $slug]);
-                    } else {
-                        $conn->prepare("INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)")->execute([$cat_name, $slug]);
-                    }
+                    $sql = $is_sqlite
+                        ? "INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)"
+                        : "INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)";
+                    $conn->prepare($sql)->execute([$cat_name, $slug]);
                 }
             }
 
@@ -69,6 +70,13 @@ function get_settings() {
             // 3. Remove obsolete categories
             $stmt_del = $conn->prepare("DELETE FROM categories WHERE name NOT IN ($placeholders)");
             $stmt_del->execute($required_cats);
+
+            // 4. Mark migration as complete
+            try {
+                $conn->exec("ALTER TABLE site_settings ADD COLUMN taxonomy_migrated TINYINT DEFAULT 0");
+            } catch (Exception $e) {}
+            $conn->exec("UPDATE site_settings SET taxonomy_migrated = 1");
+            $settings['taxonomy_migrated'] = 1;
 
         } catch (Exception $e) {
             error_log("Taxonomy refactoring failed: " . $e->getMessage());
