@@ -7,7 +7,7 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | Elite Coverage'; ?></title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | ' . ($settings['tagline'] ?? 'Elite Coverage'); ?></title>
     <?php if (isset($custom_meta_description)): ?>
     <meta name="description" content="<?php echo $custom_meta_description; ?>">
     <?php endif; ?>

@@ -69,6 +69,10 @@ if ($path == '/' || $path == '') {
     include __DIR__ . '/login.php';
 } elseif ($path == '/ajax_suggest.php' || $path == '/ajax_suggest') {
     include __DIR__ . '/ajax_suggest.php';
+} elseif ($path == '/social_connect') {
+    include __DIR__ . '/social_connect.php';
+} elseif ($path == '/social_callback') {
+    include __DIR__ . '/social_callback.php';
 } elseif ($path == '/logout') {
     session_destroy();
     redirect($admin_base . '/login');

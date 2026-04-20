@@ -4,7 +4,7 @@
             <div class="row g-5">
                 <div class="col-lg-4">
                     <h3 class="font-condensed fw-black italic text-white mb-4 fs-4"><?php echo $settings['name'] ?? 'GFW'; ?></h3>
-                    <p class="text-white-50 small leading-relaxed max-w-sm mb-4">The world's most advanced football intelligence network. Real-time decryption of global sports data and tactical analysis.</p>
+                    <p class="text-white-50 small leading-relaxed max-w-sm mb-4"><?php echo $settings['tagline'] ?? 'The world\'s most advanced football intelligence network. Real-time decryption of global sports data and tactical analysis.'; ?></p>
 
                     <div class="mt-5">
                         <h4 class="font-condensed fw-black text-electric-red mb-3 small tracking-widest uppercase">STAY UPDATED</h4>

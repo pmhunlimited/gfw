@@ -276,9 +276,10 @@ function send_mail($to, $subject, $message) {
     }
 }
 
-function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
+function render_email_template($content, $subtitle = null) {
     $settings = get_settings();
     $site_name = $settings['name'] ?? 'GFW';
+    $subtitle = $subtitle ?? ($settings['tagline'] ?? 'Intelligence Protocol Active');
     $year = date('Y');
 
     return "
