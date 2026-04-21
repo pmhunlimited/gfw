@@ -31,7 +31,7 @@ $rss_results = get_rss_news($rss_urls);
 if (!empty($rss_results)) {
     echo "Using RSS Feeds for 100% factual discovery...\n";
     foreach ($rss_results as $res) {
-        if (count($discovered_items) >= 20) break;
+        // No hard cap, we filter duplicates and then process top ones
         $discovered_items[] = [
             'title' => $res['title'],
             'description' => $res['description'],
@@ -77,16 +77,25 @@ if (empty($discovered_items)) {
     die("Intelligence status: All discovered news are already published. No new reports to generate.\n");
 }
 
-// 1.2 Football-Only Filtering: Use AI to prune non-football stories
-echo "Stage 1.2: Restricting discovery to football and transfers...\n";
+// 1.2 Streamlined League Filtering: Use AI to prune stories not related to target leagues
+echo "Stage 1.2: Streamlining discovery to target leagues and transfers...\n";
 $headlines_for_filter = "";
 foreach ($discovered_items as $idx => $item) {
     $headlines_for_filter .= "$idx: {$item['title']}\n";
 }
 
-$filter_prompt = "I have a list of sports headlines. Some are about football (soccer), some are about other sports (cricket, tennis, etc).
-Identify the headlines that are STRICTLY about football (soccer) or football transfer news.
-Return a JSON array of the indices (integers) that are football-related.
+$filter_prompt = "I have a list of sports headlines. I only want news related to these specific leagues and their transfers:
+- Premier League (England)
+- Spanish League / La Liga (Spain)
+- Champions League (UEFA)
+- Europa League (UEFA)
+- Conference League (UEFA)
+- French League / Ligue 1 (France)
+- Italian League / Serie A (Italy)
+- Transfer News for any of the above.
+
+Identify the headlines that are STRICTLY about these leagues or their players/managers/transfers.
+Return a JSON array of the indices (integers) that I should keep.
 
 HEADLINES:
 $headlines_for_filter
@@ -185,6 +194,7 @@ foreach ($discovered_items as $item) {
     - CATEGORIZATION: Transfers/Rumors -> 'Transfer News'. Others -> 'Football News'.
 
     JSON Requirements:
+    - 'title': A catchy, 100% human-sounding headline (do not use source title).
     - 'category': 'Football News' or 'Transfer News'.
     - 'content': The human-style report (Markdown).
     - 'tags': 6-10 SEO tags.
@@ -248,13 +258,14 @@ foreach ($discovered_items as $item) {
     }
 
     // 4. Save to Database
-    $title = sanitize($item['title']);
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
+    $title = sanitize($content_data['title'] ?? $item['title']);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $slug = $safe_title . '-' . time();
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
     $author = $settings['name'] ?? 'GFW';
+    $source_url = $item['source_link'] ?? '';
 
     $tags = sanitize($content_data['tags'] ?? '');
     $meta_title = sanitize($content_data['meta_title'] ?? $title);
