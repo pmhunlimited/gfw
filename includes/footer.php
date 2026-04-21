@@ -30,9 +30,11 @@
                                 <?php
                                 $conn = get_db_connection();
                                 if ($conn) {
-                                    $footer_pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'footer'")->fetchAll();
+                                    $footer_pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'footer'")->fetchAll();
                                     foreach ($footer_pages as $fp) {
-                                        echo '<li class="mb-2"><a href="/'.$fp['slug'].'" class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
+                                        $url = ($fp['is_external']) ? $fp['external_url'] : '/'.$fp['slug'];
+                                        $target = ($fp['is_external']) ? 'target="_blank"' : '';
+                                        echo '<li class="mb-2"><a href="'.$url.'" '.$target.' class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
                                     }
                                 }
                                 ?>

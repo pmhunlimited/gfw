@@ -210,6 +210,23 @@ $relatedPosts = $stmt_related->fetchAll();
 
             <div class="col-lg-4">
                 <div class="sticky-top" style="top: 100px;">
+                    <?php
+                    if ($conn) {
+                        $sidebar_pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'sidebar'")->fetchAll();
+                        if (!empty($sidebar_pages)) {
+                            echo '<div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
+                                    <h4 class="font-condensed fw-black italic text-white text-xl mb-6 uppercase tracking-widest border-bottom border-white/10 pb-3">Resources</h4>
+                                    <ul class="list-unstyled d-flex flex-column gap-3">';
+                            foreach ($sidebar_pages as $sp) {
+                                $url = ($sp['is_external']) ? $sp['external_url'] : '/'.$sp['slug'];
+                                $target = ($sp['is_external']) ? 'target="_blank"' : '';
+                                echo '<li><a href="'.$url.'" '.$target.' class="text-white text-opacity-60 hover:text-electric-red transition-all text-decoration-none font-bold italic uppercase small">'.$sp['title'].'</a></li>';
+                            }
+                            echo '  </ul>
+                                  </div>';
+                        }
+                    }
+                    ?>
                     <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
                         <h4 class="font-condensed fw-black italic text-electric-red text-xl mb-4 uppercase">Newsletter Syndication</h4>
                         <p class="text-white-50 small mb-6">Receive real-time intelligence directly to your secure inbox.</p>

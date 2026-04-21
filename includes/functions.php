@@ -128,6 +128,16 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Auto-migration for pages external links
+    try {
+        $conn->query("SELECT is_external FROM pages LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE pages ADD COLUMN is_external TINYINT DEFAULT 0");
+            $conn->exec("ALTER TABLE pages ADD COLUMN external_url VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
     $settings = $settings ?: [
         'name' => 'GFW Intelligence',
         'logo' => '',

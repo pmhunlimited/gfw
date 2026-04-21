@@ -13,6 +13,10 @@ if (!$page) {
     redirect('/404');
 }
 
+if ($page['is_external']) {
+    redirect($page['external_url']);
+}
+
 // Set dynamic meta tags for header
 $custom_meta_title = !empty($page['meta_title']) ? $page['meta_title'] : $page['title'];
 $custom_meta_description = !empty($page['meta_description']) ? $page['meta_description'] : '';

@@ -20,18 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_page'])) {
     $content = $_POST['content']; // Markdown content
     $position = $_POST['position'];
     $is_visible = isset($_POST['is_visible']) ? 1 : 0;
+    $is_external = isset($_POST['is_external']) ? 1 : 0;
+    $external_url = sanitize($_POST['external_url']);
 
     $meta_title = sanitize($_POST['meta_title']);
     $meta_desc = sanitize($_POST['meta_description']);
     $meta_keys = sanitize($_POST['meta_keywords']);
 
     if ($id) {
-        $stmt = $conn->prepare("UPDATE pages SET title = ?, slug = ?, content = ?, position = ?, is_visible = ?, meta_title = ?, meta_description = ?, meta_keywords = ? WHERE id = ?");
-        $stmt->execute([$title, $slug, $content, $position, $is_visible, $meta_title, $meta_desc, $meta_keys, $id]);
+        $stmt = $conn->prepare("UPDATE pages SET title = ?, slug = ?, content = ?, position = ?, is_visible = ?, meta_title = ?, meta_description = ?, meta_keywords = ?, is_external = ?, external_url = ? WHERE id = ?");
+        $stmt->execute([$title, $slug, $content, $position, $is_visible, $meta_title, $meta_desc, $meta_keys, $is_external, $external_url, $id]);
         $success = "Page updated.";
     } else {
-        $stmt = $conn->prepare("INSERT INTO pages (title, slug, content, position, is_visible, meta_title, meta_description, meta_keywords) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$title, $slug, $content, $position, $is_visible, $meta_title, $meta_desc, $meta_keys]);
+        $stmt = $conn->prepare("INSERT INTO pages (title, slug, content, position, is_visible, meta_title, meta_description, meta_keywords, is_external, external_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, $slug, $content, $position, $is_visible, $meta_title, $meta_desc, $meta_keys, $is_external, $external_url]);
         $success = "New page published.";
     }
 }
@@ -102,12 +104,14 @@ $pages = $stmt->fetchAll();
                                 data-id="<?php echo $p['id']; ?>"
                                 data-title="<?php echo htmlspecialchars($p['title']); ?>"
                                 data-slug="<?php echo htmlspecialchars($p['slug']); ?>"
-                                data-content="<?php echo htmlspecialchars($p['content']); ?>"
+                                data-content="<?php echo htmlspecialchars($p['content'] ?? ''); ?>"
                                 data-position="<?php echo $p['position']; ?>"
                                 data-visible="<?php echo $p['is_visible']; ?>"
                                 data-mtitle="<?php echo htmlspecialchars($p['meta_title'] ?? ''); ?>"
                                 data-mdesc="<?php echo htmlspecialchars($p['meta_description'] ?? ''); ?>"
                                 data-mkeys="<?php echo htmlspecialchars($p['meta_keywords'] ?? ''); ?>"
+                                data-external="<?php echo $p['is_external'] ?? 0; ?>"
+                                data-url="<?php echo htmlspecialchars($p['external_url'] ?? ''); ?>"
                                 data-bs-toggle="modal" data-bs-target="#pageModal">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
@@ -153,14 +157,25 @@ $pages = $stmt->fetchAll();
                             <select name="position" id="page_position" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
                                 <option value="top">Top Menu</option>
                                 <option value="main">Main Menu</option>
+                                <option value="sidebar">Sidebar</option>
                                 <option value="footer">Footer Menu</option>
                             </select>
                         </div>
-                        <div class="col-md-8 d-flex align-items-center pt-4">
+                        <div class="col-md-4 d-flex align-items-center pt-4">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" name="is_visible" id="page_visible" checked>
                                 <label class="form-check-label text-white-50 small uppercase font-black ms-2">Visible to Public</label>
                             </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center pt-4">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_external" id="page_external">
+                                <label class="form-check-label text-white-50 small uppercase font-black ms-2 text-info">External Link</label>
+                            </div>
+                        </div>
+                        <div class="col-md-12" id="external_url_container" style="display: none;">
+                            <label class="form-label text-info small uppercase font-black">External Destination URL</label>
+                            <input type="url" name="external_url" id="page_external_url" class="form-control bg-black border-info border-opacity-30 text-white rounded-xl" placeholder="https://external-site.com">
                         </div>
 
                         <div class="col-12 mt-4">
@@ -197,6 +212,15 @@ document.querySelectorAll('.edit-page').forEach(button => {
         document.getElementById('page_content').value = this.dataset.content;
         document.getElementById('page_position').value = this.dataset.position;
         document.getElementById('page_visible').checked = this.dataset.visible == '1';
+        document.getElementById('page_external').checked = this.dataset.external == '1';
+        document.getElementById('page_external_url').value = this.dataset.url;
+        if (this.dataset.external == '1') {
+            document.getElementById('external_url_container').style.display = 'block';
+            document.getElementById('page_content').disabled = true;
+        } else {
+            document.getElementById('external_url_container').style.display = 'none';
+            document.getElementById('page_content').disabled = false;
+        }
         document.getElementById('page_mtitle').value = this.dataset.mtitle;
         document.getElementById('page_mdesc').value = this.dataset.mdesc;
         document.getElementById('page_mkeys').value = this.dataset.mkeys;
@@ -210,10 +234,26 @@ document.getElementById('pageModal').addEventListener('hidden.bs.modal', functio
     document.getElementById('page_content').value = '';
     document.getElementById('page_position').value = 'main';
     document.getElementById('page_visible').checked = true;
+    document.getElementById('page_external').checked = false;
+    document.getElementById('page_external_url').value = '';
+    document.getElementById('external_url_container').style.display = 'none';
+    document.getElementById('page_content').disabled = false;
     document.getElementById('page_mtitle').value = '';
     document.getElementById('page_mdesc').value = '';
     document.getElementById('page_mkeys').value = '';
     document.getElementById('pageModalLabel').innerText = 'Publish CMS Content';
+});
+
+document.getElementById('page_external').addEventListener('change', function() {
+    const container = document.getElementById('external_url_container');
+    const content = document.getElementById('page_content');
+    if (this.checked) {
+        container.style.display = 'block';
+        content.disabled = true;
+    } else {
+        container.style.display = 'none';
+        content.disabled = false;
+    }
 });
 </script>
 

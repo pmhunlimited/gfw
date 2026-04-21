@@ -50,7 +50,7 @@
     </div>
     <div class="collapse mt-3" id="adminSidebar">
         <nav class="nav flex-column bg-[#0a0e17] rounded-3 border border-white border-opacity-5">
-            <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
+            <a class="nav-link <?php echo ($path == '' || $path == '/' || $path == '/posts') ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/posts"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
             <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
             <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
             <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>
@@ -81,7 +81,7 @@
                 </a>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
+                <a class="nav-link <?php echo ($path == '' || $path == '/' || $path == '/posts') ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/posts"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
                 <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
                 <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
                 <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>

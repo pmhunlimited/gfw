@@ -76,6 +76,26 @@ $settings = get_settings();
     <?php endif; ?>
 </head>
 <body>
+    <!-- Top Navbar -->
+    <?php
+    $conn = get_db_connection();
+    if ($conn) {
+        $top_pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'top'")->fetchAll();
+        if (!empty($top_pages)) {
+            echo '<div class="bg-dark border-bottom border-white border-opacity-5 py-1 d-none d-lg-block">
+                    <div class="container-fluid px-4">
+                        <ul class="nav justify-content-end gap-4 text-[10px] font-black uppercase italic tracking-widest">';
+            foreach ($top_pages as $tp) {
+                $url = ($tp['is_external']) ? $tp['external_url'] : '/'.$tp['slug'];
+                $target = ($tp['is_external']) ? 'target="_blank"' : '';
+                echo '<li><a href="'.$url.'" '.$target.' class="text-white text-opacity-40 hover:text-electric-red transition-all text-decoration-none">'.$tp['title'].'</a></li>';
+            }
+            echo '      </ul>
+                    </div>
+                </div>';
+        }
+    }
+    ?>
     <!-- Main Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
         <div class="container-fluid px-4">
@@ -105,10 +125,12 @@ $settings = get_settings();
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
-                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
+                        $pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
-                            $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
+                            $url = ($p['is_external']) ? $p['external_url'] : '/'.$p['slug'];
+                            $target = ($p['is_external']) ? 'target="_blank"' : '';
+                            $active = ($current_path == $url) ? 'active text-electric-red' : '';
+                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="'.$url.'" '.$target.' style="color: #fff;">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
