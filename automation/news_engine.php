@@ -178,7 +178,7 @@ foreach ($discovered_items as $item) {
     CORE RULES:
     - Minimum 350 words of high-quality, unique commentary.
     - ABSOLUTELY NO FICTION. Keep every single fact provided, but change every single word used to describe it.
-    - NEWS MUST BE RECENT (Last 24 hours).
+    - NEWS MUST BE RECENT (Within the last 30 minutes).
     - DO NOT mention news source names (BBC, ESPN, etc.).
     - Use 3-4 detailed paragraphs in Markdown for formatting.
     - Determine the category ONLY from: ($cat_list).

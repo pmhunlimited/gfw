@@ -244,18 +244,18 @@ $activeTab = $_GET['tab'] ?? 'general';
             <div class="space-y-8">
                 <div class="alert alert-warning bg-orange-900 bg-opacity-10 border-orange-500 border-opacity-20 text-orange-500 font-condensed italic uppercase p-4 rounded-3xl">
                     <h5 class="fw-black mb-3">Cron Job Configuration</h5>
-                    <p class="small mb-4 opacity-75">To enable daily news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 24 hours.</p>
+                    <p class="small mb-4 opacity-75">To enable real-time news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 30 minutes to capture the latest headlines.</p>
 
                     <div class="bg-black/50 p-4 rounded-2xl mb-4 border border-white/10">
                         <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-2">CRON JOB COMMAND</span>
-                        <code class="text-white small">0 6 * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
+                        <code class="text-white small">*/30 * * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
                     </div>
 
                     <h6 class="fw-black small uppercase mb-2">Instructions for cPanel:</h6>
                     <ol class="small ps-3 opacity-75">
                         <li>Log in to your <strong>cPanel</strong> account.</li>
                         <li>Search for <strong>"Cron Jobs"</strong> in the search bar.</li>
-                        <li>Under "Add New Cron Job", select <strong>"Once Per Day"</strong> from Common Settings.</li>
+                        <li>Under "Add New Cron Job", select <strong>"Twice Per Hour (*/30)"</strong> from Common Settings.</li>
                         <li>In the "Command" field, paste the command shown above.</li>
                         <li>Click <strong>"Add New Cron Job"</strong> to finalize.</li>
                     </ol>

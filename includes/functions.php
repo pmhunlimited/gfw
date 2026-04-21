@@ -434,8 +434,8 @@ function get_rss_news($urls) {
                 $pubDate = (string)$item->pubDate;
                 $timestamp = strtotime($pubDate);
 
-                // Only within last 24 hours
-                if ($timestamp > (time() - 86400)) {
+                // Only within last 30 minutes (1800 seconds)
+                if ($timestamp > (time() - 1800)) {
                     $all_items[] = [
                         'title' => (string)$item->title,
                         'description' => strip_tags((string)$item->description),
