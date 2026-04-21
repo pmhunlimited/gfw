@@ -1,5 +1,19 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
+
+// Ensure config exists
+if (!file_exists(__DIR__ . '/../includes/config.php')) {
+    header("Location: ../install/");
+    exit;
+}
+
+require_once __DIR__ . '/../includes/config.php';
+
+if (defined('INSTALLED') && !INSTALLED) {
+    header("Location: ../install/");
+    exit;
+}
+
 require_once __DIR__ . '/../includes/functions.php';
 
 // Accurate Path Detection for Admin (Handles root or subfolder installs)
@@ -24,6 +38,17 @@ if (!is_admin() && $path !== '/login') {
 }
 
 $conn = get_db_connection();
+
+if (!$conn) {
+    die("<html><body style='background:#05070a;color:#ff3e3e;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;'>
+        <div style='text-align:center;border:1px solid #ff3e3e33;padding:40px;border-radius:20px;background:#0a0e17;'>
+            <h1 style='margin-bottom:10px;'>INTELLIGENCE DATABASE OFFLINE</h1>
+            <p style='color:#fff;opacity:0.6;'>System cannot establish connection to the core data hub. Verify your configuration.</p>
+            <a href='../install/' style='color:#ff3e3e;text-decoration:none;margin-top:20px;display:inline-block;font-weight:bold;'>RECONFIG SYSTEM</a>
+        </div>
+    </body></html>");
+}
+
 $settings = get_settings();
 
 // Security PIN enforcement - ONLY for authenticated admins

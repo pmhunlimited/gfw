@@ -119,6 +119,9 @@ function get_settings() {
     } catch (Exception $e) {
         try {
             $conn->exec("ALTER TABLE categories ADD COLUMN slug VARCHAR(100)");
+        } catch (Exception $ex) {}
+
+        try {
             // Populate slugs for existing categories
             $all_cats = $conn->query("SELECT id, name FROM categories")->fetchAll();
             foreach ($all_cats as $c) {

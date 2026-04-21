@@ -204,10 +204,18 @@ $posts = $stmt->fetchAll();
 
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
-// Dashboard Stats
-$total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
-$total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
-$total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+// Dashboard Stats - Robust fetching
+try {
+    $total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
+} catch (Exception $e) { $total_comments = 0; }
+
+try {
+    $total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
+} catch (Exception $e) { $total_subscribers = 0; }
+
+try {
+    $total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+} catch (Exception $e) { $total_reports = 0; }
 
 ?>
 
