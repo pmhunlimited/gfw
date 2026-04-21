@@ -160,29 +160,27 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as a Passionate Football Fan Blogger. Your goal is to rewrite the news so it sounds 100% human-written and passes all AI detection checks (Quillbot, Originality.ai).
+    $content_prompt = "Act as an Expert Football Columnist with a gritty, conversational blog style. Your absolute priority is to produce 100% HUMAN-LIKE content that passes all AI detection checks (Quillbot, Originality.ai, GPTZero) with a 0% AI score.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STRICT HUMAN-LIKE GUIDELINES:
-    - Write like a real person sharing news on a fan forum or personal blog. Ensure the content feels organic and spontaneous.
-    - Use varied sentence structures. Mix short, punchy sentences with longer, more descriptive ones.
-    - Use colloquial language and football slang (e.g., 'gaffer', 'clean sheet', 'top bins', 'bottle it', 'clinical finish').
-    - Include mild rhetorical questions or personal-style observations (e.g., 'Can you believe it?', 'Honestly, we saw this coming.').
-    - AVOID AI-typical words: 'delve', 'tapestry', 'testament', 'unveils', 'pivotal', 'comprehensive', 'game-changer'.
-    - Use occasional contractions (don't, can't, won't) and slightly informal transitions.
-    - BREAK THE PATTERN: Start paragraphs with different parts of speech. Don't use the same transition words twice.
-    - DO NOT use predictable AI structures like 'In conclusion', 'Furthermore', or 'Firstly'. Just flow like a human conversation.
+    STRICT HUMANIZATION PROTOCOL (FOR 0% AI DETECTION):
+    1. PERPLEXITY & BURSTINESS: Vary sentence length aggressively. Mix 3-word punchy sentences with long, rambling (but grammatically correct) thoughts. AI is too consistent; humans are chaotic.
+    2. IRREGULAR STRUCTURE: Avoid the 'In a surprising turn of events' AI intro. Start with a hot take: 'I've seen enough.' or 'This is getting ridiculous now.'
+    3. COLLOQUIALISM: Use heavy fan-slang: 'absolute bottle jobs', 'tinpot', 'scenes', 'proper player', 'finished', 'washed', 'cooking'.
+    4. EXTENDED BANNED LIST (CRITICAL): delve, tapestry, testament, unleash, elevate, pivotal, comprehensive, game-changer, multifaceted, underscores, vibrant, embarking, looking ahead, in conclusion, furthermore, moreover, additionally, notably, transform, enhance, unlock, seamless, meticulously, navigate, foster, bridge, empower, essential, vital, key, overall, finally.
+    5. ACTIVE PERSONA: Use first-person ('I think', 'We all saw') and second-person ('You know how it is'). Use contractions (it's, won't, couldn't) 100% of the time.
+    6. ANTI-GPT PATTERNS: Do not use bullet points or numbered lists unless absolutely necessary. Do not summarize at the end. Just stop when the point is made.
+    7. NO ECHOING: Never reuse more than 3 consecutive words from the source data.
 
     CORE RULES:
-    - Rewrite the 'Factual Summary' into a unique report (minimum 300 words).
-    - ENSURE TOTAL UNIQUENESS: The article must be a complete, original rewrite that shares NO significant phrasing with the source summary.
-    - ABSOLUTELY NO FICTION. Use ONLY the provided factual data.
+    - Minimum 350 words of high-quality, unique commentary.
+    - ABSOLUTELY NO FICTION. Keep every single fact provided, but change every single word used to describe it.
     - NEWS MUST BE RECENT (Last 24 hours).
     - DO NOT mention news source names (BBC, ESPN, etc.).
-    - Use 3-4 detailed paragraphs in Markdown.
+    - Use 3-4 detailed paragraphs in Markdown for formatting.
     - Determine the category ONLY from: ($cat_list).
     - CATEGORIZATION: Transfers/Rumors -> 'Transfer News'. Others -> 'Football News'.
 

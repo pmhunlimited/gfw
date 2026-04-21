@@ -1,7 +1,8 @@
 <?php
 include __DIR__ . '/../includes/header.php';
 $today = date('l, d F Y');
-$oddsData = get_ai_insight("Provide a detailed market prices and betting odds report for major upcoming football matches for today, $today. Use Markdown tables and include match dates and times.");
+$oddsData = get_ai_insight("Act as a Professional Football Betting Analyst. Provide a detailed market prices and betting odds report for major upcoming football matches for today, $today.
+                            Write the commentary in a gritty, human-like analyst style. AVOID AI-typical words like 'delve' or 'comprehensive'. Use Markdown tables and include match dates and times.");
 ?>
 <div class="container py-5">
     <h1 class="font-condensed fw-black italic text-white display-3 mb-5">MARKET <span class="text-danger">PRICES</span></h1>

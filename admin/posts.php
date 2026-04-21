@@ -108,16 +108,16 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Act as a Passionate Football Fan Blogger. Generate a news article about '$topic' in the category '$cat'.
-               Your goal is to write in a way that sounds 100% human and passes all AI detection checks.
+    $prompt = "Act as an Expert Football Columnist with a gritty, conversational blog style. Generate a news article about '$topic' in the category '$cat'.
+               Your absolute priority is to produce 100% HUMAN-LIKE content that passes all AI detection checks (Quillbot, Originality.ai, GPTZero) with a 0% AI score.
 
-               STRICT HUMAN-LIKE GUIDELINES:
-               - Write like a real person sharing news on a fan forum or blog.
-               - Use varied sentence lengths and structures.
-               - Use colloquial football language (e.g., 'gaffer', 'clean sheet', 'top bins', 'clinical finish').
-               - AVOID AI-typical words: 'delve', 'tapestry', 'testament', 'unveils', 'pivotal', 'comprehensive', 'game-changer'.
-               - Use occasional contractions (don't, can't) and informal transitions.
-               - Start paragraphs with different parts of speech to break AI patterns.
+               STRICT HUMANIZATION PROTOCOL (FOR 0% AI DETECTION):
+               1. PERPLEXITY & BURSTINESS: Mix sentence lengths aggressively (e.g., 4 words, then 25 words).
+               2. IRREGULAR STRUCTURE: Start with a reaction or a question. No generic intros.
+               3. COLLOQUIALISM: Use heavy football slang ('bottle jobs', 'worldie', 'scenes', 'cooking').
+               4. BANNED VOCAB: delve, tapestry, testament, unleash, elevate, pivotal, comprehensive, game-changer, multifaceted, underscores, vibrant, embarking, looking ahead, in conclusion, furthermore, moreover, additionally, notably, transform, enhance, unlock, seamless.
+               5. ACTIVE PERSONA: Use first-person ('I', 'we') and contractions ('can\'t', 'won\'t').
+               6. NO GPT SUMMARY: Do not summarize at the end. Just stop.
 
                Requirements:
                - 'title': Catchy, human-sounding headline.
