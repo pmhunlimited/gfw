@@ -86,4 +86,3 @@ if ($path == '/subscribe' && $_SERVER['REQUEST_METHOD'] == 'POST') {
         include __DIR__ . '/pages/404.php';
     }
 }
-?>

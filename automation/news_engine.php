@@ -298,4 +298,3 @@ if (!empty($published_post_ids)) {
     notify_subscribers($published_post_ids);
     echo "Notification process complete.\n";
 }
-?>

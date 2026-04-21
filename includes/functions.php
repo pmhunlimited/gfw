@@ -673,4 +673,3 @@ function get_rss_feed_urls() {
         'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
     ];
 }
-?>

@@ -106,4 +106,3 @@ if ($path == '/' || $path == '' || $path == '/posts') {
     redirect($admin_base . '/');
     exit;
 }
-?>
