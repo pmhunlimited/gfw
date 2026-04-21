@@ -84,7 +84,7 @@ foreach ($discovered_items as $idx => $item) {
     $headlines_for_filter .= "$idx: {$item['title']}\n";
 }
 
-$filter_prompt = "I have a list of sports headlines. I only want news related to these specific leagues and their transfers:
+$filter_prompt = "I have a list of sports headlines. I only want news related to these specific European football leagues and their transfers:
 - Premier League (England)
 - Spanish League / La Liga (Spain)
 - Champions League (UEFA)
@@ -94,7 +94,8 @@ $filter_prompt = "I have a list of sports headlines. I only want news related to
 - Italian League / Serie A (Italy)
 - Transfer News for any of the above.
 
-Identify the headlines that are STRICTLY about these leagues or their players/managers/transfers.
+STRICT RULE: There must be NO American sports news (NFL, NBA, MLB, NHL, MLS, etc.).
+Identify the headlines that are STRICTLY about the European football leagues listed above or their players/managers/transfers.
 Return a JSON array of the indices (integers) that I should keep.
 
 HEADLINES:

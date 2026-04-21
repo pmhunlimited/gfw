@@ -463,8 +463,9 @@ function get_rss_news($urls) {
 
 function get_suggested_topics() {
     $today = date('D d M Y');
-    $prompt = "Suggest 5 trending football news subjects or headlines for today, $today.
+    $prompt = "Suggest 5 trending European football news subjects or headlines for today, $today.
                Write them in a natural, human-sounding style. Avoid clickbait and robotic phrasing.
+               STRICT RULE: Only European football (Premier League, La Liga, Serie A, etc.). NO American sports or MLS.
                Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"].
                Be very specific about current teams, transfers and players.";
     $raw = get_ai_insight($prompt);
