@@ -19,7 +19,23 @@ $path = rtrim(strtok($request, '?'), '/');
 
 if (empty($path)) $path = '/';
 
-if ($path == '/' || $path == '' || empty($path)) {
+if ($path == '/subscribe' && $_SERVER['REQUEST_METHOD'] == 'POST') {
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $conn = get_db_connection();
+        $is_sqlite = ($conn && $conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
+        $sql = $is_sqlite
+            ? "INSERT OR IGNORE INTO subscribers (email) VALUES (?)"
+            : "INSERT IGNORE INTO subscribers (email) VALUES (?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$email]);
+        header('Location: /?subscribed=true');
+        exit;
+    } else {
+        header('Location: /?error=invalid_email');
+        exit;
+    }
+} elseif ($path == '/' || $path == '' || empty($path)) {
     include __DIR__ . '/pages/home.php';
 } elseif (preg_match('/^\/post\/([^\/]+)$/', $path, $matches)) {
     $_GET['slug'] = $matches[1];
@@ -47,22 +63,6 @@ if ($path == '/' || $path == '' || empty($path)) {
         $_GET['category'] = urldecode($cat_identifier);
     }
     include __DIR__ . '/pages/home.php';
-} elseif ($path == '/subscribe' && $_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-    if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $conn = get_db_connection();
-        $is_sqlite = ($conn && $conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
-        $sql = $is_sqlite
-            ? "INSERT OR IGNORE INTO subscribers (email) VALUES (?)"
-            : "INSERT IGNORE INTO subscribers (email) VALUES (?)";
-        $stmt = $conn->prepare($sql);
-        $stmt->execute([$email]);
-        header('Location: /?subscribed=true');
-        exit;
-    } else {
-        header('Location: /?error=invalid_email');
-        exit;
-    }
 } elseif (strpos($path, '/admin') === 0) {
     include __DIR__ . '/admin/index.php';
 } elseif ($path == '/install' || strpos($path, '/install/') === 0) {

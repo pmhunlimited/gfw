@@ -49,7 +49,7 @@ function admin_footer() {
     include __DIR__ . '/footer.php';
 }
 
-if ($path == '/' || $path == '') {
+if ($path == '/' || $path == '' || $path == '/posts') {
     include __DIR__ . '/posts.php';
 } elseif ($path == '/settings') {
     include __DIR__ . '/settings.php';

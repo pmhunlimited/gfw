@@ -162,7 +162,7 @@ if (isset($_POST['generate_ai'])) {
         }
 
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $author_name = ($settings['name'] ?? 'GFW') . ' AI';
+        $author_name = ($settings['name'] ?? 'GFW');
         if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author_name, $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
@@ -204,11 +204,69 @@ $posts = $stmt->fetchAll();
 
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
+// Dashboard Stats
+$total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
+$total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
+$total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+
 ?>
+
+<!-- Dashboard Stats -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-danger transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Total Reports</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_reports); ?></h2>
+                </div>
+                <div class="bg-danger bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-file-earmark-text text-danger fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-danger small font-monospace">SYSTEM ACTIVE</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-info transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Total Comments</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_comments); ?></h2>
+                </div>
+                <div class="bg-info bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-chat-dots text-info fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-info small font-monospace">COMMUNICATIONS UP</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-success transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Subscribers</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_subscribers); ?></h2>
+                </div>
+                <div class="bg-success bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-people text-success fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-success small font-monospace">NETWORK EXPANDING</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <div>
-        <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
-        <p class="text-white-50 small font-condensed italic uppercase mb-0"><?php echo $total_posts; ?> Reports Discovered</p>
+        <h1 class="font-condensed fw-black italic text-white display-6 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
+        <p class="text-white-50 small font-condensed italic uppercase mb-0">Registry Query Results: <?php echo $total_posts; ?> Reports</p>
     </div>
     <div class="d-flex flex-wrap gap-3">
         <form method="GET" class="position-relative">
