@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GFW | SECURITY VERIFICATION</title>
+    <title><?php echo $settings['name'] ?? 'GFW'; ?> | SECURITY VERIFICATION</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -51,8 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="pin-card shadow-2xl text-center">
-        <div class="mb-4">
-            <i class="bi bi-shield-lock-fill text-danger display-4"></i>
+        <div class="text-center mb-4">
+            <?php if (!empty($settings['logo'])): ?>
+                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 50px;" class="d-inline-block">
+            <?php else: ?>
+                <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
+                <h1 class="font-condensed italic text-white mb-0"><?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : 'CORE'; ?></span></h1>
+            <?php endif; ?>
         </div>
         <h1 class="font-condensed italic text-white mb-2">SECURITY <span class="text-danger">PIN</span></h1>
         <p class="text-white-50 small uppercase tracking-widest mb-5">Enter your secondary authorization cipher</p>

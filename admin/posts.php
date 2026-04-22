@@ -57,6 +57,7 @@ if (isset($_POST['save_manual'])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
+            notify_subscribers([$post_id]);
             $success = "Intelligence report deployed and broadcasted.";
         } else {
             $success = "Intelligence report scheduled for $publish_date.";
@@ -155,6 +156,7 @@ if (isset($_POST['generate_ai'])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
+                notify_subscribers([$post_id]);
                 $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
                 $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;
@@ -191,7 +193,58 @@ $posts = $stmt->fetchAll();
 
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
+// Dashboard Stats
+try {
+    $total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+    $total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
+    $total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
+} catch (Exception $e) {
+    $total_reports = $total_comments = $total_subscribers = 0;
+}
+
 ?>
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-danger/10 flex items-center justify-center">
+                    <i class="bi bi-file-earmark-text text-danger fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Total Reports</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_reports); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <i class="bi bi-chat-dots text-primary fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Total Comments</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_comments); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center">
+                    <i class="bi bi-people text-success fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Syndication Network</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_subscribers); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <div>
         <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>

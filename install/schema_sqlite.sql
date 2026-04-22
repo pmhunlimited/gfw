@@ -93,6 +93,8 @@ CREATE TABLE IF NOT EXISTS pages (
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     content TEXT,
+    is_external BOOLEAN DEFAULT FALSE,
+    external_url VARCHAR(255),
     is_visible BOOLEAN DEFAULT TRUE,
     position TEXT DEFAULT 'main',
     meta_title VARCHAR(255),

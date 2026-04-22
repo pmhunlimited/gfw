@@ -244,11 +244,11 @@ $activeTab = $_GET['tab'] ?? 'general';
             <div class="space-y-8">
                 <div class="alert alert-warning bg-orange-900 bg-opacity-10 border-orange-500 border-opacity-20 text-orange-500 font-condensed italic uppercase p-4 rounded-3xl">
                     <h5 class="fw-black mb-3">Cron Job Configuration</h5>
-                    <p class="small mb-4 opacity-75">To enable daily news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 24 hours.</p>
+                    <p class="small mb-4 opacity-75">To enable real-time news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 30 minutes to capture the latest intelligence.</p>
 
                     <div class="bg-black/50 p-4 rounded-2xl mb-4 border border-white/10">
                         <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-2">CRON JOB COMMAND</span>
-                        <code class="text-white small">0 6 * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
+                        <code class="text-white small">*/30 * * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
                     </div>
 
                     <h6 class="fw-black small uppercase mb-2">Instructions for cPanel:</h6>
@@ -268,6 +268,24 @@ $activeTab = $_GET['tab'] ?? 'general';
                         <span class="text-[10px] font-black text-white uppercase tracking-widest">Automation Engine Ready</span>
                     </div>
                     <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek API key is configured in the "AI Core" tab.</p>
+                </div>
+
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-6 small">Intelligence Feed Registry</h4>
+                    <div class="space-y-4">
+                        <?php
+                        $feeds = get_rss_feed_urls();
+                        foreach ($feeds as $feed):
+                        ?>
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-black/40 rounded-xl border border-white/5">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="w-2 h-2 rounded-full bg-danger animate-pulse"></div>
+                                    <span class="text-white font-monospace small" style="font-size: 10px;"><?php echo $feed; ?></span>
+                                </div>
+                                <span class="badge bg-danger bg-opacity-10 text-danger font-black uppercase italic" style="font-size: 8px;">ACTIVE MONITORING</span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
             </div>
 

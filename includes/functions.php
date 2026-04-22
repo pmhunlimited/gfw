@@ -60,6 +60,16 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Auto-migration for pages is_external and external_url
+    try {
+        $conn->query("SELECT is_external FROM pages LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE pages ADD COLUMN is_external BOOLEAN DEFAULT FALSE");
+            $conn->exec("ALTER TABLE pages ADD COLUMN external_url VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
     $settings = $settings ?: [
         'name' => 'GLOBAL FOOTBALL WATCH',
         'logo' => '',
@@ -268,6 +278,54 @@ function log_activity($message) {
     }
 }
 
+/**
+ * Notifies all subscribers about new intelligence reports.
+ * @param array $post_ids
+ * @return void
+ */
+function notify_subscribers($post_ids) {
+    if (empty($post_ids)) return;
+
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    // Fetch posts
+    $placeholders = implode(',', array_fill(0, count($post_ids), '?'));
+    $stmt = $conn->prepare("SELECT title, slug, excerpt FROM posts WHERE id IN ($placeholders)");
+    $stmt->execute($post_ids);
+    $posts = $stmt->fetchAll();
+
+    if (empty($posts)) return;
+
+    // Fetch subscribers
+    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($subscribers)) return;
+
+    $settings = get_settings();
+    $site_name = $settings['name'] ?? 'GFW';
+
+    $subject = "Intelligence Alert: New Reports Published - " . $site_name;
+
+    $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>New Intelligence Reports:</p>";
+
+    foreach ($posts as $post) {
+        $post_url = SITE_URL . "/post/" . $post['slug'];
+        $content .= "
+            <div class='news-item'>
+                <a href='$post_url' class='news-title'>{$post['title']}</a>
+                <p class='news-excerpt'>{$post['excerpt']}</p>
+                <a href='$post_url' class='btn'>Decrypt Full Report</a>
+            </div>
+        ";
+    }
+
+    $message = render_email_template($content, "New Intelligence Dispatch");
+
+    foreach ($subscribers as $email) {
+        send_mail($email, $subject, $message);
+    }
+}
+
 function get_ai_insight($prompt) {
     $settings = get_settings();
     $model = $settings['selected_model'] ?? 'deepseek-chat';
@@ -321,6 +379,20 @@ function get_ai_insight($prompt) {
 }
 
 /**
+ * Centralized registry of sports news RSS feeds.
+ * @return array
+ */
+function get_rss_feed_urls() {
+    return [
+        'https://www.skysports.com/rss/12433', // Sky Sports Home
+        'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
+        'https://supersport.com/rss/news', // SuperSport All News
+        'https://sport.sky.ch/feed', // Sky Sport CH
+        'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
+    ];
+}
+
+/**
  * Fetches and parses RSS feeds from multiple sources.
  * @param array $urls
  * @return array
@@ -355,8 +427,8 @@ function get_rss_news($urls) {
                 $pubDate = (string)$item->pubDate;
                 $timestamp = strtotime($pubDate);
 
-                // Only within last 24 hours
-                if ($timestamp > (time() - 86400)) {
+                // Only within last 30 minutes (1800 seconds)
+                if ($timestamp > (time() - 1800)) {
                     $all_items[] = [
                         'title' => (string)$item->title,
                         'description' => strip_tags((string)$item->description),

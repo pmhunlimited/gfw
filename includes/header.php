@@ -83,7 +83,8 @@ $settings = get_settings();
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                    <?php $name_parts = explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH'); ?>
+                    <?php echo $name_parts[0]; ?> <span class="text-electric-red"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>
                 <?php endif; ?>
             </a>
 
@@ -99,10 +100,11 @@ $settings = get_settings();
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
-                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
+                        $pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
+                            $url = $p['is_external'] ? $p['external_url'] : '/'.$p['slug'];
                             $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
+                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="'.$url.'" style="color: #fff;">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
