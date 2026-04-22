@@ -13,4 +13,3 @@ define('APP_VERSION', '1.0.0');
 
 // Installation status
 define('INSTALLED', false);
-?>

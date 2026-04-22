@@ -75,15 +75,15 @@
                 </a>
             </div>
             <nav class="nav flex-column">
-                <a class="nav-link <?php echo ($path == '' || $path == '/') ? 'active' : ''; ?>" href="/admin/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
-                <a class="nav-link <?php echo $path == '/comments' ? 'active' : ''; ?>" href="/admin/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
-                <a class="nav-link <?php echo $path == '/subscribers' ? 'active' : ''; ?>" href="/admin/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
-                <a class="nav-link <?php echo $path == '/categories' ? 'active' : ''; ?>" href="/admin/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>
-                <a class="nav-link <?php echo $path == '/pages' ? 'active' : ''; ?>" href="/admin/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS PAGES</a>
-                <a class="nav-link <?php echo $path == '/settings' ? 'active' : ''; ?>" href="/admin/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
-                <a class="nav-link <?php echo $path == '/profile' ? 'active' : ''; ?>" href="/admin/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
+                <a class="nav-link <?php echo ($path == '' || $path == '/' || $path == '/posts') ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/"><i class="bi bi-grid-fill me-3"></i> POST REGISTRY</a>
+                <a class="nav-link <?php echo strpos($path, '/comments') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/comments"><i class="bi bi-chat-dots-fill me-3"></i> COMMENTS</a>
+                <a class="nav-link <?php echo strpos($path, '/subscribers') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/subscribers"><i class="bi bi-people-fill me-3"></i> SUBSCRIBERS</a>
+                <a class="nav-link <?php echo strpos($path, '/categories') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/categories"><i class="bi bi-tags-fill me-3"></i> CATEGORIES</a>
+                <a class="nav-link <?php echo strpos($path, '/pages') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/pages"><i class="bi bi-file-earmark-text-fill me-3"></i> CMS PAGES</a>
+                <a class="nav-link <?php echo strpos($path, '/settings') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/settings"><i class="bi bi-sliders me-3"></i> SETTINGS</a>
+                <a class="nav-link <?php echo strpos($path, '/profile') === 0 ? 'active' : ''; ?>" href="<?php echo $admin_base; ?>/profile"><i class="bi bi-person-badge-fill me-3"></i> PROFILE</a>
                 <hr class="border-white border-opacity-5 mx-4 my-4">
-                <a class="nav-link text-danger" href="/admin/logout"><i class="bi bi-power me-3"></i> LOGOUT</a>
+                <a class="nav-link text-danger" href="<?php echo $admin_base; ?>/logout"><i class="bi bi-power me-3"></i> LOGOUT</a>
             </nav>
         </div>
 
