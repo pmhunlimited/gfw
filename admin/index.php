@@ -2,12 +2,14 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
-// Detect dynamic admin base path
-$script_dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-$admin_base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . $script_dir;
+// Consistent Admin Base Detection
+$admin_root = '/admin';
+$request_uri = $_SERVER['REQUEST_URI'];
+$base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+$admin_base = $base_url . $admin_root;
 
 if (!is_admin()) {
-    redirect($admin_base_url . '/login');
+    redirect($admin_base . '/login');
 }
 
 $conn = get_db_connection();
@@ -19,27 +21,19 @@ if (!empty($settings['pin_enabled'])) {
         (time() - ($_SESSION['pin_verified_at'] ?? 0)) > 86400) {
 
         // Don't redirect if already on pin_verify page
-        $request = $_SERVER['REQUEST_URI'];
-        if (strpos($request, $script_dir . '/pin_verify') === false) {
-            redirect($admin_base_url . '/pin_verify');
+        if (strpos($request_uri, $admin_root . '/pin_verify') === false) {
+            redirect($admin_base . '/pin_verify');
         }
     }
 }
 
-// Admin Routing & Normalization
-$request = $_SERVER['REQUEST_URI'];
-$base_path = rtrim(strtok($request, '?'), '/');
-
-// Relative path from admin root
-if (strpos($base_path, $script_dir) === 0) {
-    $path = substr($base_path, strlen($script_dir));
-} else {
-    $path = $base_path;
+// Extract path after /admin
+$path = '/';
+$admin_pos = strpos($request_uri, $admin_root);
+if ($admin_pos !== false) {
+    $after_admin = substr($request_uri, $admin_pos + strlen($admin_root));
+    $path = rtrim(strtok($after_admin, '?'), '/');
 }
-
-// Ensure $admin_base matches the detected path for layout helpers
-$admin_base = $admin_base_url;
-
 if (empty($path)) $path = '/';
 
 // Layout helper

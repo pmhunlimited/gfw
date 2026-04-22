@@ -76,11 +76,11 @@ if ($path == '/' || $path == '' || empty($path)) {
             $_GET['page_id'] = $page['id'];
             include __DIR__ . '/pages/cms_page.php';
         } else {
-            http_response_code(404);
+            if (!headers_sent()) http_response_code(404);
             include __DIR__ . '/pages/404.php';
         }
     } else {
-        http_response_code(404);
+        if (!headers_sent()) http_response_code(404);
         include __DIR__ . '/pages/404.php';
     }
 }
