@@ -1,4 +1,8 @@
 <?php
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 include __DIR__ . '/../includes/header.php';
 
 $category = $_GET['category'] ?? null;

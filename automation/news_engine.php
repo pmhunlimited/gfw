@@ -67,32 +67,46 @@ foreach ($discovered_items as $item) {
 }
 $discovered_items = $filtered_discovery;
 
-$headlines_for_dedup = "";
+echo "Stage 1.2: Streamlined League & Cross-Run Filtering via AI...\n";
+// Fetch recent headlines from DB to prevent cross-run duplication
+$recent_db_posts = $conn->query("SELECT title FROM posts ORDER BY created_at DESC LIMIT 50")->fetchAll(PDO::FETCH_COLUMN);
+$db_headlines_str = implode("\n", array_map(function($t) { return "- " . $t; }, $recent_db_posts));
+
+$headlines_to_filter = "";
 foreach ($discovered_items as $idx => $item) {
-    $headlines_for_dedup .= "$idx: {$item['title']}\n";
+    $headlines_to_filter .= "$idx: {$item['title']}\n";
 }
 
-$dedup_prompt = "I have a list of sports news headlines from different sources. Some refer to the EXACT SAME match, transfer, or event.
-Identify the unique events and return a JSON array of the indices (integers) that I should KEEP.
-If multiple headlines refer to the same event, only keep the ONE index that has the most descriptive or complete headline.
+$filter_prompt = "Act as a Content Curator for a European Football Intelligence Network.
+I have a list of discovered headlines from RSS feeds.
+You MUST filter this list and return a JSON array of indices (integers) that I should KEEP.
 
-HEADLINES:
-$headlines_for_dedup
+STRICT FILTERING RULES:
+1. KEEP only news related to European Football (Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League) and associated transfers.
+2. REMOVE all American sports content (NFL, NBA, MLB, NHL, MLS).
+3. REMOVE headlines that refer to the SAME event already present in our database.
+4. If multiple headlines in the current list refer to the SAME event, KEEP only the most descriptive one.
 
-Return ONLY a valid JSON array of integers. Example: [0, 2, 5]";
+RECENT DATABASE HEADLINES (ALREADY PUBLISHED):
+$db_headlines_str
 
-$raw_dedup = get_ai_insight($dedup_prompt);
-$unique_indices = extract_json($raw_dedup, true);
+DISCOVERED HEADLINES TO FILTER:
+$headlines_to_filter
 
-if (is_array($unique_indices) && !empty($unique_indices)) {
+Return ONLY a valid JSON array of integers. Example: [0, 3, 4]";
+
+$raw_filter = get_ai_insight($filter_prompt);
+$keep_indices = extract_json($raw_filter, true);
+
+if (is_array($keep_indices)) {
     $filtered_items = [];
-    foreach ($unique_indices as $idx) {
+    foreach ($keep_indices as $idx) {
         if (isset($discovered_items[$idx])) {
             $filtered_items[] = $discovered_items[$idx];
         }
     }
     $discovered_items = $filtered_items;
-    echo "Deduplication complete. " . count($discovered_items) . " unique stories remaining.\n";
+    echo "AI Filtering complete. " . count($discovered_items) . " high-quality unique stories remaining.\n";
 }
 
 $date_path = date('Y/m/d');
