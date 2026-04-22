@@ -6,14 +6,82 @@ function get_settings() {
     static $settings = null;
     if ($settings !== null) return $settings;
 
-    $conn = get_db_connection();
-    if (!$conn) return [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+    $defaults = [
+        'name' => 'GFW Intelligence',
+        'tagline' => 'Global Football Insights',
         'logo' => '',
-        'favicon' => ''
+        'favicon' => '',
+        'admin_email' => '',
+        'whatsapp_number' => '',
+        'header_code' => '',
+        'footer_code' => '',
+        'selected_model' => 'deepseek-chat',
+        'deepseek_api_key' => '',
+        'smtp_host' => '',
+        'smtp_port' => '587',
+        'smtp_user' => '',
+        'smtp_pass' => '',
+        'smtp_sender_email' => '',
+        'smtp_sender_name' => '',
+        'pin_enabled' => 0,
+        'admin_pin' => ''
     ];
-    $stmt = $conn->query("SELECT * FROM site_settings WHERE id = 1");
-    $settings = $stmt->fetch();
+
+    $conn = get_db_connection();
+    if (!$conn) return $defaults;
+
+    try {
+        $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
+        $fetched = $stmt->fetch();
+        if (!$fetched) {
+            $conn->exec("INSERT INTO site_settings (name) VALUES ('GFW Intelligence')");
+            $stmt = $conn->query("SELECT * FROM site_settings LIMIT 1");
+            $fetched = $stmt->fetch();
+        }
+        $settings = array_merge($defaults, $fetched ?: []);
+    } catch (Exception $e) {
+        $settings = $defaults;
+    }
+
+    // Category Taxonomy Refactoring (One-time migration)
+    if ($conn && empty($settings['taxonomy_migrated'])) {
+        try {
+            $required_cats = ['Football News', 'Transfer News'];
+            $existing_cats = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
+
+            $is_sqlite = ($conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
+
+            // 1. Ensure required categories exist
+            foreach ($required_cats as $cat_name) {
+                if (!in_array($cat_name, $existing_cats)) {
+                    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $cat_name)));
+                    $sql = $is_sqlite
+                        ? "INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)"
+                        : "INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)";
+                    $conn->prepare($sql)->execute([$cat_name, $slug]);
+                }
+            }
+
+            // 2. Migrate existing posts to 'Football News' if they are in obsolete categories
+            $placeholders = implode(',', array_fill(0, count($required_cats), '?'));
+            $stmt = $conn->prepare("UPDATE posts SET category = 'Football News' WHERE category NOT IN ($placeholders) OR category IS NULL");
+            $stmt->execute($required_cats);
+
+            // 3. Remove obsolete categories
+            $stmt_del = $conn->prepare("DELETE FROM categories WHERE name NOT IN ($placeholders)");
+            $stmt_del->execute($required_cats);
+
+            // 4. Mark migration as complete
+            try {
+                $conn->exec("ALTER TABLE site_settings ADD COLUMN taxonomy_migrated TINYINT DEFAULT 0");
+            } catch (Exception $e) {}
+            $conn->exec("UPDATE site_settings SET taxonomy_migrated = 1");
+            $settings['taxonomy_migrated'] = 1;
+
+        } catch (Exception $e) {
+            error_log("Taxonomy refactoring failed: " . $e->getMessage());
+        }
+    }
 
     if ($settings && !array_key_exists('header_code', $settings)) {
         try {
@@ -51,6 +119,9 @@ function get_settings() {
     } catch (Exception $e) {
         try {
             $conn->exec("ALTER TABLE categories ADD COLUMN slug VARCHAR(100)");
+        } catch (Exception $ex) {}
+
+        try {
             // Populate slugs for existing categories
             $all_cats = $conn->query("SELECT id, name FROM categories")->fetchAll();
             foreach ($all_cats as $c) {
@@ -60,8 +131,18 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Auto-migration for pages external links
+    try {
+        $conn->query("SELECT is_external FROM pages LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE pages ADD COLUMN is_external TINYINT DEFAULT 0");
+            $conn->exec("ALTER TABLE pages ADD COLUMN external_url VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
     $settings = $settings ?: [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'GFW Intelligence',
         'logo' => '',
         'favicon' => ''
     ];
@@ -208,9 +289,10 @@ function send_mail($to, $subject, $message) {
     }
 }
 
-function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
+function render_email_template($content, $subtitle = null) {
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GLOBAL FOOTBALL WATCH';
+    $site_name = $settings['name'] ?? 'GFW';
+    $subtitle = $subtitle ?? ($settings['tagline'] ?? 'Intelligence Protocol Active');
     $year = date('Y');
 
     return "
@@ -264,7 +346,7 @@ function log_activity($message) {
     $settings = get_settings();
     if (!empty($settings['admin_email'])) {
         $html = render_email_template("<p>$message</p>", "Security Alert");
-        send_mail($settings['admin_email'], "GFW System Alert", $html);
+        send_mail($settings['admin_email'], ($settings['name'] ?? 'GFW') . " System Alert", $html);
     }
 }
 
@@ -355,8 +437,8 @@ function get_rss_news($urls) {
                 $pubDate = (string)$item->pubDate;
                 $timestamp = strtotime($pubDate);
 
-                // Only within last 24 hours
-                if ($timestamp > (time() - 86400)) {
+                // Only within last 30 minutes (1800 seconds)
+                if ($timestamp > (time() - 1800)) {
                     $all_items[] = [
                         'title' => (string)$item->title,
                         'description' => strip_tags((string)$item->description),
@@ -384,7 +466,11 @@ function get_rss_news($urls) {
 
 function get_suggested_topics() {
     $today = date('D d M Y');
-    $prompt = "Suggest 5 trending football news subjects/headlines for today, $today. Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"]. Be very specific about current teams, transfers and players.";
+    $prompt = "Suggest 5 trending European football news subjects or headlines for today, $today.
+               Write them in a natural, human-sounding style. Avoid clickbait and robotic phrasing.
+               STRICT RULE: Only European football (Premier League, La Liga, Serie A, etc.). NO American sports or MLS.
+               Return them as a JSON array of strings ONLY. Example format: [\"Subject 1\", \"Subject 2\"].
+               Be very specific about current teams, transfers and players.";
     $raw = get_ai_insight($prompt);
 
     $topics = extract_json($raw, true);
@@ -529,4 +615,61 @@ function parse_markdown($text) {
     }
     return nl2br($text);
 }
-?>
+
+/**
+ * Notifies all subscribers about new posts.
+ * @param array $post_ids Array of post IDs
+ */
+function notify_subscribers($post_ids) {
+    if (empty($post_ids)) return;
+
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($subscribers)) return;
+
+    $placeholders = implode(',', array_fill(0, count($post_ids), '?'));
+    $stmt = $conn->prepare("SELECT title, slug, excerpt FROM posts WHERE id IN ($placeholders)");
+    $stmt->execute($post_ids);
+    $posts = $stmt->fetchAll();
+
+    if (empty($posts)) return;
+
+    $settings = get_settings();
+    $site_url = defined('SITE_URL') ? rtrim(SITE_URL, '/') : '';
+
+    $subject = "Intelligence Alert: New Reports Published - " . date('D d M Y');
+    $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>New Intelligence Reports: ".date('d M Y')."</p>";
+
+    foreach ($posts as $post) {
+        $post_url = $site_url . "/post/" . $post['slug'];
+        $content .= "
+            <div class='news-item'>
+                <a href='$post_url' class='news-title'>{$post['title']}</a>
+                <p class='news-excerpt'>{$post['excerpt']}</p>
+                <a href='$post_url' class='btn'>Decrypt Full Report</a>
+            </div>
+        ";
+    }
+
+    $message = render_email_template($content, "Intelligence Alert");
+
+    foreach ($subscribers as $email) {
+        send_mail($email, $subject, $message);
+    }
+}
+
+/**
+ * Returns the list of active RSS feed URLs used for news discovery.
+ * @return array
+ */
+function get_rss_feed_urls() {
+    return [
+        'https://www.skysports.com/rss/12433', // Sky Sports Home
+        'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
+        'https://supersport.com/rss/news', // SuperSport All News
+        'https://sport.sky.ch/feed', // Sky Sport CH
+        'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
+    ];
+}

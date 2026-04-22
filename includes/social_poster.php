@@ -139,4 +139,3 @@ function post_to_tiktok($token, $image_url, $description) {
     curl_exec($ch);
     curl_close($ch);
 }
-?>

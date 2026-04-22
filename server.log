@@ -1,0 +1,22 @@
+[Wed Apr 22 09:44:41 2026] PHP 8.3.6 Development Server (http://localhost:8888) started
+[Wed Apr 22 09:44:44 2026] [::1]:57082 Accepted
+[Wed Apr 22 09:44:44 2026] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /app/includes/header.php on line 5
+[Wed Apr 22 09:44:44 2026] [::1]:57082 [500]: GET / - syntax error, unexpected token "<", expecting end of file in /app/includes/header.php on line 5
+[Wed Apr 22 09:44:44 2026] [::1]:57082 Closing
+[Wed Apr 22 09:47:32 2026] [::1]:37158 Accepted
+[Wed Apr 22 09:47:32 2026] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /app/includes/header.php on line 5
+[Wed Apr 22 09:47:32 2026] [::1]:37158 [500]: GET / - syntax error, unexpected token "<", expecting end of file in /app/includes/header.php on line 5
+[Wed Apr 22 09:47:32 2026] [::1]:37158 Closing
+[Wed Apr 22 09:52:30 2026] [::1]:50054 Accepted
+[Wed Apr 22 09:52:30 2026] Taxonomy refactoring failed: SQLSTATE[HY000]: General error: 1 table categories has no column named slug
+[Wed Apr 22 09:52:30 2026] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:52:30 2026] [::1]:50054 [200]: GET / - syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:52:30 2026] [::1]:50054 Closing
+[Wed Apr 22 09:53:39 2026] [::1]:35964 Accepted
+[Wed Apr 22 09:53:39 2026] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:53:39 2026] [::1]:35964 [200]: GET / - syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:53:39 2026] [::1]:35964 Closing
+[Wed Apr 22 09:56:13 2026] [::1]:47356 Accepted
+[Wed Apr 22 09:56:13 2026] PHP Parse error:  syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:56:13 2026] [::1]:47356 [200]: GET / - syntax error, unexpected token "<", expecting end of file in /app/includes/footer.php on line 41
+[Wed Apr 22 09:56:13 2026] [::1]:47356 Closing

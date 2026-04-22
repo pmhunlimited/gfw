@@ -1,5 +1,5 @@
 <?php
-$custom_meta_title = "Live Centre | GFW Intelligence";
+$custom_meta_title = "Live Centre | " . ($settings['name'] ?? 'GFW') . " Intelligence";
 include __DIR__ . '/../includes/header.php';
 
 $leagues = [
@@ -14,23 +14,23 @@ $leagues = [
     ['id' => '637', 'name' => 'Major League Soccer'],
     ['id' => '557', 'name' => 'Saudi Pro League']
 ];
-?>
+
 <div class="container py-5 px-4">
     <h1 class="font-condensed fw-black italic text-white display-5 display-md-3 mb-5 border-bottom border-white border-opacity-10 pb-3 text-sharp uppercase">Live <span class="text-danger">Centre</span></h1>
 
     <div class="elite-tabs-container">
         <!-- Tabs Header -->
         <div class="elite-tabs-nav no-scrollbar mb-4">
-            <?php foreach ($leagues as $index => $league): ?>
+            <?php foreach ($leagues as $index => $league):
                 <button class="elite-tab-btn <?php echo $index === 0 ? 'active' : ''; ?>" data-target="#scores-<?php echo $league['id']; ?>">
-                    <?php echo $league['name']; ?>
+                    <?php echo $league['name'];
                 </button>
-            <?php endforeach; ?>
+            <?php endforeach;
         </div>
 
         <!-- Tabs Content -->
         <div class="elite-tabs-content">
-            <?php foreach ($leagues as $index => $league): ?>
+            <?php foreach ($leagues as $index => $league):
                 <div class="elite-tab-pane <?php echo $index === 0 ? 'active' : ''; ?>" id="scores-<?php echo $league['id']; ?>">
                     <div class="bg-[#0a0e17] p-2 p-md-4 rounded-4 border border-white border-opacity-5 shadow-2xl overflow-x-auto">
                         <div data-widget-type="entityScores"
@@ -42,7 +42,7 @@ $leagues = [
                         </div>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            <?php endforeach;
         </div>
     </div>
 </div>
@@ -109,4 +109,4 @@ $leagues = [
     });
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php';

@@ -7,7 +7,7 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | Elite Coverage'; ?></title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | ' . ($settings['tagline'] ?? 'Elite Coverage'); ?></title>
     <?php if (isset($custom_meta_description)): ?>
     <meta name="description" content="<?php echo $custom_meta_description; ?>">
     <?php endif; ?>
@@ -76,6 +76,26 @@ $settings = get_settings();
     <?php endif; ?>
 </head>
 <body>
+    <!-- Top Navbar -->
+    <?php
+    $conn = get_db_connection();
+    if ($conn) {
+        $top_pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'top'")->fetchAll();
+        if (!empty($top_pages)) {
+            echo '<div class="bg-dark border-bottom border-white border-opacity-5 py-1 d-none d-lg-block">
+                    <div class="container-fluid px-4">
+                        <ul class="nav justify-content-end gap-4 text-[10px] font-black uppercase italic tracking-widest">';
+            foreach ($top_pages as $tp) {
+                $url = ($tp['is_external']) ? $tp['external_url'] : '/'.$tp['slug'];
+                $target = ($tp['is_external']) ? 'target="_blank"' : '';
+                echo '<li><a href="'.$url.'" '.$target.' class="text-white text-opacity-40 hover:text-electric-red transition-all text-decoration-none">'.$tp['title'].'</a></li>';
+            }
+            echo '      </ul>
+                    </div>
+                </div>';
+        }
+    }
+    ?>
     <!-- Main Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-black border-bottom border-white border-opacity-10 py-2 sticky-top">
         <div class="container-fluid px-4">
@@ -83,7 +103,13 @@ $settings = get_settings();
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                    <?php
+                        $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
+                        echo $site_name_parts[0];
+                        if (isset($site_name_parts[1])) {
+                            echo ' <span class="text-electric-red">' . $site_name_parts[1] . '</span>';
+                        }
+                    ?>
                 <?php endif; ?>
             </a>
 
@@ -99,10 +125,12 @@ $settings = get_settings();
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
-                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
+                        $pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
-                            $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
+                            $url = ($p['is_external']) ? $p['external_url'] : '/'.$p['slug'];
+                            $target = ($p['is_external']) ? 'target="_blank"' : '';
+                            $active = ($current_path == $url) ? 'active text-electric-red' : '';
+                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="'.$url.'" '.$target.' style="color: #fff;">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>
@@ -129,3 +157,18 @@ $settings = get_settings();
         </div>
     </nav>
     <main>
+        <?php if (isset($_GET['subscribed'])): ?>
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase">
+                    <i class="bi bi-check-circle-fill me-2"></i> Intelligence feed subscription successful. System linked.
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_GET['error']) && $_GET['error'] == 'invalid_email'): ?>
+            <div class="container-fluid px-4 mt-3">
+                <div class="alert alert-danger bg-red-900 bg-opacity-10 border-red-500 border-opacity-20 text-red-500 font-condensed italic uppercase">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Invalid communication address. Subscription failed.
+                </div>
+            </div>
+        <?php endif; ?>

@@ -57,6 +57,7 @@ if (isset($_POST['save_manual'])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
+            notify_subscribers([$post_id]);
             $success = "Intelligence report deployed and broadcasted.";
         } else {
             $success = "Intelligence report scheduled for $publish_date.";
@@ -107,17 +108,27 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
-               Write in an engaging first-person 'fan blogger' perspective.
-               Return JSON with:
-               - 'title': Catchy headline.
-               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
-               - 'tags': 5-8 relevant SEO tags (comma separated).
+    $prompt = "Act as an Expert Football Columnist with a gritty, conversational blog style. Generate a news article about '$topic' in the category '$cat'.
+               Your absolute priority is to produce 100% HUMAN-LIKE content that passes all AI detection checks (Quillbot, Originality.ai, GPTZero) with a 0% AI score.
+
+               STRICT HUMANIZATION PROTOCOL (FOR 0% AI DETECTION):
+               1. PERPLEXITY & BURSTINESS: Mix sentence lengths aggressively (e.g., 4 words, then 25 words).
+               2. IRREGULAR STRUCTURE: Start with a reaction or a question. No generic intros.
+               3. COLLOQUIALISM: Use heavy football slang ('bottle jobs', 'worldie', 'scenes', 'cooking').
+               4. BANNED VOCAB: delve, tapestry, testament, unleash, elevate, pivotal, comprehensive, game-changer, multifaceted, underscores, vibrant, embarking, looking ahead, in conclusion, furthermore, moreover, additionally, notably, transform, enhance, unlock, seamless.
+               5. ACTIVE PERSONA: Use first-person ('I', 'we') and contractions ('can\'t', 'won\'t').
+               6. NO GPT SUMMARY: Do not summarize at the end. Just stop.
+
+               Requirements:
+               - 'title': Catchy, human-sounding headline.
+               - 'content': A unique 500-word report structured with 4-5 paragraphs in Markdown.
+               - 'image_keyword': 3-5 specific keywords for image search.
+               - 'tags': 5-8 relevant SEO tags.
                - 'meta_title': SEO optimized title (max 60 chars).
                - 'meta_description': Compelling SEO description (max 160 chars).
-               - 'meta_keywords': High ranking keywords for this specific news.
-               Ensure the response is a valid JSON object.";
+               - 'meta_keywords': High ranking keywords.
+
+               Return ONLY a valid JSON object.";
     $raw = get_ai_insight($prompt);
 
     $data = extract_json($raw, false);
@@ -151,10 +162,12 @@ if (isset($_POST['generate_ai'])) {
         }
 
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
+        $author_name = ($settings['name'] ?? 'GFW');
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author_name, $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
+                notify_subscribers([$post_id]);
                 $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
                 $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;
@@ -191,11 +204,77 @@ $posts = $stmt->fetchAll();
 
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
-?>
+// Dashboard Stats - Robust fetching
+try {
+    $total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
+} catch (Exception $e) { $total_comments = 0; }
+
+try {
+    $total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
+} catch (Exception $e) { $total_subscribers = 0; }
+
+try {
+    $total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+} catch (Exception $e) { $total_reports = 0; }
+
+
+
+<!-- Dashboard Stats -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-danger transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Total Reports</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_reports); ?></h2>
+                </div>
+                <div class="bg-danger bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-file-earmark-text text-danger fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-danger small font-monospace">SYSTEM ACTIVE</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-info transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Total Comments</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_comments); ?></h2>
+                </div>
+                <div class="bg-info bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-chat-dots text-info fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-info small font-monospace">COMMUNICATIONS UP</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] border border-white border-opacity-5 p-4 rounded-3xl shadow-xl hover:border-success transition-all group">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <p class="text-white-50 small font-black uppercase tracking-widest mb-1">Subscribers</p>
+                    <h2 class="text-white display-5 fw-black font-condensed italic mb-0"><?php echo number_format($total_subscribers); ?></h2>
+                </div>
+                <div class="bg-success bg-opacity-10 p-3 rounded-2xl group-hover:bg-opacity-20 transition-all">
+                    <i class="bi bi-people text-success fs-3"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <span class="text-success small font-monospace">NETWORK EXPANDING</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <div>
-        <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
-        <p class="text-white-50 small font-condensed italic uppercase mb-0"><?php echo $total_posts; ?> Reports Discovered</p>
+        <h1 class="font-condensed fw-black italic text-white display-6 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
+        <p class="text-white-50 small font-condensed italic uppercase mb-0">Registry Query Results: <?php echo $total_posts; ?> Reports</p>
     </div>
     <div class="d-flex flex-wrap gap-3">
         <form method="GET" class="position-relative">
@@ -203,17 +282,17 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
-        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
+        <button type="button" class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>
 
-<?php if (isset($success)): ?>
+<?php if (isset($success)):
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
-<?php endif; ?>
+<?php endif;
 
-<?php if (isset($error)): ?>
+<?php if (isset($error)):
     <div class="alert alert-danger bg-red-900 bg-opacity-10 border-red-500 border-opacity-20 text-red-500 font-condensed italic uppercase mb-5"><?php echo $error; ?></div>
-<?php endif; ?>
+<?php endif;
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
     <form id="bulkForm" method="POST">
@@ -235,7 +314,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($posts as $post): ?>
+                <?php foreach ($posts as $post):
                 <tr>
                     <td class="ps-5 py-4 border-white border-opacity-5">
                         <input type="checkbox" name="selected_posts[]" value="<?php echo $post['id']; ?>" class="form-check-input bg-black border-white/20 post-checkbox">
@@ -256,20 +335,20 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <span class="text-white-50 small font-bold italic"><?php echo $post['author']; ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
-                        <?php if (!empty($post['source_url'])): ?>
+                        <?php if (!empty($post['source_url'])):
                             <a href="<?php echo $post['source_url']; ?>" target="_blank" class="text-info small font-monospace" style="font-size: 9px;">LINK</a>
-                        <?php else: ?>
+                        <?php else:
                             <span class="text-white-50 small italic opacity-30">INTERNAL</span>
-                        <?php endif; ?>
+                        <?php endif;
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
                         <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d', strtotime($post['publish_date'] ?: $post['created_at'])); ?></span>
-                        <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()): ?>
+                        <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()):
                             <div class="text-danger font-black uppercase italic" style="font-size: 8px;">SCHEDULED</div>
-                        <?php endif; ?>
+                        <?php endif;
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
-                        <button class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-post"
+                        <button type="button" class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-post"
                             data-id="<?php echo $post['id']; ?>"
                             data-title="<?php echo htmlspecialchars($post['title']); ?>"
                             data-cat="<?php echo htmlspecialchars($post['category']); ?>"
@@ -287,41 +366,41 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                             data-bs-toggle="modal" data-bs-target="#editModal">
                             <i class="bi bi-pencil-square fs-5"></i>
                         </button>
-                        <a href="?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
+                        <a href="<?php echo $admin_base; ?>/posts?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endforeach;
             </tbody>
         </table>
     </div>
     </form>
 
     <!-- Pagination -->
-    <?php if ($total_pages > 1): ?>
+    <?php if ($total_pages > 1):
     <div class="px-5 py-4 border-top border-white/5 bg-black/20">
         <nav>
             <ul class="pagination pagination-sm mb-0 gap-2 justify-content-center">
-                <?php if ($page > 1): ?>
+                <?php if ($page > 1):
                     <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>">PREV</a></li>
-                <?php endif; ?>
+                <?php endif;
 
                 <?php
                 $start = max(1, $page - 2);
                 $end = min($total_pages, $page + 2);
                 for ($i = $start; $i <= $end; $i++):
-                ?>
+
                     <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
                         <a class="page-link <?php echo $i == $page ? 'bg-danger border-danger' : 'bg-black border-white/10'; ?> text-white rounded-lg px-3" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>"><?php echo $i; ?></a>
                     </li>
-                <?php endfor; ?>
+                <?php endfor;
 
-                <?php if ($page < $total_pages): ?>
+                <?php if ($page < $total_pages):
                     <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>">NEXT</a></li>
-                <?php endif; ?>
+                <?php endif;
             </ul>
         </nav>
     </div>
-    <?php endif; ?>
+    <?php endif;
 </div>
 
 <style>
@@ -355,9 +434,9 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <div class="col-md-4">
                             <label class="form-label text-white-50 small uppercase font-black">Category</label>
                             <select name="cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
-                                <?php foreach ($categories as $c): ?>
+                                <?php foreach ($categories as $c):
                                     <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
-                                <?php endforeach; ?>
+                                <?php endforeach;
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -439,9 +518,9 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <div class="col-md-4">
                             <label class="form-label text-white-50 small uppercase font-black">Category</label>
                             <select name="cat" id="edit_cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
-                                <?php foreach ($categories as $c): ?>
+                                <?php foreach ($categories as $c):
                                     <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
-                                <?php endforeach; ?>
+                                <?php endforeach;
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -558,4 +637,4 @@ document.querySelectorAll('.edit-post').forEach(btn => {
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

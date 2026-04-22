@@ -27,4 +27,3 @@ function get_db_connection() {
         return null;
     }
 }
-?>

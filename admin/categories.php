@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_category'])) {
 }
 
 $categories = get_categories_with_counts();
-?>
+
 
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <h1 class="font-condensed fw-black italic text-white display-5 mb-0">CATEGORIES <span class="text-danger">REGISTRY</span></h1>
@@ -48,9 +48,9 @@ $categories = get_categories_with_counts();
     </div>
 </div>
 
-<?php if (isset($success)): ?>
+<?php if (isset($success)):
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
-<?php endif; ?>
+<?php endif;
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
     <form id="bulkFormCats" method="POST">
@@ -71,7 +71,7 @@ $categories = get_categories_with_counts();
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($categories as $cat): ?>
+                <?php foreach ($categories as $cat):
                 <tr>
                     <td class="ps-5 py-4 border-white border-opacity-5">
                         <input type="checkbox" name="selected_cats[]" value="<?php echo $cat['id']; ?>" class="form-check-input bg-black border-white/20 cat-checkbox">
@@ -93,13 +93,13 @@ $categories = get_categories_with_counts();
                             <button type="button" class="btn btn-sm btn-outline-light border-0 edit-cat" data-id="<?php echo $cat['id']; ?>" data-name="<?php echo htmlspecialchars($cat['name']); ?>" data-slug="<?php echo htmlspecialchars($cat['slug'] ?? ''); ?>" data-bs-toggle="modal" data-bs-target="#categoryModal">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
-                            <a href="/admin/categories?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
+                            <a href="<?php echo $admin_base; ?>/categories?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-outline-danger border-0" onclick="return confirm('Decommission this category permanently?')">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </div>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endforeach;
             </tbody>
         </table>
     </div>
@@ -191,4 +191,4 @@ document.getElementById('categoryModal').addEventListener('hidden.bs.modal', fun
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

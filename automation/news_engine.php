@@ -16,28 +16,14 @@ if (empty($apiKey)) {
 echo "Starting AI-Powered News Discovery...\n";
 
 // Fetch current categories from DB
-$available_categories = $conn->query("SELECT name FROM categories")->fetchAll(PDO::FETCH_COLUMN);
-if (empty($available_categories)) {
-    // Seed default categories if missing
-    $defaults = ['PREMIER LEAGUE', 'CHAMPIONS LEAGUE', 'TRANSFER NEWS', 'LA LIGA', 'SERIE A', 'BUNDESLIGA', 'MATCH ANALYSIS', 'CRICKET', 'TENNIS', 'BASKETBALL', 'GOLF', 'MOTOR SPORT', 'OTHER SPORTS'];
-    foreach ($defaults as $d) {
-        $conn->prepare("INSERT IGNORE INTO categories (name) VALUES (?)")->execute([$d]);
-    }
-    $available_categories = $defaults;
-}
+$available_categories = ['Football News', 'Transfer News'];
 $cat_list = implode(', ', $available_categories);
 
 // 1. Discovery Stage: Fetch factual news from RSS Feeds
 $today = date('D d M Y H:i');
 echo "Stage 1: Discovering factual sports stories from RSS for $today...\n";
 
-$rss_urls = [
-    'https://www.skysports.com/rss/12433', // Sky Sports Home
-    'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
-    'https://supersport.com/rss/news', // SuperSport All News
-    'https://sport.sky.ch/feed', // Sky Sport CH
-    'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
-];
+$rss_urls = get_rss_feed_urls();
 
 $discovered_items = [];
 $rss_results = get_rss_news($rss_urls);
@@ -45,7 +31,7 @@ $rss_results = get_rss_news($rss_urls);
 if (!empty($rss_results)) {
     echo "Using RSS Feeds for 100% factual discovery...\n";
     foreach ($rss_results as $res) {
-        if (count($discovered_items) >= 20) break;
+        // No hard cap, we filter duplicates and then process top ones
         $discovered_items[] = [
             'title' => $res['title'],
             'description' => $res['description'],
@@ -58,6 +44,81 @@ if (!empty($rss_results)) {
 
 if (empty($discovered_items)) {
     die("Error: News discovery failed. Please check your API keys.\n");
+}
+
+// 1.1 Pre-filtering Stage: Remove stories that already exist in the database to save AI tokens
+echo "Stage 1.1: Pre-filtering existing stories from database...\n";
+$filtered_discovery = [];
+foreach ($discovered_items as $item) {
+    $title = trim($item['title']);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
+    $source_url = $item['source_link'] ?? '';
+    $title_prefix = substr($title, 0, 20) . '%'; // Slightly shorter prefix for better matching
+
+    // Robust check: exact title, similar slug, same source URL, or similar title start
+    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ? OR excerpt LIKE ?");
+    $check_stmt->execute([
+        $title,
+        $safe_title . '%',
+        $source_url,
+        $title_prefix,
+        '%' . substr($title, 0, 30) . '%'
+    ]);
+
+    if ($check_stmt->fetch()) {
+        echo "Pre-filtering existing or duplicate post: " . $title . "\n";
+        continue;
+    }
+    $filtered_discovery[] = $item;
+}
+$discovered_items = $filtered_discovery;
+
+if (empty($discovered_items)) {
+    die("Intelligence status: All discovered news are already published. No new reports to generate.\n");
+}
+
+// 1.2 Streamlined League Filtering: Use AI to prune stories not related to target leagues
+echo "Stage 1.2: Streamlining discovery to target leagues and transfers...\n";
+$headlines_for_filter = "";
+foreach ($discovered_items as $idx => $item) {
+    $headlines_for_filter .= "$idx: {$item['title']}\n";
+}
+
+$filter_prompt = "I have a list of sports headlines. I only want news related to these specific European football leagues and their transfers:
+- Premier League (England)
+- Spanish League / La Liga (Spain)
+- Champions League (UEFA)
+- Europa League (UEFA)
+- Conference League (UEFA)
+- French League / Ligue 1 (France)
+- Italian League / Serie A (Italy)
+- Transfer News for any of the above.
+
+STRICT RULE: There must be NO American sports news (NFL, NBA, MLB, NHL, MLS, etc.).
+Identify the headlines that are STRICTLY about the European football leagues listed above or their players/managers/transfers.
+Return a JSON array of the indices (integers) that I should keep.
+
+HEADLINES:
+$headlines_for_filter
+
+Return ONLY a valid JSON array of integers. Example: [0, 1, 4]";
+
+$raw_filter = get_ai_insight($filter_prompt);
+$football_indices = extract_json($raw_filter, true);
+
+if (is_array($football_indices)) {
+    $filtered_items = [];
+    foreach ($football_indices as $idx) {
+        if (isset($discovered_items[$idx])) {
+            $filtered_items[] = $discovered_items[$idx];
+        }
+    }
+    $discovered_items = $filtered_items;
+    echo "Football filter complete. " . count($discovered_items) . " football stories identified.\n";
+}
+
+if (empty($discovered_items)) {
+    die("Intelligence status: No new football-related reports discovered in this cycle.\n");
 }
 
 // 1.5 Deduplication Stage: Use AI to identify and remove redundant stories
@@ -98,54 +159,51 @@ if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
 $count = 0;
 $loop_idx = 0;
 $fetched_hashes = [];
-$published_posts = [];
+$published_post_ids = [];
 foreach ($discovered_items as $item) {
     $loop_idx++;
     if ($count >= 10) break;
 
-    // Skip if already exists or similar slug found (prevent duplicates)
-    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $item['title'])));
-    $source_url = $item['source_link'] ?? '';
-
-    // Robust check: Exact title, Slug prefix, Source URL, or Title prefix (first 25 chars)
-    $title_prefix = substr($item['title'], 0, 25) . '%';
-
-    $check_stmt = $conn->prepare("SELECT id FROM posts WHERE title = ? OR slug LIKE ? OR (source_url != '' AND source_url = ?) OR title LIKE ?");
-    $check_stmt->execute([$item['title'], $safe_title . '%', $source_url, $title_prefix]);
-    if ($check_stmt->fetch()) {
-        echo "Skipping existing or duplicate post: " . $item['title'] . "\n";
-        continue;
-    }
 
     echo "\n--- Processing Story $loop_idx: " . $item['title'] . " ---\n";
 
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as a Factual Sports News Rewriter.
+    $content_prompt = "Act as an Expert Football Columnist with a gritty, conversational blog style. Your absolute priority is to produce 100% HUMAN-LIKE content that passes all AI detection checks (Quillbot, Originality.ai, GPTZero) with a 0% AI score.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STRICT GUIDELINES:
-    - Rewrite the 'Factual Summary' into a unique, detailed, and engaging sports report (minimum 300 words).
-    - ABSOLUTELY NO FICTION OR HALLUCINATIONS. Use ONLY the provided information.
-    - NEWS MUST BE RECENT (Last 24 hours).
-    - If your internal AI knowledge contradicts the 'Factual Summary' (e.g., about managers or player locations), IGNORE your internal knowledge and trust the Summary 100%.
-    - DO NOT mention any news source names (e.g., Goal.com, BBC, ESPN, Sky Sports, etc.).
-    - Use an engaging fan-blogger tone with 3-4 paragraphs. Use Markdown.
-    - Determine the best category for this story from this list ONLY: ($cat_list).
+    STRICT HUMANIZATION PROTOCOL (FOR 0% AI DETECTION):
+    1. PERPLEXITY & BURSTINESS: Vary sentence length aggressively. Mix 3-word punchy sentences with long, rambling (but grammatically correct) thoughts. AI is too consistent; humans are chaotic.
+    2. IRREGULAR STRUCTURE: Avoid the 'In a surprising turn of events' AI intro. Start with a hot take: 'I've seen enough.' or 'This is getting ridiculous now.'
+    3. COLLOQUIALISM: Use heavy fan-slang: 'absolute bottle jobs', 'tinpot', 'scenes', 'proper player', 'finished', 'washed', 'cooking'.
+    4. EXTENDED BANNED LIST (CRITICAL): delve, tapestry, testament, unleash, elevate, pivotal, comprehensive, game-changer, multifaceted, underscores, vibrant, embarking, looking ahead, in conclusion, furthermore, moreover, additionally, notably, transform, enhance, unlock, seamless, meticulously, navigate, foster, bridge, empower, essential, vital, key, overall, finally.
+    5. ACTIVE PERSONA: Use first-person ('I think', 'We all saw') and second-person ('You know how it is'). Use contractions (it's, won't, couldn't) 100% of the time.
+    6. ANTI-GPT PATTERNS: Do not use bullet points or numbered lists unless absolutely necessary. Do not summarize at the end. Just stop when the point is made.
+    7. NO ECHOING: Never reuse more than 3 consecutive words from the source data.
 
-    Requirements:
-    - 'category': The chosen category (must be from the provided list).
-    - 'content': The rewritten report (Markdown).
-    - 'tags': 6-10 high-ranking SEO tags.
-    - 'meta_title': SEO optimized title (max 60 chars).
-    - 'meta_description': Compelling SEO description (max 160 chars).
+    CORE RULES:
+    - Minimum 350 words of high-quality, unique commentary.
+    - ABSOLUTELY NO FICTION. Keep every single fact provided, but change every single word used to describe it.
+    - NEWS MUST BE RECENT (Within the last 30 minutes).
+    - DO NOT mention news source names (BBC, ESPN, etc.).
+    - Use 3-4 detailed paragraphs in Markdown for formatting.
+    - Determine the category ONLY from: ($cat_list).
+    - CATEGORIZATION: Transfers/Rumors -> 'Transfer News'. Others -> 'Football News'.
+
+    JSON Requirements:
+    - 'title': A catchy, 100% human-sounding headline (do not use source title).
+    - 'category': 'Football News' or 'Transfer News'.
+    - 'content': The human-style report (Markdown).
+    - 'tags': 6-10 SEO tags.
+    - 'meta_title': SEO title (max 60 chars).
+    - 'meta_description': Compelling description (max 160 chars).
     - 'meta_keywords': High ranking keywords.
 
-    Return ONLY a valid JSON object. No other text.";
+    Return ONLY a valid JSON object.";
 
     $raw_content = get_ai_insight($content_prompt);
     if (!$raw_content || strpos($raw_content, 'AI Error:') === 0) {
@@ -201,12 +259,14 @@ foreach ($discovered_items as $item) {
     }
 
     // 4. Save to Database
-    $title = sanitize($item['title']);
+    $title = sanitize($content_data['title'] ?? $item['title']);
+    $safe_title = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title)));
     $slug = $safe_title . '-' . time();
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
-    $author = 'GFW';
+    $author = $settings['name'] ?? 'GFW';
+    $source_url = $item['source_link'] ?? '';
 
     $tags = sanitize($content_data['tags'] ?? '');
     $meta_title = sanitize($content_data['meta_title'] ?? $title);
@@ -222,11 +282,7 @@ foreach ($discovered_items as $item) {
         echo "Broadcasting to social media...\n";
         broadcast_to_social($post_id);
 
-        $published_posts[] = [
-            'title' => $title,
-            'slug' => $slug,
-            'excerpt' => $excerpt
-        ];
+        $published_post_ids[] = $post_id;
 
         $count++;
     } else {
@@ -237,32 +293,8 @@ foreach ($discovered_items as $item) {
 echo "\nAI Automation complete. $count posts published.\n";
 
 // 5. Notify Subscribers
-if ($count > 0) {
+if (!empty($published_post_ids)) {
     echo "Notifying subscribers...\n";
-    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
-
-    if (!empty($subscribers)) {
-        $subject = "Daily Sports Intelligence Digest - " . date('D d M Y');
-
-        $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>Daily Intelligence Digest: ".date('d M Y')."</p>";
-
-        foreach ($published_posts as $post) {
-            $post_url = SITE_URL . "/post/" . $post['slug'];
-            $content .= "
-                <div class='news-item'>
-                    <a href='$post_url' class='news-title'>{$post['title']}</a>
-                    <p class='news-excerpt'>{$post['excerpt']}</p>
-                    <a href='$post_url' class='btn'>Decrypt Full Report</a>
-                </div>
-            ";
-        }
-
-        $message = render_email_template($content, "Daily Intelligence Digest");
-
-        foreach ($subscribers as $email) {
-            send_mail($email, $subject, $message);
-        }
-        echo "Notification sent to " . count($subscribers) . " subscribers.\n";
-    }
+    notify_subscribers($published_post_ids);
+    echo "Notification process complete.\n";
 }
-?>

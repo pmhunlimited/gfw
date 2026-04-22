@@ -91,12 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['save_social'])) {
 $settings = get_settings();
 $activeTab = $_GET['tab'] ?? 'general';
 
-?>
+
 <h1 class="font-condensed fw-black italic text-white display-5 mb-5">SITE <span class="text-danger">SETTINGS</span></h1>
 
-<?php if (isset($success)): ?>
+<?php if (isset($success)):
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
-<?php endif; ?>
+<?php endif;
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
     <div class="d-flex flex-wrap border-bottom border-white/5 bg-black">
@@ -109,7 +109,7 @@ $activeTab = $_GET['tab'] ?? 'general';
     </div>
 
     <div class="p-5 p-md-5">
-        <?php if ($activeTab == 'general'): ?>
+        <?php if ($activeTab == 'general'):
             <form method="POST" enctype="multipart/form-data" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4">
@@ -140,22 +140,22 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Site Logo (Any format)</label>
                         <input type="file" name="logo" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white">
-                        <?php if (!empty($settings['logo'])): ?>
+                        <?php if (!empty($settings['logo'])):
                             <img src="<?php echo $settings['logo']; ?>" class="mt-2 rounded" style="max-height: 50px;">
-                        <?php endif; ?>
+                        <?php endif;
                     </div>
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Favicon (Any format)</label>
                         <input type="file" name="favicon" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white">
-                        <?php if (!empty($settings['favicon'])): ?>
+                        <?php if (!empty($settings['favicon'])):
                             <img src="<?php echo $settings['favicon']; ?>" class="mt-2 rounded" style="max-height: 30px;">
-                        <?php endif; ?>
+                        <?php endif;
                     </div>
                 </div>
                 <button type="submit" name="save_general" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Commit Settings</button>
             </form>
 
-        <?php elseif ($activeTab == 'ai'): ?>
+        <?php elseif ($activeTab == 'ai'):
             <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-5 p-4 rounded-3xl">
                 <h5 class="fw-black mb-3">Intelligence Acquisition Guide</h5>
                 <div class="row g-4 small">
@@ -203,7 +203,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                         ['id' => 'deepseek-reasoner', 'name' => 'DeepSeek-R1 (Reasoner)', 'provider' => 'DeepSeek'],
                     ];
                     foreach ($models as $m):
-                    ?>
+
                         <label class="d-flex align-items-center justify-content-between p-4 rounded-2xl border w-full mb-3 cursor-pointer transition-all <?php echo $settings['selected_model'] == $m['id'] ? 'border-danger bg-danger bg-opacity-5' : 'border-white/5 bg-white/5'; ?>">
                             <div class="text-start">
                                 <span class="text-[8px] font-black px-1.5 py-0.5 rounded uppercase bg-white/10 text-gray-400 mr-2"><?php echo $m['provider']; ?></span>
@@ -211,12 +211,12 @@ $activeTab = $_GET['tab'] ?? 'general';
                             </div>
                             <input type="radio" name="selected_model" value="<?php echo $m['id']; ?>" <?php echo $settings['selected_model'] == $m['id'] ? 'checked' : ''; ?> class="form-check-input bg-danger border-0">
                         </label>
-                    <?php endforeach; ?>
+                    <?php endforeach;
                 </div>
                 <button type="submit" name="save_ai" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Update AI Logic</button>
             </form>
 
-        <?php elseif ($activeTab == 'security'): ?>
+        <?php elseif ($activeTab == 'security'):
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
@@ -240,28 +240,28 @@ $activeTab = $_GET['tab'] ?? 'general';
                 <button type="submit" name="save_security" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply Security Logic</button>
             </form>
 
-        <?php elseif ($activeTab == 'automation'): ?>
+        <?php elseif ($activeTab == 'automation'):
             <div class="space-y-8">
                 <div class="alert alert-warning bg-orange-900 bg-opacity-10 border-orange-500 border-opacity-20 text-orange-500 font-condensed italic uppercase p-4 rounded-3xl">
                     <h5 class="fw-black mb-3">Cron Job Configuration</h5>
-                    <p class="small mb-4 opacity-75">To enable daily news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 24 hours.</p>
+                    <p class="small mb-4 opacity-75">To enable real-time news automation, you must configure a cron job on your server (cPanel/VPS). This job should trigger the news engine every 30 minutes to capture the latest headlines.</p>
 
                     <div class="bg-black/50 p-4 rounded-2xl mb-4 border border-white/10">
                         <span class="text-[9px] font-black text-gray-500 uppercase tracking-widest block mb-2">CRON JOB COMMAND</span>
-                        <code class="text-white small">0 6 * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
+                        <code class="text-white small">*/30 * * * * /usr/bin/php <?php echo $_SERVER['DOCUMENT_ROOT']; ?>/automation/news_engine.php</code>
                     </div>
 
                     <h6 class="fw-black small uppercase mb-2">Instructions for cPanel:</h6>
                     <ol class="small ps-3 opacity-75">
                         <li>Log in to your <strong>cPanel</strong> account.</li>
                         <li>Search for <strong>"Cron Jobs"</strong> in the search bar.</li>
-                        <li>Under "Add New Cron Job", select <strong>"Once Per Day"</strong> from Common Settings.</li>
+                        <li>Under "Add New Cron Job", select <strong>"Twice Per Hour (*/30)"</strong> from Common Settings.</li>
                         <li>In the "Command" field, paste the command shown above.</li>
                         <li>Click <strong>"Add New Cron Job"</strong> to finalize.</li>
                     </ol>
                 </div>
 
-                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5 mb-8">
                     <h4 class="text-white font-black uppercase italic mb-3 small">Operational Status</h4>
                     <div class="d-flex align-items-center gap-3">
                         <div class="w-3 h-3 rounded-full bg-success shadow-[0_0_10px_#198754]"></div>
@@ -269,9 +269,26 @@ $activeTab = $_GET['tab'] ?? 'general';
                     </div>
                     <p class="text-gray-500 text-[9px] uppercase font-bold mt-4">Note: Ensure your DeepSeek API key is configured in the "AI Core" tab.</p>
                 </div>
+
+                <div class="bg-white/5 p-8 rounded-3xl border border-white/5">
+                    <h4 class="text-white font-black uppercase italic mb-4 small">Intelligence Feed Registry</h4>
+                    <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest mb-6">The system is actively monitoring the following encrypted RSS channels for tactical data discovery.</p>
+
+                    <div class="space-y-3">
+                        <?php
+                        $feeds = get_rss_feed_urls();
+                        foreach ($feeds as $url):
+
+                            <div class="bg-black/40 border border-white/10 rounded-xl px-4 py-3 d-flex align-items-center justify-content-between">
+                                <code class="text-info small"><?php echo $url; ?></code>
+                                <span class="badge bg-green-500/10 text-green-500 font-condensed italic uppercase text-[8px] tracking-widest">ACTIVE MONITOR</span>
+                            </div>
+                        <?php endforeach;
+                    </div>
+                </div>
             </div>
 
-        <?php elseif ($activeTab == 'smtp'): ?>
+        <?php elseif ($activeTab == 'smtp'):
             <form method="POST" class="space-y-8">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
                 <div class="row g-4">
@@ -303,10 +320,10 @@ $activeTab = $_GET['tab'] ?? 'general';
                 <button type="submit" name="save_smtp" class="mt-8 bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Apply SMTP Config</button>
             </form>
 
-        <?php elseif ($activeTab == 'social'): ?>
-            <?php if (isset($_GET['success'])): ?>
+        <?php elseif ($activeTab == 'social'):
+            <?php if (isset($_GET['success'])):
                 <div class="alert alert-success bg-green-900 bg-opacity-20 border-green-500 text-green-500 font-black uppercase italic mb-8 p-4 rounded-3xl">Account Successfully Linked!</div>
-            <?php endif; ?>
+            <?php endif;
             <div class="alert alert-info bg-blue-900 bg-opacity-10 border-blue-500 border-opacity-20 text-info font-condensed italic uppercase mb-8 p-4 rounded-3xl">
                 <h5 class="fw-black mb-3">Automatic Link-Up Instructions</h5>
                 <p class="small opacity-75 mb-0">To enable automatic posting, follow these simple steps for each platform:</p>
@@ -400,8 +417,8 @@ $activeTab = $_GET['tab'] ?? 'general';
 
                 <button type="submit" name="save_social" class="bg-danger text-white px-10 py-3 rounded-2xl font-black uppercase italic tracking-widest hover:bg-white hover:text-danger transition-all">Synchronize Social API</button>
             </form>
-        <?php endif; ?>
+        <?php endif;
     </div>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

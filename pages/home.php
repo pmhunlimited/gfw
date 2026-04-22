@@ -52,7 +52,7 @@ if ($conn) {
 }
 
 if ($category) {
-    $custom_meta_title = "Category: " . htmlspecialchars($category) . " | GFW";
+    $custom_meta_title = "Category: " . htmlspecialchars($category) . " | " . ($settings['name'] ?? 'GFW');
 }
 ?>
 
@@ -211,18 +211,18 @@ if ($category) {
 
                 <!-- Pagination -->
                 <?php if (isset($totalPages) && $totalPages > 1): ?>
-                <div class="mt-16 flex justify-center gap-2">
+                <div class="mt-16 flex flex-wrap justify-center gap-2">
                     <?php $base_url = "/category/" . urlencode($category) . "?"; ?>
                     <?php if ($page > 1): ?>
-                        <a href="<?php echo $base_url; ?>page=<?php echo $page - 1; ?>" class="px-5 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black">PREV</a>
+                        <a href="<?php echo $base_url; ?>page=<?php echo $page - 1; ?>" class="px-3 py-2 md:px-5 md:py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black text-xs md:text-base">PREV</a>
                     <?php endif; ?>
 
                     <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <a href="<?php echo $base_url; ?>page=<?php echo $i; ?>" class="px-5 py-3 <?php echo $page == $i ? 'bg-electric-red border-electric-red' : 'bg-white/5 border-white/10'; ?> border rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black"><?php echo $i; ?></a>
+                        <a href="<?php echo $base_url; ?>page=<?php echo $i; ?>" class="px-3 py-2 md:px-5 md:py-3 <?php echo $page == $i ? 'bg-electric-red border-electric-red' : 'bg-white/5 border-white/10'; ?> border rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black text-xs md:text-base"><?php echo $i; ?></a>
                     <?php endfor; ?>
 
                     <?php if ($page < $totalPages): ?>
-                        <a href="<?php echo $base_url; ?>page=<?php echo $page + 1; ?>" class="px-5 py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black">NEXT</a>
+                        <a href="<?php echo $base_url; ?>page=<?php echo $page + 1; ?>" class="px-3 py-2 md:px-5 md:py-3 bg-white/5 border border-white/10 rounded-lg text-white hover:bg-electric-red transition-all font-condensed italic fw-black text-xs md:text-base">NEXT</a>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>

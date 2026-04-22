@@ -99,7 +99,7 @@ define('DB_NAME', '".$db['name']."');
 define('DB_FILE', __DIR__ . '/../database.sqlite');
 define('SITE_URL', '".$base_url."');
 define('INSTALLED', true);
-?>";
+\";
         file_put_contents(__DIR__ . '/../includes/config.php', $config_content);
 
         header('Location: ?stage=4');
@@ -109,13 +109,13 @@ define('INSTALLED', true);
     }
 }
 
-?>
+
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GFW Installer - Stage <?php echo $stage; ?></title>
+    <title>Installer - Stage <?php echo $stage; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -134,13 +134,13 @@ define('INSTALLED', true);
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="installer-card shadow-lg">
-                <h1 class="font-condensed italic text-center mb-4">GFW <span class="text-electric-red">INSTALLER</span></h1>
+                <h1 class="font-condensed italic text-center mb-4">SYSTEM <span class="text-electric-red">INSTALLER</span></h1>
 
-                <?php if ($error): ?>
+                <?php if ($error):
                     <div class="alert alert-danger"><?php echo $error; ?></div>
-                <?php endif; ?>
+                <?php endif;
 
-                <?php if ($stage == 1): ?>
+                <?php if ($stage == 1):
                     <h3 class="font-condensed h5 mb-3 text-white-50">Stage 1: Welcome & Requirements</h3>
                     <ul class="list-group list-group-flush mb-4">
                         <li class="list-group-item bg-transparent text-white border-white border-opacity-10 d-flex justify-content-between">
@@ -162,7 +162,7 @@ define('INSTALLED', true);
                     </ul>
                     <a href="?stage=2" class="btn btn-primary w-100">Proceed to Database</a>
 
-                <?php elseif ($stage == 2): ?>
+                <?php elseif ($stage == 2):
                     <h3 class="font-condensed h5 mb-3 text-white-50">Stage 2: Database Configuration</h3>
                     <form method="POST">
                         <div class="mb-3">
@@ -199,7 +199,7 @@ define('INSTALLED', true);
                     }
                     </script>
 
-                <?php elseif ($stage == 3): ?>
+                <?php elseif ($stage == 3):
                     <h3 class="font-condensed h5 mb-3 text-white-50">Stage 3: Admin Account</h3>
                     <form method="POST">
                         <div class="mb-3">
@@ -217,11 +217,11 @@ define('INSTALLED', true);
                         <button type="submit" class="btn btn-primary w-100">Complete Installation</button>
                     </form>
 
-                <?php elseif ($stage == 4): ?>
+                <?php elseif ($stage == 4):
                     <h3 class="font-condensed h5 mb-3 text-white-50 text-center">Stage 4: Congratulations!</h3>
                     <div class="text-center py-4">
                         <div class="display-1 text-success mb-4">✅</div>
-                        <p class="lead">GFW has been successfully installed on your server.</p>
+                        <p class="lead">The system has been successfully installed on your server.</p>
                         <hr class="border-white border-opacity-10">
                         <div class="text-start small text-white-50">
                             <p><strong>Next steps:</strong></p>
@@ -234,7 +234,7 @@ define('INSTALLED', true);
                         </div>
                         <a href="/" class="btn btn-primary w-100 mt-4">Go to Website</a>
                     </div>
-                <?php endif; ?>
+                <?php endif;
             </div>
         </div>
     </div>

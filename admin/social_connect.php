@@ -1,5 +1,5 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
 if (!is_admin()) {
@@ -10,7 +10,7 @@ $platform = $_GET['platform'] ?? '';
 $settings = get_settings();
 
 // Base URL for callback
-$callback_url = SITE_URL . "/admin/social_callback.php?platform=" . $platform;
+$callback_url = $admin_base . "/social_callback.php?platform=" . $platform;
 
 if ($platform == 'facebook') {
     $app_id = $settings['fb_app_id'] ?? '';
@@ -73,4 +73,3 @@ if ($platform == 'facebook') {
 }
 
 die("Invalid platform");
-?>
