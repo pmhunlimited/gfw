@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
     ig_access_token TEXT,
     tt_client_key VARCHAR(255),
     tt_client_secret VARCHAR(255),
-    tt_access_token TEXT
+    tt_access_token TEXT,
+    taxonomy_migrated BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS users (

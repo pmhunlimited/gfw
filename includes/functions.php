@@ -70,6 +70,33 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Category Consolidation & Data Integrity Migration
+    if ($settings && empty($settings['taxonomy_migrated'])) {
+        try {
+            // Ensure categories exist
+            $conn->exec("INSERT IGNORE INTO categories (name, slug) VALUES ('Football News', 'football-news')");
+            $conn->exec("INSERT IGNORE INTO categories (name, slug) VALUES ('Transfer News', 'transfer-news')");
+
+            // Update posts to new categories
+            $conn->exec("UPDATE posts SET category = 'Transfer News' WHERE category LIKE '%Transfer%'");
+            $conn->exec("UPDATE posts SET category = 'Football News' WHERE category != 'Transfer News'");
+
+            // Fix NULLs
+            $conn->exec("UPDATE posts SET is_scheduled = 0 WHERE is_scheduled IS NULL");
+            $conn->exec("UPDATE posts SET is_top_story = 0 WHERE is_top_story IS NULL");
+            $conn->exec("UPDATE posts SET publish_date = created_at WHERE publish_date IS NULL");
+
+            // Clean up old categories
+            $conn->exec("DELETE FROM categories WHERE name NOT IN ('Football News', 'Transfer News')");
+
+            // Mark as migrated
+            $conn->exec("UPDATE site_settings SET taxonomy_migrated = 1 WHERE id = 1");
+            $settings['taxonomy_migrated'] = 1;
+        } catch (Exception $e) {
+            // Silently fail if columns/tables don't exist yet
+        }
+    }
+
     $settings = $settings ?: [
         'name' => 'GLOBAL FOOTBALL WATCH',
         'logo' => '',
