@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
     }
 }
 
-?>
+
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -112,28 +112,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
 <body>
     <div class="login-card shadow-2xl">
         <div class="text-center mb-4">
-            <?php if (!empty($settings['logo'])): ?>
+            <?php if (!empty($settings['logo'])):
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 60px;" class="mx-auto">
-            <?php else: ?>
+            <?php else:
                 <h1 class="font-condensed italic text-white mb-0">
                     <?php
                         $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
                         echo $site_name_parts[0];
                         echo ' <span class="text-danger">ACCESS</span>';
-                    ?>
+
                 </h1>
-            <?php endif; ?>
+            <?php endif;
         </div>
 
-        <?php if ($error): ?>
+        <?php if ($error):
             <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small font-bold italic mb-4"><?php echo $error; ?></div>
-        <?php endif; ?>
+        <?php endif;
 
-        <?php if ($success): ?>
+        <?php if ($success):
             <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 small font-bold italic mb-4"><?php echo $success; ?></div>
-        <?php endif; ?>
+        <?php endif;
 
-        <?php if ($view == 'login'): ?>
+        <?php if ($view == 'login'):
             <p class="text-center text-white-50 small uppercase tracking-widest mb-5">Identify yourself to the network</p>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
                 <button type="submit" name="login" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic">AUTHORIZE ACCESS</button>
             </form>
 
-        <?php elseif ($view == 'forgot'): ?>
+        <?php elseif ($view == 'forgot'):
             <p class="text-center text-white-50 small uppercase tracking-widest mb-5">Verify your identity</p>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
@@ -167,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
                 <a href="?view=login" class="btn btn-link w-100 text-white-50 font-condensed italic text-decoration-none">CANCEL</a>
             </form>
 
-        <?php elseif ($view == 'reset_form'): ?>
+        <?php elseif ($view == 'reset_form'):
             <p class="text-center text-white-50 small uppercase tracking-widest mb-5">Set New Security Cipher</p>
             <form method="POST">
                 <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['complete_reset'])) {
                 </div>
                 <button type="submit" name="complete_reset" class="btn btn-primary w-100 py-3 rounded-xl font-condensed italic">UPDATE CIPHER</button>
             </form>
-        <?php endif; ?>
+        <?php endif;
 
         <div class="mt-4 text-center">
             <a href="/" class="text-white-50 small text-decoration-none hover:text-white transition-all uppercase font-black italic tracking-widest">Back to Broadcast</a>

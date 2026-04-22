@@ -8,7 +8,7 @@ if (isset($_GET['delete'])) {
 
 $subs = $conn->query("SELECT * FROM subscribers ORDER BY created_at DESC")->fetchAll();
 
-?>
+
 <h1 class="font-condensed fw-black italic text-white display-5 mb-5">SYNDICATION <span class="text-danger">NETWORK</span></h1>
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
@@ -22,7 +22,7 @@ $subs = $conn->query("SELECT * FROM subscribers ORDER BY created_at DESC")->fetc
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($subs as $s): ?>
+                <?php foreach ($subs as $s):
                 <tr>
                     <td class="px-5 py-4 border-white border-opacity-5">
                         <div class="text-white font-mono small"><?php echo $s['email']; ?></div>
@@ -34,10 +34,10 @@ $subs = $conn->query("SELECT * FROM subscribers ORDER BY created_at DESC")->fetc
                         <a href="<?php echo $admin_base; ?>/subscribers?delete=<?php echo $s['id']; ?>" class="text-danger" onclick="return confirm('Decommission target?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endforeach;
             </tbody>
         </table>
     </div>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

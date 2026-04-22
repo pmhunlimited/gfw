@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-?>
+
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
@@ -52,24 +52,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="pin-card shadow-2xl text-center">
         <div class="mb-4">
-            <?php if (!empty($settings['logo'])): ?>
+            <?php if (!empty($settings['logo'])):
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 60px;" class="mx-auto">
-            <?php else: ?>
+            <?php else:
                 <i class="bi bi-shield-lock-fill text-danger display-4"></i>
-            <?php endif; ?>
+            <?php endif;
         </div>
         <h1 class="font-condensed italic text-white mb-2">
             <?php
                 $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
                 echo $site_name_parts[0];
                 echo ' <span class="text-danger">PIN</span>';
-            ?>
+
         </h1>
         <p class="text-white-50 small uppercase tracking-widest mb-5">Enter your secondary authorization cipher</p>
 
-        <?php if ($error): ?>
+        <?php if ($error):
             <div class="alert alert-danger bg-danger bg-opacity-10 border-danger border-opacity-20 text-danger small font-bold italic"><?php echo $error; ?></div>
-        <?php endif; ?>
+        <?php endif;
 
         <form method="POST" id="pinForm">
             <input type="hidden" name="csrf_token" value="<?php echo generate_csrf_token(); ?>">
@@ -80,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <!-- Digital Keypad -->
             <div class="pin-keypad mb-5">
                 <div class="row g-2">
-                    <?php for($i=1; $i<=9; $i++): ?>
+                    <?php for($i=1; $i<=9; $i++):
                         <div class="col-4"><button type="button" class="btn btn-dark w-100 py-3 fw-bold keypad-btn" data-val="<?php echo $i; ?>"><?php echo $i; ?></button></div>
-                    <?php endfor; ?>
+                    <?php endfor;
                     <div class="col-4"><button type="button" class="btn btn-outline-danger w-100 py-3 fw-bold keypad-clear">CLR</button></div>
                     <div class="col-4"><button type="button" class="btn btn-dark w-100 py-3 fw-bold keypad-btn" data-val="0">0</button></div>
                     <div class="col-4"><button type="button" class="btn btn-outline-secondary w-100 py-3 fw-bold keypad-del"><i class="bi bi-backspace"></i></button></div>

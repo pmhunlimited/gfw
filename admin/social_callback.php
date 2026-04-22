@@ -39,12 +39,12 @@ if ($platform == 'facebook' && $code) {
 
         // Show page selector
         admin_header("Select Facebook Page");
-        ?>
+
         <h1 class="font-condensed fw-black italic text-white display-5 mb-5">SELECT <span class="text-danger">FACEBOOK PAGE</span></h1>
         <div class="bg-[#0a0e17] rounded-3xl border border-white/5 p-5 shadow-2xl">
             <p class="text-white-50 mb-4">Select the page you want to broadcast reports to:</p>
             <div class="row g-4">
-                <?php foreach ($pages_data['data'] ?? [] as $page): ?>
+                <?php foreach ($pages_data['data'] ?? [] as $page):
                     <div class="col-md-6">
                         <form method="POST" action="social_callback.php?platform=facebook_final">
                             <input type="hidden" name="page_id" value="<?php echo $page['id']; ?>">
@@ -56,7 +56,7 @@ if ($platform == 'facebook' && $code) {
                             </button>
                         </form>
                     </div>
-                <?php endforeach; ?>
+                <?php endforeach;
             </div>
         </div>
         <?php
@@ -139,4 +139,3 @@ if ($platform == 'tiktok' && $code) {
 }
 
 redirect($admin_base . "/settings?tab=social&error=callback_failed");
-?>

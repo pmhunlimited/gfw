@@ -57,7 +57,7 @@ $stmt_related = $conn->prepare("SELECT * FROM posts WHERE category = ? AND id !=
 $stmt_related->execute([$post['category'], $post['id']]);
 $relatedPosts = $stmt_related->fetchAll();
 
-?>
+
 <div class="bg-black text-white min-h-screen">
     <!-- Hero Header -->
     <div class="relative py-12 md:py-24 overflow-hidden bg-[#05070a] border-bottom border-white/5">
@@ -75,7 +75,7 @@ $relatedPosts = $stmt_related->fetchAll();
                     <div class="flex flex-wrap items-center gap-4 md:gap-6 text-white-50 font-monospace text-[10px] uppercase tracking-[0.15em]">
                         <div class="flex items-center gap-2">
                             <div class="w-8 h-8 rounded-full bg-electric-red flex items-center justify-center text-white fw-bold italic font-condensed">
-                                <?php echo substr($post['author'], 0, 1); ?>
+                                <?php echo substr($post['author'], 0, 1);
                             </div>
                             <span>BY <span class="text-white fw-bold"><?php echo $post['author']; ?></span></span>
                         </div>
@@ -115,14 +115,14 @@ $relatedPosts = $stmt_related->fetchAll();
                             $video_id = $match[1];
                         }
                         if ($video_id):
-                    ?>
+
                         <div class="ratio ratio-16x9 mb-10 shadow-2xl rounded-4 overflow-hidden border border-white/10">
                             <iframe src="https://www.youtube.com/embed/<?php echo $video_id; ?>" allowfullscreen></iframe>
                         </div>
-                    <?php endif; endif; ?>
+                    <?php endif; endif;
 
                     <div class="markdown-content text-lg leading-relaxed text-white-90 opacity-90 mb-12">
-                        <?php echo parse_markdown($post['content']); ?>
+                        <?php echo parse_markdown($post['content']);
                     </div>
 
                     <!-- Social Share Buttons -->
@@ -133,7 +133,7 @@ $relatedPosts = $stmt_related->fetchAll();
                                 $post_url = SITE_URL . "/post/" . $post['slug'];
                                 $encoded_url = urlencode($post_url);
                                 $encoded_title = urlencode($post['title']);
-                            ?>
+
                             <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $encoded_url; ?>" target="_blank" class="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white-50 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all">
                                 <i class="bi bi-facebook fs-5"></i>
                             </a>
@@ -152,26 +152,26 @@ $relatedPosts = $stmt_related->fetchAll();
                         </div>
                     </div>
 
-                    <?php if (!empty($post['tags'])): ?>
+                    <?php if (!empty($post['tags'])):
                     <div class="mt-10 flex flex-wrap gap-2">
-                        <?php foreach (explode(',', $post['tags']) as $tag): ?>
+                        <?php foreach (explode(',', $post['tags']) as $tag):
                             <span class="bg-white/5 border border-white/10 text-white-50 px-3 py-1 rounded-full text-[10px] uppercase font-bold italic">#<?php echo trim($tag); ?></span>
-                        <?php endforeach; ?>
+                        <?php endforeach;
                     </div>
-                    <?php endif; ?>
+                    <?php endif;
                 </article>
 
                 <!-- Comments Section -->
                 <div class="mt-16 border-t border-white/10 pt-12">
                     <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Comments</h3>
 
-                    <?php if (isset($comment_msg)): ?>
+                    <?php if (isset($comment_msg)):
                         <div class="alert alert-success bg-green-900/20 border-green-500/50 text-green-500 rounded-xl font-condensed italic uppercase"><?php echo $comment_msg; ?></div>
-                    <?php endif; ?>
+                    <?php endif;
 
-                    <?php if (isset($comment_error)): ?>
+                    <?php if (isset($comment_error)):
                         <div class="alert alert-danger bg-red-900/20 border-red-500/50 text-danger rounded-xl font-condensed italic uppercase"><?php echo $comment_error; ?></div>
-                    <?php endif; ?>
+                    <?php endif;
 
                     <form method="POST" class="mb-12 bg-[#0a0e17] p-4 p-md-8 border border-white/5 rounded-2xl shadow-2xl">
                         <div class="row g-4">
@@ -192,7 +192,7 @@ $relatedPosts = $stmt_related->fetchAll();
                     </form>
 
                     <div class="space-y-6">
-                        <?php foreach ($comments as $comment): ?>
+                        <?php foreach ($comments as $comment):
                             <div class="bg-white/5 p-6 border-l-2 border-electric-red">
                                 <div class="flex justify-between items-center mb-2">
                                     <span class="font-condensed fw-black italic text-white uppercase"><?php echo $comment['author']; ?></span>
@@ -200,10 +200,10 @@ $relatedPosts = $stmt_related->fetchAll();
                                 </div>
                                 <p class="text-white-50 mb-0"><?php echo nl2br($comment['text']); ?></p>
                             </div>
-                        <?php endforeach; ?>
-                        <?php if (empty($comments)): ?>
+                        <?php endforeach;
+                        <?php if (empty($comments)):
                             <p class="text-white-50 italic opacity-40 font-condensed uppercase tracking-widest text-center py-10">Waiting for intelligence input...</p>
-                        <?php endif; ?>
+                        <?php endif;
                     </div>
                 </div>
             </div>
@@ -226,7 +226,7 @@ $relatedPosts = $stmt_related->fetchAll();
                                   </div>';
                         }
                     }
-                    ?>
+
                     <div class="bg-[#0a0e17] p-8 border border-white/5 rounded-3xl mb-8">
                         <h4 class="font-condensed fw-black italic text-electric-red text-xl mb-4 uppercase">Newsletter Syndication</h4>
                         <p class="text-white-50 small mb-6">Receive real-time intelligence directly to your secure inbox.</p>
@@ -241,11 +241,11 @@ $relatedPosts = $stmt_related->fetchAll();
     </div>
 
     <!-- Read Also Section -->
-    <?php if (count($relatedPosts) > 0): ?>
+    <?php if (count($relatedPosts) > 0):
     <div class="container mx-auto px-4 px-md-6 py-12 border-t border-white/10">
         <h3 class="font-condensed fw-black italic text-white text-3xl mb-8 uppercase">Read Also</h3>
         <div class="row g-4">
-            <?php foreach ($relatedPosts as $rp): ?>
+            <?php foreach ($relatedPosts as $rp):
                 <div class="col-md-3">
                     <a href="/post/<?php echo $rp['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
                         <div class="ratio ratio-16x9 mb-3 overflow-hidden rounded-3 border border-white/10">
@@ -254,9 +254,9 @@ $relatedPosts = $stmt_related->fetchAll();
                         <h4 class="text-white font-condensed fw-black italic uppercase fs-5 leading-tight group-hover:text-electric-red transition-all"><?php echo $rp['title']; ?></h4>
                     </a>
                 </div>
-            <?php endforeach; ?>
+            <?php endforeach;
         </div>
     </div>
-    <?php endif; ?>
+    <?php endif;
 </div>
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php';

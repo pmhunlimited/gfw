@@ -25,12 +25,12 @@ $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $me = $stmt->fetch();
 
-?>
+
 <h1 class="font-condensed fw-black italic text-white display-5 mb-5">OPERATOR <span class="text-danger">PROFILE</span></h1>
 
-<?php if (isset($success)): ?>
+<?php if (isset($success)):
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
-<?php endif; ?>
+<?php endif;
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 p-5 p-md-5 shadow-2xl max-w-2xl">
     <form method="POST">
@@ -51,4 +51,4 @@ $me = $stmt->fetch();
     </form>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

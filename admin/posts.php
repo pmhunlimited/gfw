@@ -217,7 +217,7 @@ try {
     $total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
 } catch (Exception $e) { $total_reports = 0; }
 
-?>
+
 
 <!-- Dashboard Stats -->
 <div class="row g-4 mb-5">
@@ -282,17 +282,17 @@ try {
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
-        <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
+        <button type="button" class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>
 
-<?php if (isset($success)): ?>
+<?php if (isset($success)):
     <div class="alert alert-success bg-green-900 bg-opacity-10 border-green-500 border-opacity-20 text-green-500 font-condensed italic uppercase mb-5"><?php echo $success; ?></div>
-<?php endif; ?>
+<?php endif;
 
-<?php if (isset($error)): ?>
+<?php if (isset($error)):
     <div class="alert alert-danger bg-red-900 bg-opacity-10 border-red-500 border-opacity-20 text-red-500 font-condensed italic uppercase mb-5"><?php echo $error; ?></div>
-<?php endif; ?>
+<?php endif;
 
 <div class="bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
     <form id="bulkForm" method="POST">
@@ -314,7 +314,7 @@ try {
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($posts as $post): ?>
+                <?php foreach ($posts as $post):
                 <tr>
                     <td class="ps-5 py-4 border-white border-opacity-5">
                         <input type="checkbox" name="selected_posts[]" value="<?php echo $post['id']; ?>" class="form-check-input bg-black border-white/20 post-checkbox">
@@ -335,20 +335,20 @@ try {
                         <span class="text-white-50 small font-bold italic"><?php echo $post['author']; ?></span>
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
-                        <?php if (!empty($post['source_url'])): ?>
+                        <?php if (!empty($post['source_url'])):
                             <a href="<?php echo $post['source_url']; ?>" target="_blank" class="text-info small font-monospace" style="font-size: 9px;">LINK</a>
-                        <?php else: ?>
+                        <?php else:
                             <span class="text-white-50 small italic opacity-30">INTERNAL</span>
-                        <?php endif; ?>
+                        <?php endif;
                     </td>
                     <td class="px-4 py-4 border-white border-opacity-5">
                         <span class="text-white-50 font-monospace small"><?php echo date('Y-m-d', strtotime($post['publish_date'] ?: $post['created_at'])); ?></span>
-                        <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()): ?>
+                        <?php if ($post['is_scheduled'] && strtotime($post['publish_date']) > time()):
                             <div class="text-danger font-black uppercase italic" style="font-size: 8px;">SCHEDULED</div>
-                        <?php endif; ?>
+                        <?php endif;
                     </td>
                     <td class="px-5 py-4 border-white border-opacity-5 text-end">
-                        <button class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-post"
+                        <button type="button" class="btn btn-link text-white-50 hover:text-white p-0 me-3 edit-post"
                             data-id="<?php echo $post['id']; ?>"
                             data-title="<?php echo htmlspecialchars($post['title']); ?>"
                             data-cat="<?php echo htmlspecialchars($post['category']); ?>"
@@ -369,38 +369,38 @@ try {
                         <a href="<?php echo $admin_base; ?>/posts?delete=<?php echo $post['id']; ?>" class="text-danger hover:text-white transition-all" onclick="return confirm('Decommission this report permanently?')"><i class="bi bi-trash fs-5"></i></a>
                     </td>
                 </tr>
-                <?php endforeach; ?>
+                <?php endforeach;
             </tbody>
         </table>
     </div>
     </form>
 
     <!-- Pagination -->
-    <?php if ($total_pages > 1): ?>
+    <?php if ($total_pages > 1):
     <div class="px-5 py-4 border-top border-white/5 bg-black/20">
         <nav>
             <ul class="pagination pagination-sm mb-0 gap-2 justify-content-center">
-                <?php if ($page > 1): ?>
+                <?php if ($page > 1):
                     <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page-1; ?>&search=<?php echo urlencode($search); ?>">PREV</a></li>
-                <?php endif; ?>
+                <?php endif;
 
                 <?php
                 $start = max(1, $page - 2);
                 $end = min($total_pages, $page + 2);
                 for ($i = $start; $i <= $end; $i++):
-                ?>
+
                     <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
                         <a class="page-link <?php echo $i == $page ? 'bg-danger border-danger' : 'bg-black border-white/10'; ?> text-white rounded-lg px-3" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>"><?php echo $i; ?></a>
                     </li>
-                <?php endfor; ?>
+                <?php endfor;
 
-                <?php if ($page < $total_pages): ?>
+                <?php if ($page < $total_pages):
                     <li class="page-item"><a class="page-link bg-black border-white/10 text-white rounded-lg px-3" href="?page=<?php echo $page+1; ?>&search=<?php echo urlencode($search); ?>">NEXT</a></li>
-                <?php endif; ?>
+                <?php endif;
             </ul>
         </nav>
     </div>
-    <?php endif; ?>
+    <?php endif;
 </div>
 
 <style>
@@ -434,9 +434,9 @@ try {
                         <div class="col-md-4">
                             <label class="form-label text-white-50 small uppercase font-black">Category</label>
                             <select name="cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
-                                <?php foreach ($categories as $c): ?>
+                                <?php foreach ($categories as $c):
                                     <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
-                                <?php endforeach; ?>
+                                <?php endforeach;
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -518,9 +518,9 @@ try {
                         <div class="col-md-4">
                             <label class="form-label text-white-50 small uppercase font-black">Category</label>
                             <select name="cat" id="edit_cat" class="form-select bg-black border-white border-opacity-10 text-white rounded-xl">
-                                <?php foreach ($categories as $c): ?>
+                                <?php foreach ($categories as $c):
                                     <option value="<?php echo $c['name']; ?>"><?php echo $c['name']; ?></option>
-                                <?php endforeach; ?>
+                                <?php endforeach;
                             </select>
                         </div>
                         <div class="col-md-12">
@@ -637,4 +637,4 @@ document.querySelectorAll('.edit-post').forEach(btn => {
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

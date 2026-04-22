@@ -25,24 +25,24 @@
         /* Fix Tailwind/Bootstrap .collapse conflict */
         .collapse.show { visibility: visible !important; }
     </style>
-    <?php if (!empty($settings['header_code'])): ?>
-        <?php echo $settings['header_code']; ?>
-    <?php endif; ?>
+    <?php if (!empty($settings['header_code'])):
+        <?php echo $settings['header_code'];
+    <?php endif;
 </head>
 <body>
 <!-- Mobile Header -->
 <div class="d-md-none bg-black border-bottom border-white border-opacity-10 p-3 sticky-top" style="z-index: 1050;">
     <div class="d-flex justify-content-between align-items-center">
         <a href="<?php echo SITE_URL; ?>" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
-            <?php if (!empty($settings['logo'])): ?>
+            <?php if (!empty($settings['logo'])):
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 30px;">
-            <?php else: ?>
+            <?php else:
                 <?php
                     $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
                     echo $site_name_parts[0];
                     echo ' <span class="text-danger">CORE</span>';
-                ?>
-            <?php endif; ?>
+
+            <?php endif;
         </a>
         <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminSidebar">
             <i class="bi bi-list fs-3"></i>
@@ -69,15 +69,15 @@
         <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block position-fixed h-full bg-[#0a0e17] border-r border-white/5" style="z-index: 1000;">
             <div class="p-4 mb-4">
                 <a href="<?php echo SITE_URL; ?>" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
-                    <?php if (!empty($settings['logo'])): ?>
+                    <?php if (!empty($settings['logo'])):
                         <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;">
-                    <?php else: ?>
+                    <?php else:
                         <?php
                             $site_name_parts = explode(' ', $settings['name'] ?? 'GFW');
                             echo $site_name_parts[0];
                             echo ' <span class="text-danger">CORE</span>';
-                        ?>
-                    <?php endif; ?>
+
+                    <?php endif;
                 </a>
             </div>
             <nav class="nav flex-column">

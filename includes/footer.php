@@ -37,7 +37,7 @@
                                         echo '<li class="mb-2"><a href="'.$url.'" '.$target.' class="text-decoration-none text-reset hover:text-white transition-all">'.$fp['title'].'</a></li>';
                                     }
                                 }
-                                ?>
+
                             </ul>
                         </div>
                         <div class="col-md-4">
@@ -64,7 +64,7 @@
             $current_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
             $encoded_url = urlencode($current_url);
             $share_title = urlencode($settings['name'] ?? 'GFW');
-        ?>
+
         <a href="https://www.facebook.com/sharer/sharer.php?u=<?php echo $encoded_url; ?>" target="_blank" class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 text-white hover:bg-blue-600 transition-all shadow-lg" title="Share on Facebook">
             <i class="bi bi-facebook"></i>
         </a>
@@ -129,8 +129,8 @@
             }
         });
     </script>
-    <?php if (!empty($settings['footer_code'])): ?>
-        <?php echo $settings['footer_code']; ?>
-    <?php endif; ?>
+    <?php if (!empty($settings['footer_code'])):
+        <?php echo $settings['footer_code'];
+    <?php endif;
 </body>
 </html>
