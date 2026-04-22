@@ -33,13 +33,34 @@ $rss_results = get_rss_news($rss_urls);
 
 if (!empty($rss_results)) {
     echo "Using RSS Feeds for 100% factual discovery...\n";
+    $seen_descriptions = [];
     foreach ($rss_results as $res) {
-        if (count($discovered_items) >= 20) break;
+        if (count($discovered_items) >= 60) break;
+
+        // Immediate rejection of non-European football / American sports content
+        $lower_title = strtolower($res['title']);
+        $lower_desc = strtolower($res['description']);
+
+        $banned = ['nfl', 'nba', 'mlb', 'nhl', 'mls', 'baseball', 'basketball', 'college football', 'nascar', 'wnba', 'cricket', 'rugby', 'golf', 'tennis', 'f1 ', 'formula 1', 'boxing'];
+        $is_banned = false;
+        foreach ($banned as $b) {
+            if (strpos($lower_title, $b) !== false || strpos($lower_desc, $b) !== false) {
+                $is_banned = true;
+                break;
+            }
+        }
+        if ($is_banned) continue;
+
+        // Content Deduplication via Description Hash
+        $desc_hash = md5($res['description']);
+        if (in_array($desc_hash, $seen_descriptions)) continue;
+        $seen_descriptions[] = $desc_hash;
+
         $discovered_items[] = [
             'title' => $res['title'],
             'description' => $res['description'],
             'source_link' => $res['link'],
-            'category' => 'MATCH ANALYSIS', // Default, refined by AI
+            'category' => 'Football News',
             'image_keyword' => $res['title']
         ];
     }
@@ -82,11 +103,11 @@ I have a list of discovered headlines from RSS feeds.
 You MUST filter this list and return a JSON array of indices (integers) that I should KEEP.
 
 STRICT FILTERING RULES:
-1. KEEP only news related to European Football (Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League) and associated transfers.
-2. STERNLY REMOVE all American sports content (NFL, NBA, MLB, NHL, MLS).
-3. REMOVE headlines that refer to the SAME event already present in our database.
-4. If multiple headlines in the current list refer to the SAME event, KEEP only the most descriptive one.
-5. If a headline is about generic sports or multi-sport events without a primary focus on the European leagues listed, REMOVE it.
+1. KEEP only news related to top-tier European Football (Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League) and associated transfers.
+2. STERNLY REMOVE all American sports content (NFL, NBA, MLB, NHL, MLS) and minor leagues.
+3. ABSOLUTELY REMOVE headlines that refer to the SAME event or story already present in our database (cross-check against recent headlines provided).
+4. If multiple headlines in the current list refer to the SAME story, KEEP only the ONE most descriptive one.
+5. If a headline is about generic sports, multi-sport events, or non-football topics, REMOVE it.
 
 RECENT DATABASE HEADLINES (ALREADY PUBLISHED):
 $db_headlines_str
@@ -148,16 +169,16 @@ foreach ($discovered_items as $item) {
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STRICT LINGUISTIC GUIDELINES FOR 100% HUMAN SCORE:
-    - Rewrite the 'Factual Summary' into a unique, sophisticated, and engaging report (minimum 400 words).
+    STRICT LINGUISTIC GUIDELINES FOR 0% AI DETECTION SCORE:
+    - Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 450 words).
     - DO NOT mention news sources (Sky, BBC, etc).
-    - Use a mix of short, punchy sentences and long, complex analytical ones (High Perplexity & Burstiness).
-    - Use colloquialisms common in football fan culture but keep a professional tone.
-    - AVOID typical AI vocabulary: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore'.
-    - DO NOT use an 'Introduction' or 'Conclusion' header. Start right with the analysis.
+    - TONE: Act as a seasoned, slightly cynical football columnist with a British or European flair. Use colloquialisms and fan-blog rhetoric (e.g., 'The gaffer', 'Stuck in the mud', 'Absolute scenes', 'Clinical finish', 'Bottled it').
+    - STRUCTURE: Maximum Perplexity & Burstiness. Use a mix of short, staccato sentences and long, multi-clause analytical ones. Use rhetorical questions to engage the reader.
+    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore', 'shrouded', 'pivot', 'unlock', 'navigate', 'embrace', 'comprehensive', 'reimagine', 'ever-evolving', 'notably'.
+    - NO HEADERS: Do not use 'Introduction' or 'Conclusion'. Start immediately with the raw reporting.
     - Focus strictly on European Football: Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League and their transfers.
-    - ABSOLUTELY EXCLUDE American sports (NFL, NBA, MLB, NHL) or MLS.
-    - ABSOLUTELY NO HALLUCINATIONS.
+    - STERNLY EXCLUDE American sports (NFL, NBA, MLB, NHL) or MLS.
+    - ABSOLUTELY NO HALLUCINATIONS. Rewrite ONLY based on the factual data provided. Ensure 100% human-score quality.
 
     CATEGORY SELECTION:
     - Categorize strictly into one of: ($cat_list).
@@ -231,7 +252,7 @@ foreach ($discovered_items as $item) {
     $content = $content_data['content'];
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
-    $author = 'GFW';
+    $author = $settings['name'] ?? 'STAFF';
 
     $tags = sanitize($content_data['tags'] ?? '');
     $meta_title = sanitize($content_data['meta_title'] ?? $title);

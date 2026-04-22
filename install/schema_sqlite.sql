@@ -106,9 +106,10 @@ CREATE TABLE IF NOT EXISTS pages (
 
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    slug VARCHAR(100)
 );
 
-INSERT INTO site_settings (name, tagline, selected_model) VALUES ('GLOBAL FOOTBALL WATCH', 'Intelligence in Football', 'deepseek-chat');
-INSERT INTO categories (name) VALUES ('PREMIER LEAGUE'), ('TRANSFER NEWS'), ('MATCH ANALYSIS'), ('LA LIGA'), ('CHAMPIONS LEAGUE');
+INSERT INTO site_settings (name, tagline, selected_model) VALUES ('FOOTBALL INTELLIGENCE', 'Elite Coverage', 'deepseek-chat');
+INSERT INTO categories (name, slug) VALUES ('Football News', 'football-news'), ('Transfer News', 'transfer-news');
 INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main');

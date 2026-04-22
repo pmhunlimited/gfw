@@ -297,8 +297,8 @@ try {
                         <div class="d-flex align-items-center">
                             <img src="<?php echo $post['image']; ?>" class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
                             <div>
-                                <div class="text-white font-bold small uppercase italic"><?php echo $post['title']; ?></div>
-                                <div class="text-[9px] text-white-50 font-monospace opacity-50">/<?php echo $post['slug']; ?></div>
+                                <div class="text-white font-bold small uppercase italic"><?php echo htmlspecialchars($post['title']); ?></div>
+                                <div class="text-[9px] text-white-50 font-monospace opacity-50">/<?php echo htmlspecialchars($post['slug']); ?></div>
                             </div>
                         </div>
                     </td>

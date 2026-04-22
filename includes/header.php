@@ -7,7 +7,7 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | Elite Coverage'; ?></title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : htmlspecialchars($settings['name'] ?? 'GFW') . ' | ' . htmlspecialchars($settings['tagline'] ?? 'Elite Coverage'); ?></title>
     <?php if (isset($custom_meta_description)): ?>
     <meta name="description" content="<?php echo $custom_meta_description; ?>">
     <?php endif; ?>
@@ -83,7 +83,7 @@ $settings = get_settings();
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 80px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php $name_parts = explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH'); ?>
+                    <?php $name_parts = explode(' ', htmlspecialchars($settings['name'] ?? 'SITE NAME')); ?>
                     <?php echo $name_parts[0]; ?> <span class="text-electric-red"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>
                 <?php endif; ?>
             </a>

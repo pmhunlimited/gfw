@@ -8,7 +8,7 @@ function get_settings() {
 
     $conn = get_db_connection();
     if (!$conn) return [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'FOOTBALL INTELLIGENCE',
         'logo' => '',
         'favicon' => ''
     ];
@@ -98,7 +98,7 @@ function get_settings() {
     }
 
     $settings = $settings ?: [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'FOOTBALL INTELLIGENCE',
         'logo' => '',
         'favicon' => ''
     ];
@@ -167,7 +167,7 @@ function verify_csrf_token($token) {
 function send_mail($to, $subject, $message) {
     $settings = get_settings();
     if (empty($settings['smtp_host'])) {
-        $headers = "From: " . ($settings['smtp_sender_name'] ?: 'GFW') . " <" . ($settings['smtp_sender_email'] ?: 'noreply@gfw.com') . ">\r\n";
+        $headers = "From: " . ($settings['smtp_sender_name'] ?: ($settings['name'] ?? 'GFW')) . " <" . ($settings['smtp_sender_email'] ?: 'noreply@gfw.com') . ">\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         return mail($to, $subject, $message, $headers);
@@ -256,7 +256,7 @@ function send_mail($to, $subject, $message) {
 
 function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GLOBAL FOOTBALL WATCH';
+    $site_name = $settings['name'] ?? 'FOOTBALL INTELLIGENCE';
     $year = date('Y');
 
     return "
@@ -308,9 +308,10 @@ function render_email_template($content, $subtitle = 'Intelligence Protocol Acti
 
 function log_activity($message) {
     $settings = get_settings();
+    $site_name = $settings['name'] ?? 'GFW';
     if (!empty($settings['admin_email'])) {
         $html = render_email_template("<p>$message</p>", "Security Alert");
-        send_mail($settings['admin_email'], "GFW System Alert", $html);
+        send_mail($settings['admin_email'], $site_name . " System Alert", $html);
     }
 }
 
@@ -420,11 +421,12 @@ function get_ai_insight($prompt) {
  */
 function get_rss_feed_urls() {
     return [
-        'https://www.skysports.com/rss/12433', // Sky Sports Home
-        'https://www.espn.com/espn/rss/news', // ESPN Top Headlines
-        'https://supersport.com/rss/news', // SuperSport All News
-        'https://sport.sky.ch/feed', // Sky Sport CH
-        'https://feeds.bbci.co.uk/sport/rss.xml' // BBC Sport Home
+        'https://www.skysports.com/rss/12040', // Sky Sports Football
+        'https://www.espn.com/espn/rss/soccer/news', // ESPN Soccer
+        'https://www.bbc.com/sport/football/rss.xml', // BBC Football
+        'https://www.theguardian.com/football/rss', // The Guardian Football
+        'https://sport.sky.ch/feed', // Sky Sport CH (Euro focus)
+        'https://www.france24.com/en/sports/rss' // France24 Sports (Good for Ligue 1)
     ];
 }
 
@@ -441,7 +443,7 @@ function get_rss_news($urls) {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 25);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         $xml_data = curl_exec($ch);
         curl_close($ch);
@@ -449,9 +451,13 @@ function get_rss_news($urls) {
         if (!$xml_data) continue;
 
         try {
-            // Suppress errors for malformed XML
-            $xml = @simplexml_load_string($xml_data);
-            if ($xml === false) continue;
+            // Robust XML Loading
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string(trim($xml_data));
+            if (!$xml) {
+                libxml_clear_errors();
+                continue;
+            }
 
             $items = $xml->xpath('//item');
             if (!$items) continue;
@@ -461,14 +467,17 @@ function get_rss_news($urls) {
                 if (in_array($link, $seen_links)) continue;
 
                 $pubDate = (string)$item->pubDate;
-                $timestamp = strtotime($pubDate);
+                if (empty($pubDate)) $pubDate = (string)$item->children('http://purl.org/dc/elements/1.1/')->date;
 
-                // Only within last 30 minutes (1800 seconds)
+                $timestamp = strtotime($pubDate);
+                if (!$timestamp) continue;
+
+                // 30 minute window (1800s) for strict real-time relevance as per directive
                 if ($timestamp > (time() - 1800)) {
                     $all_items[] = [
-                        'title' => (string)$item->title,
-                        'description' => strip_tags((string)$item->description),
-                        'link' => $link,
+                        'title' => trim((string)$item->title),
+                        'description' => strip_tags(trim((string)$item->description)),
+                        'link' => trim($link),
                         'pubDate' => $pubDate,
                         'timestamp' => $timestamp,
                         'source' => parse_url($url, PHP_URL_HOST)
@@ -476,6 +485,7 @@ function get_rss_news($urls) {
                     $seen_links[] = $link;
                 }
             }
+            libxml_clear_errors();
         } catch (Exception $e) {
             error_log("RSS Parse Error ($url): " . $e->getMessage());
         }

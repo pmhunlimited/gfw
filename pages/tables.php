@@ -1,5 +1,5 @@
 <?php
-$custom_meta_title = "League Standings | GFW Intelligence";
+$custom_meta_title = "League Standings | " . ($settings['name'] ?? 'GFW');
 include __DIR__ . '/../includes/header.php';
 
 $leagues = [

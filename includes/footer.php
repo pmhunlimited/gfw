@@ -25,7 +25,7 @@
         <div class="container-fluid px-5">
             <div class="row g-5">
                 <div class="col-lg-4">
-                    <h3 class="font-condensed fw-black italic text-white mb-4 fs-4"><?php echo $settings['name'] ?? 'GFW'; ?></h3>
+                    <h3 class="font-condensed fw-black italic text-white mb-4 fs-4"><?php echo htmlspecialchars($settings['name'] ?? 'GFW'); ?></h3>
                     <p class="text-white-50 small leading-relaxed max-w-sm">The world's most advanced football intelligence network. Real-time decryption of global sports data and tactical analysis.</p>
                 </div>
                 <div class="col-lg-4">
@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="border-top border-white border-opacity-5 mt-5 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo $settings['name'] ?? 'GFW'; ?>. SYSTEM SECURE.</p>
+                <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($settings['name'] ?? 'GFW'); ?>. SYSTEM SECURE.</p>
             </div>
         </div>
     </footer>

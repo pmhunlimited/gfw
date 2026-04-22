@@ -56,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 120px;" class="d-inline-block">
             <?php else: ?>
                 <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
-                <h1 class="font-condensed italic text-white mb-0"><?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : 'CORE'; ?></span></h1>
+                <h1 class="font-condensed italic text-white mb-0"><?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span></h1>
             <?php endif; ?>
         </div>
         <h1 class="font-condensed italic text-white mb-2">SECURITY <span class="text-danger">PIN</span></h1>
