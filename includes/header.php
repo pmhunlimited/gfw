@@ -81,7 +81,7 @@ $settings = get_settings();
         <div class="container-fluid px-4">
             <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-4" href="/">
                 <?php if (!empty($settings['logo'])): ?>
-                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 80px;" class="d-inline-block align-middle">
                 <?php else: ?>
                     <?php $name_parts = explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH'); ?>
                     <?php echo $name_parts[0]; ?> <span class="text-electric-red"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>

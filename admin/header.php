@@ -35,7 +35,7 @@
     <div class="d-flex justify-content-between align-items-center">
         <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
             <?php if (!empty($settings['logo'])): ?>
-                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 30px;">
+                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 65px;">
             <?php else: ?>
                 <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
                 <?php echo $name_parts[0]; ?> <span class="text-danger">CORE</span>
@@ -67,7 +67,7 @@
             <div class="p-4 mb-4">
                 <a href="/" class="font-condensed italic fw-black text-white text-decoration-none fs-4">
                     <?php if (!empty($settings['logo'])): ?>
-                        <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 40px;">
+                        <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 90px;">
                     <?php else: ?>
                         <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
                         <?php echo $name_parts[0]; ?> <span class="text-danger">CORE</span>

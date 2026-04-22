@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="pin-card shadow-2xl text-center">
         <div class="text-center mb-4">
             <?php if (!empty($settings['logo'])): ?>
-                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 50px;" class="d-inline-block">
+                <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 120px;" class="d-inline-block">
             <?php else: ?>
                 <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
                 <h1 class="font-condensed italic text-white mb-0"><?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : 'CORE'; ?></span></h1>

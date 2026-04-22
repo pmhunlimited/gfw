@@ -20,9 +20,10 @@ $totalPosts = 0;
 $totalPages = 0;
 
 if ($conn) {
+    clearstatcache();
     // Determine the correct date comparison function based on driver
     $is_sqlite = ($conn->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite');
-    $now = $is_sqlite ? "datetime('now')" : "NOW()";
+    $now = $is_sqlite ? "datetime('now', 'localtime')" : "NOW()";
 
     if ($category) {
         // CATEGORY PAGE: Display all posts in this category

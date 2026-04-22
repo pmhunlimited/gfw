@@ -83,9 +83,10 @@ You MUST filter this list and return a JSON array of indices (integers) that I s
 
 STRICT FILTERING RULES:
 1. KEEP only news related to European Football (Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League) and associated transfers.
-2. REMOVE all American sports content (NFL, NBA, MLB, NHL, MLS).
+2. STERNLY REMOVE all American sports content (NFL, NBA, MLB, NHL, MLS).
 3. REMOVE headlines that refer to the SAME event already present in our database.
 4. If multiple headlines in the current list refer to the SAME event, KEEP only the most descriptive one.
+5. If a headline is about generic sports or multi-sport events without a primary focus on the European leagues listed, REMOVE it.
 
 RECENT DATABASE HEADLINES (ALREADY PUBLISHED):
 $db_headlines_str

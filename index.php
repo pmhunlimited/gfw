@@ -1,4 +1,5 @@
 <?php
+ob_start();
 if (!file_exists(__DIR__ . '/includes/config.php')) {
     header("Location: /install/");
     exit;
