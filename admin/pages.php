@@ -235,4 +235,4 @@ document.getElementById('pageModal').addEventListener('hidden.bs.modal', functio
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

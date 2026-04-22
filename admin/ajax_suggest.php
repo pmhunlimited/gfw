@@ -8,4 +8,3 @@ if (!is_admin()) {
 
 $topics = get_suggested_topics();
 echo json_encode($topics);
-?>

@@ -2,8 +2,12 @@
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
+// Detect dynamic admin base path
+$script_dir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+$admin_base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]" . $script_dir;
+
 if (!is_admin()) {
-    redirect('/admin/login');
+    redirect($admin_base_url . '/login');
 }
 
 $conn = get_db_connection();
@@ -16,8 +20,8 @@ if (!empty($settings['pin_enabled'])) {
 
         // Don't redirect if already on pin_verify page
         $request = $_SERVER['REQUEST_URI'];
-        if (strpos($request, '/admin/pin_verify') === false) {
-            redirect('/admin/pin_verify');
+        if (strpos($request, $script_dir . '/pin_verify') === false) {
+            redirect($admin_base_url . '/pin_verify');
         }
     }
 }
@@ -26,14 +30,15 @@ if (!empty($settings['pin_enabled'])) {
 $request = $_SERVER['REQUEST_URI'];
 $base_path = rtrim(strtok($request, '?'), '/');
 
-// Global admin base for URLs
-$admin_base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]/admin";
-
-if (strpos($base_path, '/admin') === 0) {
-    $path = substr($base_path, 6);
+// Relative path from admin root
+if (strpos($base_path, $script_dir) === 0) {
+    $path = substr($base_path, strlen($script_dir));
 } else {
     $path = $base_path;
 }
+
+// Ensure $admin_base matches the detected path for layout helpers
+$admin_base = $admin_base_url;
 
 if (empty($path)) $path = '/';
 
@@ -78,4 +83,3 @@ if ($path == '/' || $path == '' || $path == '/posts') {
         redirect('/admin/');
     }
 }
-?>

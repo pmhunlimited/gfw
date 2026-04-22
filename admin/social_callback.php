@@ -139,4 +139,3 @@ if ($platform == 'tiktok' && $code) {
 }
 
 redirect("/admin/settings?tab=social&error=callback_failed");
-?>

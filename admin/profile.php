@@ -51,4 +51,4 @@ $me = $stmt->fetch();
     </form>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

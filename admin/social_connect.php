@@ -73,4 +73,3 @@ if ($platform == 'facebook') {
 }
 
 die("Invalid platform");
-?>

@@ -1,4 +1,4 @@
-    </main>
+</main>
     <!-- Floating Social Share Icons -->
     <div class="fixed right-0 top-1/2 -translate-y-1/2 z-[1000] d-none d-md-flex flex-column gap-2 bg-black/40 backdrop-blur-md p-2 rounded-l-2xl border border-white/10 border-r-0">
         <?php

@@ -261,4 +261,3 @@ if ($count > 0) {
     echo "Notifying subscribers via centralized system...\n";
     notify_subscribers($published_post_ids);
 }
-?>

@@ -611,4 +611,4 @@ document.querySelectorAll('.edit-post').forEach(btn => {
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

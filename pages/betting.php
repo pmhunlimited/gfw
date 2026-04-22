@@ -11,4 +11,4 @@ $oddsData = get_ai_insight("Provide a detailed market prices and betting odds re
         </div>
     </div>
 </div>
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php';

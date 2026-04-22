@@ -422,4 +422,4 @@ $activeTab = $_GET['tab'] ?? 'general';
     </div>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

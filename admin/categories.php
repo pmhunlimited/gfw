@@ -191,4 +191,4 @@ document.getElementById('categoryModal').addEventListener('hidden.bs.modal', fun
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

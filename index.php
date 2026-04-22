@@ -84,4 +84,3 @@ if ($path == '/' || $path == '' || empty($path)) {
         include __DIR__ . '/pages/404.php';
     }
 }
-?>

@@ -98,8 +98,7 @@ define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
 define('DB_FILE', __DIR__ . '/../database.sqlite');
 define('SITE_URL', '".$base_url."');
-define('INSTALLED', true);
-?>";
+define('INSTALLED', true);";
         file_put_contents(__DIR__ . '/../includes/config.php', $config_content);
 
         header('Location: ?stage=4');
