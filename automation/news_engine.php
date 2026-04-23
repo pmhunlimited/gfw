@@ -176,7 +176,7 @@ foreach ($discovered_items as $item) {
 
     STRICT LINGUISTIC GUIDELINES FOR 0% AI DETECTION SCORE:
     - Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 450 words).
-    - DO NOT mention news sources (Sky, BBC, etc).
+    - ABSOLUTELY WHITE-LABEL: You are the voice of '{$settings['name']}'. Replace any mentions of external news sources (e.g., BBC, Sky Sports, ESPN, SuperSport, etc.) with '{$settings['name']}'.
     - TONE: Act as a seasoned, slightly cynical football columnist with a British or European flair. Use colloquialisms and fan-blog rhetoric (e.g., 'The gaffer', 'Stuck in the mud', 'Absolute scenes', 'Clinical finish', 'Bottled it', 'Parked the bus', 'On a cold rainy night in Stoke', 'Lost the plot', 'Game's gone').
     - STRUCTURE: Maximum Perplexity & Burstiness. Use a mix of short, staccato sentences and long, multi-clause analytical ones. Start sentences with conjunctions occasionally for a natural flow. Use rhetorical questions. Avoid starting paragraphs with 'In a...', 'With...', or 'As...'.
     - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore', 'shrouded', 'pivot', 'unlock', 'navigate', 'embrace', 'comprehensive', 'reimagine', 'ever-evolving', 'notably', 'essential', 'crucial', 'demystify', 'vibrant', 'realm', 'unveils', 'underscores', 'moreover', 'consequently', 'ultimately', 'fascinating', 'journey', 'empower'.
@@ -251,10 +251,26 @@ foreach ($discovered_items as $item) {
         $db_img_path = "/assets/img/default-news.jpg";
     }
 
+    // 4. White-Label Post-Processing (PHP Safety Sweep)
+    $site_name = $settings['name'] ?? 'The Sports Network';
+    $banned_sources = [
+        'BBC Sport', 'BBC', 'Sky Sports', 'Sky Sport', 'Sky', 'ESPN FC', 'ESPN', 'SuperSport',
+        'France 24', 'France24', 'TalkSport', 'CaughtOffside', 'Football Espana', 'Football Italia',
+        'The Guardian', 'The Sun', 'Daily Mail', 'Mirror Sport', 'MARCA', 'AS.com', 'Gazzetta'
+    ];
+
+    $generated_title = $item['title'];
+    $generated_content = $content_data['content'];
+
+    foreach ($banned_sources as $source) {
+        $generated_title = str_ireplace($source, $site_name, $generated_title);
+        $generated_content = str_ireplace($source, $site_name, $generated_content);
+    }
+
     // 4. Save to Database
-    $title = sanitize($item['title']);
+    $title = sanitize($generated_title);
     $slug = $safe_title . '-' . time();
-    $content = $content_data['content'];
+    $content = $generated_content;
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
     $author = $settings['name'] ?? 'STAFF';
