@@ -83,8 +83,7 @@ $settings = get_settings();
                 <?php if (!empty($settings['logo'])): ?>
                     <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 80px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php $name_parts = explode(' ', htmlspecialchars($settings['name'] ?? 'SITE NAME')); ?>
-                    <?php echo $name_parts[0]; ?> <span class="text-electric-red"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>
+                    <?php echo format_site_title($settings['name'] ?? 'FootballIntelligence'); ?>
                 <?php endif; ?>
             </a>
 

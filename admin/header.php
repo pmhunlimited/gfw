@@ -37,8 +37,7 @@
             <?php if (!empty($settings['logo'])): ?>
                 <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 65px;">
             <?php else: ?>
-                <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
-                <?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>
+                <?php echo format_site_title($settings['name'] ?? 'FootballIntelligence', 'text-danger'); ?>
             <?php endif; ?>
         </a>
         <button class="btn btn-outline-light border-0" type="button" data-bs-toggle="collapse" data-bs-target="#adminSidebar">
@@ -69,8 +68,7 @@
                     <?php if (!empty($settings['logo'])): ?>
                         <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 90px;">
                     <?php else: ?>
-                        <?php $name_parts = explode(' ', $settings['name'] ?? 'GFW'); ?>
-                        <?php echo $name_parts[0]; ?> <span class="text-danger"><?php echo isset($name_parts[1]) ? implode(' ', array_slice($name_parts, 1)) : ''; ?></span>
+                        <?php echo format_site_title($settings['name'] ?? 'FootballIntelligence', 'text-danger'); ?>
                     <?php endif; ?>
                 </a>
             </div>

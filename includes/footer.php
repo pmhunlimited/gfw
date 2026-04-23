@@ -25,7 +25,7 @@
         <div class="container-fluid px-5">
             <div class="row g-5">
                 <div class="col-lg-4">
-                    <h3 class="font-condensed fw-black italic text-white mb-4 fs-4"><?php echo htmlspecialchars($settings['name'] ?? 'GFW'); ?></h3>
+                    <h3 class="font-condensed fw-black italic text-white mb-4 fs-4"><?php echo format_site_title($settings['name'] ?? 'FootballIntelligence'); ?></h3>
                     <p class="text-white-50 small leading-relaxed max-w-sm">The world's most advanced football intelligence network. Real-time decryption of global sports data and tactical analysis.</p>
                 </div>
                 <div class="col-lg-4">

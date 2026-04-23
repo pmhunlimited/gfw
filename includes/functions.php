@@ -127,6 +127,28 @@ function get_categories_with_counts() {
     return $categories;
 }
 
+function format_site_title($name, $primary_class = 'text-electric-red') {
+    $name = trim($name);
+    // Find all capital letters
+    preg_match_all('/[A-Z]/', $name, $matches, PREG_OFFSET_CAPTURE);
+
+    // If there's at least two capital letters, split at the second one
+    if (count($matches[0]) >= 2) {
+        $split_pos = $matches[0][1][1];
+        $first = substr($name, 0, $split_pos);
+        $second = substr($name, $split_pos);
+        return htmlspecialchars($first) . '<span class="' . $primary_class . '">' . htmlspecialchars($second) . '</span>';
+    }
+
+    // Fallback if CamelCase not detected: split by first space
+    $parts = explode(' ', $name, 2);
+    if (count($parts) > 1) {
+        return htmlspecialchars($parts[0]) . ' <span class="' . $primary_class . '">' . htmlspecialchars($parts[1]) . '</span>';
+    }
+
+    return htmlspecialchars($name);
+}
+
 function sanitize($data) {
     if (is_array($data)) {
         $data = implode(', ', $data);

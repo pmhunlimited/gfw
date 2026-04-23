@@ -116,6 +116,7 @@ $activeTab = $_GET['tab'] ?? 'general';
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Broadcaster Identity</label>
                         <input type="text" name="name" class="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold" value="<?php echo $settings['name']; ?>">
+                        <p class="text-[9px] text-white-50 mt-2 italic opacity-60">TIP: Use <strong>CamelCase</strong> (e.g. <strong>GoalZaza</strong>) to achieve double-color branding. The color change will trigger at the second capital letter.</p>
                     </div>
                     <div class="col-md-6">
                         <label class="block text-[10px] font-black uppercase text-gray-500 mb-2">Tagline</label>
