@@ -429,12 +429,17 @@ function get_rss_feed_urls() {
         'https://www.bbc.com/sport/football/rss.xml', // BBC Football
         'https://www.theguardian.com/football/rss', // The Guardian Football
         'https://sport.sky.ch/feed', // Sky Sport CH (Euro focus)
-        'https://www.france24.com/en/sports/rss' // France24 Sports (Good for Ligue 1)
+        'https://www.france24.com/en/sports/rss', // France24 Sports
+        'https://talksport.com/football/feed/', // TalkSport Football
+        'https://www.caughtoffside.com/feed/', // CaughtOffside (Transfer Rumours)
+        'https://www.football-espana.net/feed', // Football Espana
+        'https://www.football-italia.net/feed', // Football Italia
+        'https://news.google.com/rss/search?q=football+transfers+premier+league+la+liga+serie+a+ligue+1+bundesliga&hl=en-GB&gl=GB&ceid=GB:en' // Google News Football Search
     ];
 }
 
 /**
- * Fetches and parses RSS feeds from multiple sources.
+ * Fetches and parses RSS/Atom feeds from multiple sources.
  * @param array $urls
  * @return array
  */
@@ -446,7 +451,7 @@ function get_rss_news($urls) {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 25);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         $xml_data = curl_exec($ch);
         curl_close($ch);
@@ -454,32 +459,34 @@ function get_rss_news($urls) {
         if (!$xml_data) continue;
 
         try {
-            // Robust XML Loading
             libxml_use_internal_errors(true);
-            $xml = simplexml_load_string(trim($xml_data));
+            $xml = simplexml_load_string(trim($xml_data), 'SimpleXMLElement', LIBXML_NOCDATA);
             if (!$xml) {
                 libxml_clear_errors();
                 continue;
             }
 
-            $items = $xml->xpath('//item');
+            // Handle standard RSS <item> and Atom <entry>
+            $items = $xml->xpath('//item') ?: $xml->xpath('//atom:entry') ?: $xml->xpath('//entry');
             if (!$items) continue;
 
             foreach ($items as $item) {
-                $link = (string)$item->link;
-                if (in_array($link, $seen_links)) continue;
+                $title = (string)($item->title ?? $item->children('atom', true)->title);
+                $link = (string)($item->link['href'] ?? $item->link ?? $item->children('atom', true)->link->attributes()->href);
+                if (empty($link)) $link = (string)$item->guid;
 
-                $pubDate = (string)$item->pubDate;
-                if (empty($pubDate)) $pubDate = (string)$item->children('http://purl.org/dc/elements/1.1/')->date;
+                if (empty($title) || empty($link) || in_array($link, $seen_links)) continue;
 
+                $pubDate = (string)($item->pubDate ?? $item->published ?? $item->updated ?? $item->children('dc', true)->date);
                 $timestamp = strtotime($pubDate);
                 if (!$timestamp) continue;
 
                 // 30 minute window (1800s) for strict real-time relevance as per directive
                 if ($timestamp > (time() - 1800)) {
+                    $description = (string)($item->description ?? $item->summary ?? $item->content ?? '');
                     $all_items[] = [
-                        'title' => trim((string)$item->title),
-                        'description' => strip_tags(trim((string)$item->description)),
+                        'title' => trim($title),
+                        'description' => strip_tags(trim($description)),
                         'link' => trim($link),
                         'pubDate' => $pubDate,
                         'timestamp' => $timestamp,
@@ -494,11 +501,7 @@ function get_rss_news($urls) {
         }
     }
 
-    // Sort by newest first
-    usort($all_items, function($a, $b) {
-        return $b['timestamp'] - $a['timestamp'];
-    });
-
+    usort($all_items, function($a, $b) { return $b['timestamp'] - $a['timestamp']; });
     return $all_items;
 }
 

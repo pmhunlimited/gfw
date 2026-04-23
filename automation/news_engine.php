@@ -16,13 +16,16 @@ if (empty($apiKey)) {
 echo "Starting AI-Powered News Discovery...\n";
 
 // Fetch current categories from DB - Strictly restricted
-$available_categories = ['Football News', 'Transfer News'];
+$available_categories_data = [
+    ['name' => 'Football News', 'slug' => 'football-news'],
+    ['name' => 'Transfer News', 'slug' => 'transfer-news']
+];
 $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
-$sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO categories (name) VALUES (?)" : "INSERT IGNORE INTO categories (name) VALUES (?)";
-foreach ($available_categories as $d) {
-    $conn->prepare($sql)->execute([$d]);
+$sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO categories (name, slug) VALUES (?, ?)" : "INSERT IGNORE INTO categories (name, slug) VALUES (?, ?)";
+foreach ($available_categories_data as $cat) {
+    $conn->prepare($sql)->execute([$cat['name'], $cat['slug']]);
 }
-$cat_list = implode(', ', $available_categories);
+$cat_list = 'Football News, Transfer News';
 
 // 1. Discovery Stage: Fetch factual news from RSS Feeds
 $today = date('D d M Y H:i');
@@ -43,7 +46,7 @@ if (!empty($rss_results)) {
         $lower_title = strtolower($res['title']);
         $lower_desc = strtolower($res['description']);
 
-        $banned = ['nfl', 'nba', 'mlb', 'nhl', 'mls', 'baseball', 'basketball', 'college football', 'nascar', 'wnba', 'cricket', 'rugby', 'golf', 'tennis', 'f1 ', 'formula 1', 'boxing'];
+        $banned = ['nfl', 'nba', 'mlb', 'nhl', 'mls', 'baseball', 'basketball', 'college football', 'nascar', 'wnba', 'cricket', 'rugby', 'golf', 'tennis', 'f1 ', 'formula 1', 'boxing', 'ufc', 'mma', 'horse racing', 'super bowl', 'playoffs', 'touchdown', 'homerun', 'yankees', 'lakers', 'ncaa', 'gridiron', 'quarterback', 'field goal', 'world series', 'stanley cup', 'nba finals', 'indiana jones', 'hollywood', 'broadway'];
         $is_banned = false;
         foreach ($banned as $b) {
             if (strpos($lower_title, $b) !== false || strpos($lower_desc, $b) !== false) {
@@ -69,7 +72,7 @@ if (!empty($rss_results)) {
 }
 
 if (empty($discovered_items)) {
-    die("Error: News discovery failed. Please check your API keys.\n");
+    die("Intelligence Notice: No new European football reports published in the last 30 minutes across monitoring channels. Monitoring continues...\n");
 }
 
 // 1.5 Deduplication Stage: Use AI to identify and remove redundant stories
@@ -174,9 +177,9 @@ foreach ($discovered_items as $item) {
     STRICT LINGUISTIC GUIDELINES FOR 0% AI DETECTION SCORE:
     - Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 450 words).
     - DO NOT mention news sources (Sky, BBC, etc).
-    - TONE: Act as a seasoned, slightly cynical football columnist with a British or European flair. Use colloquialisms and fan-blog rhetoric (e.g., 'The gaffer', 'Stuck in the mud', 'Absolute scenes', 'Clinical finish', 'Bottled it').
-    - STRUCTURE: Maximum Perplexity & Burstiness. Use a mix of short, staccato sentences and long, multi-clause analytical ones. Use rhetorical questions to engage the reader.
-    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore', 'shrouded', 'pivot', 'unlock', 'navigate', 'embrace', 'comprehensive', 'reimagine', 'ever-evolving', 'notably'.
+    - TONE: Act as a seasoned, slightly cynical football columnist with a British or European flair. Use colloquialisms and fan-blog rhetoric (e.g., 'The gaffer', 'Stuck in the mud', 'Absolute scenes', 'Clinical finish', 'Bottled it', 'Parked the bus', 'On a cold rainy night in Stoke', 'Lost the plot', 'Game's gone').
+    - STRUCTURE: Maximum Perplexity & Burstiness. Use a mix of short, staccato sentences and long, multi-clause analytical ones. Start sentences with conjunctions occasionally for a natural flow. Use rhetorical questions. Avoid starting paragraphs with 'In a...', 'With...', or 'As...'.
+    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore', 'shrouded', 'pivot', 'unlock', 'navigate', 'embrace', 'comprehensive', 'reimagine', 'ever-evolving', 'notably', 'essential', 'crucial', 'demystify', 'vibrant', 'realm', 'unveils', 'underscores', 'moreover', 'consequently', 'ultimately', 'fascinating', 'journey', 'empower'.
     - NO HEADERS: Do not use 'Introduction' or 'Conclusion'. Start immediately with the raw reporting.
     - Focus strictly on European Football: Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League and their transfers.
     - STERNLY EXCLUDE American sports (NFL, NBA, MLB, NHL) or MLS.
