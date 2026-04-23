@@ -354,7 +354,7 @@ function notify_subscribers($post_ids) {
             <div class='news-item'>
                 <a href='$post_url' class='news-title'>{$post['title']}</a>
                 <p class='news-excerpt'>{$post['excerpt']}</p>
-                <a href='$post_url' class='btn'>Decrypt Full Report</a>
+                <a href='$post_url' class='btn'>Read Full Report</a>
             </div>
         ";
     }

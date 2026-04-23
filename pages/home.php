@@ -95,7 +95,7 @@ if ($category) {
                                         <?php echo $hero['excerpt']; ?>
                                     </p>
                                     <a href="/post/<?php echo $hero['slug']; ?>" class="btn btn-primary rounded-0 font-condensed fw-black italic px-8 py-3 uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-                                        Decrypt Full Report
+                                        Read Full Report
                                     </a>
                                 </div>
                             </div>
