@@ -17,8 +17,10 @@ echo "Starting AI-Powered News Discovery...\n";
 
 // Fetch current categories from DB - Strictly restricted
 $available_categories = ['Football News', 'Transfer News'];
+$driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+$sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO categories (name) VALUES (?)" : "INSERT IGNORE INTO categories (name) VALUES (?)";
 foreach ($available_categories as $d) {
-    $conn->prepare("INSERT IGNORE INTO categories (name) VALUES (?)")->execute([$d]);
+    $conn->prepare($sql)->execute([$d]);
 }
 $cat_list = implode(', ', $available_categories);
 

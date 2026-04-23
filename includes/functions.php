@@ -73,9 +73,12 @@ function get_settings() {
     // Category Consolidation & Data Integrity Migration
     if ($settings && empty($settings['taxonomy_migrated'])) {
         try {
+            $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO categories (name, slug) VALUES " : "INSERT IGNORE INTO categories (name, slug) VALUES ";
+
             // Ensure categories exist
-            $conn->exec("INSERT IGNORE INTO categories (name, slug) VALUES ('Football News', 'football-news')");
-            $conn->exec("INSERT IGNORE INTO categories (name, slug) VALUES ('Transfer News', 'transfer-news')");
+            $conn->exec($sql . "('Football News', 'football-news')");
+            $conn->exec($sql . "('Transfer News', 'transfer-news')");
 
             // Update posts to new categories
             $conn->exec("UPDATE posts SET category = 'Transfer News' WHERE category LIKE '%Transfer%'");

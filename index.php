@@ -52,7 +52,9 @@ if ($path == '/' || $path == '' || empty($path)) {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $conn = get_db_connection();
-        $stmt = $conn->prepare("INSERT IGNORE INTO subscribers (email) VALUES (?)");
+        $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO subscribers (email) VALUES (?)" : "INSERT IGNORE INTO subscribers (email) VALUES (?)";
+        $stmt = $conn->prepare($sql);
         $stmt->execute([$email]);
         header('Location: /?subscribed=true');
         exit;
