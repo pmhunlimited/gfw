@@ -13,7 +13,6 @@ $offset = ($page - 1) * $limit;
 $conn = get_db_connection();
 $posts = [];
 $featuredNews = [];
-$latestIntelligence = [];
 $transferUpdates = [];
 $footballReports = [];
 $totalPosts = 0;
@@ -52,14 +51,6 @@ if ($conn) {
             $stmt_sidebar->execute([$hero['id']]);
             $sidebarNews = $stmt_sidebar->fetchAll();
 
-            $exclude_ids = array_merge([$hero['id']], array_column($sidebarNews, 'id'));
-            $placeholders = implode(',', array_fill(0, count($exclude_ids), '?'));
-            $stmt_latest = $conn->prepare("SELECT * FROM posts WHERE id NOT IN ($placeholders) AND (is_scheduled = 0 OR publish_date <= $now) ORDER BY publish_date DESC LIMIT 6");
-            $stmt_latest->execute($exclude_ids);
-            $latestIntelligence = $stmt_latest->fetchAll();
-        } else {
-            $stmt_latest = $conn->query("SELECT * FROM posts WHERE (is_scheduled = 0 OR publish_date <= $now) ORDER BY publish_date DESC LIMIT 10");
-            $latestIntelligence = $stmt_latest->fetchAll();
         }
 
         // 3. Category Specific Feeds
@@ -147,41 +138,6 @@ if ($category) {
         </section>
         <?php endif; ?>
 
-        <!-- LATEST INTELLIGENCE GRID -->
-        <section class="py-20 bg-black">
-            <div class="container-fluid px-4 px-md-10">
-                <div class="flex items-center justify-between mb-12 border-b border-white/5 pb-6">
-                    <div class="flex items-center gap-4">
-                        <div class="w-2 h-10 bg-electric-red"></div>
-                        <h2 class="text-4xl font-condensed fw-black italic text-white uppercase mb-0">Latest Intelligence</h2>
-                    </div>
-                </div>
-
-                <div class="row g-5">
-                    <?php foreach ($latestIntelligence as $post): ?>
-                        <div class="col-lg-4 col-md-6">
-                            <article class="group h-full flex flex-col">
-                                <a href="/post/<?php echo $post['slug']; ?>" class="block relative aspect-video overflow-hidden rounded-2xl border border-white/5 mb-6">
-                                    <img src="<?php echo $post['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-700 group-hover:scale-110" alt="">
-                                    <div class="absolute top-4 left-4">
-                                        <span class="bg-black/80 backdrop-blur-md text-electric-red font-condensed fw-black italic px-3 py-1 text-[10px] uppercase border border-electric-red/30"><?php echo $post['category']; ?></span>
-                                    </div>
-                                </a>
-                                <div class="flex-grow">
-                                    <div class="text-[10px] font-monospace text-white/30 uppercase mb-3"><?php echo date('D d M Y', strtotime($post['publish_date'])); ?></div>
-                                    <h3 class="text-2xl font-condensed fw-black italic text-white uppercase group-hover:text-electric-red transition-colors mb-4 line-clamp-2 leading-tight">
-                                        <a href="/post/<?php echo $post['slug']; ?>" class="text-inherit text-decoration-none"><?php echo $post['title']; ?></a>
-                                    </h3>
-                                    <p class="text-white/50 text-sm leading-relaxed line-clamp-3 mb-0">
-                                        <?php echo $post['excerpt']; ?>
-                                    </p>
-                                </div>
-                            </article>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-        </section>
 
         <!-- SPECIALIZED SECTIONS -->
         <section class="py-20 bg-[#05070a] border-y border-white/5">
