@@ -1,5 +1,5 @@
 <?php
-// GFW News Automation Engine - AI ONLY (NO NewsAPI)
+// Football Intelligence News Automation Engine - AI ONLY (NO NewsAPI)
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
@@ -176,18 +176,19 @@ foreach ($discovered_items as $item) {
 
     STYLE: Nigerian Standard English (NSE). Authoritative, 'flowery' but precise, and highly engaging.
 
-    STRICT LINGUISTIC GUIDELINES (0% AI DETECTION):
+    STRICT LINGUISTIC GUIDELINES (0% AI DETECTION - 100% HUMAN):
     1. REWRITE THE TITLE: Create a formal, strong Nigerian headline (e.g. 'Victory for Arsenal as they Outclass Opponents at the Emirates'). Ensure 100% ownership.
     2. WHITE-LABEL: Replace ALL mentions of external sources (BBC, Sky, ESPN, etc.) with '{$settings['name']}'.
     3. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Jersey/Kit', and 'Boots'. Use strong adjectives: 'clinical', 'resilient', 'stalwart', 'formidable'.
     4. NSE IDIOMS: Use formal expressions: 'The lion\'s share', 'In the scheme of things', 'At the end of the day', 'The powers that be', 'To give a good account of themselves'.
     5. NIGERIAN CONTEXT: Highlight Nigerian connections (Osimhen, Boniface, etc.) as 'The Super Eagles talisman' or 'The Nigerian international'.
     6. CURRENCY: Use Naira (₦) first for financial mentions (use ₦1600/$1 conversion if needed) and Metric units.
-    7. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–) or AI-style bullet points.
+    7. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
     8. NO PIDGIN: Stay 100% formal but local Nigerian Standard English.
+    9. SENTENCE VARIETY: Vary sentence lengths and structures. Avoid starting multiple sentences with the same word. Use active voice.
 
-    BANNED PHRASES/AI TELLS:
-    - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage'.
+    BANNED PHRASES/AI TELLS (STRICTLY FORBIDDEN):
+    - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage', 'tapestry', 'delve', 'unleash', 'comprehensive', 'ultimate guide'.
     - NO '-ing' depth: 'highlighting...', 'symbolizing...', 'reflecting...', 'showcasing...'.
     - NO Ad-speak: 'groundbreaking', 'transformative', 'cutting-edge', 'seamless', 'robust', 'world-class'.
     - NO Vague attributions: 'experts say', 'it has been reported'.
@@ -281,8 +282,11 @@ foreach ($discovered_items as $item) {
         $generated_content = str_ireplace($source, $site_name, $generated_content);
     }
 
-    // Punctuation Cleanup (Remove AI-style em-dashes and fix spacing)
-    $generated_content = str_replace([' — ', ' – ', ' -- '], '. ', $generated_content);
+    // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
+    // Replace all dash variations with proper punctuation or spaces
+    $generated_title = preg_replace('/(\s*[\-\–\—]\s*)/', ' ', $generated_title);
+    $generated_content = preg_replace('/(\s*[\-\–\—]\s*)/', '. ', $generated_content);
+    $generated_content = str_replace(['. .', '. . '], '. ', $generated_content);
     $generated_content = preg_replace('/\s+/', ' ', $generated_content);
 
     // 4. Save to Database

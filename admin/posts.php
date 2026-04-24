@@ -109,15 +109,36 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
-               Write in an engaging first-person 'fan blogger' perspective.
+    $prompt = "Act as a Senior Sports Editor for a premium Nigerian daily reporting for '{$settings['name']}'. You are the exclusive voice of the network.
+               Generate a professional sports news article about '$topic' in the category '$cat'.
+
+               STYLE: Nigerian Standard English (NSE). Authoritative, 'flowery' but precise, and highly engaging.
+
+               STRICT LINGUISTIC GUIDELINES (0% AI DETECTION - 100% HUMAN):
+               1. TITLE: Create a formal, strong Nigerian headline.
+               2. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Jersey/Kit', and 'Boots'. Use strong adjectives: 'clinical', 'resilient', 'stalwart', 'formidable'.
+               3. NSE IDIOMS: Use formal expressions: 'The lion\'s share', 'In the scheme of things', 'At the end of the day', 'The powers that be', 'To give a good account of themselves'.
+               4. NIGERIAN CONTEXT: Highlight Nigerian connections (Osimhen, Boniface, etc.) as 'The Super Eagles talisman' or 'The Nigerian international'.
+               5. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
+               6. NO PIDGIN: Stay 100% formal but local Nigerian Standard English.
+               7. SENTENCE VARIETY: Vary sentence lengths and structures. Avoid starting multiple sentences with the same word. Use active voice.
+
+               BANNED PHRASES/AI TELLS (STRICTLY FORBIDDEN):
+               - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage', 'tapestry', 'delve', 'unleash', 'comprehensive', 'ultimate guide'.
+               - NO '-ing' depth: 'highlighting...', 'symbolizing...', 'reflecting...', 'showcasing...'.
+               - NO Ad-speak: 'groundbreaking', 'transformative', 'cutting-edge', 'seamless', 'robust', 'world-class'.
+               - NO Filler: 'At its core', 'In today\'s world', 'It\'s worth noting', 'Needless to say', 'That being said'.
+
+               NIGERIAN CONTEXT INJECTOR:
+               - At the end of the article, add 2-8 sentences describing how local fans at viewing centers in Lagos or Abuja would react. Use flowing NSE prose.
+
                Return JSON with:
-               - 'title': Catchy headline.
-               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
-               - 'tags': 5-8 relevant SEO tags (comma separated).
-               - 'meta_title': SEO optimized title (max 60 chars).
-               - 'meta_description': Compelling SEO description (max 160 chars).
+               - 'title': The formal, rewritten NSE headline.
+               - 'content': Rewritten report + Nigerian Context (flowing prose, no em-dashes or hyphens).
+               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story.
+               - 'tags': 6-10 SEO tags.
+               - 'meta_title': NSE-style invitation.
+               - 'meta_description': Targeted at Nigerian fans.
                - 'meta_keywords': High ranking keywords for this specific news.
                Ensure the response is a valid JSON object.";
     $raw = get_ai_insight($prompt);
@@ -152,8 +173,27 @@ if (isset($_POST['generate_ai'])) {
             $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
         }
 
+        // White-Label Post-Processing (PHP Safety Sweep)
+        $site_name = $settings['name'] ?? 'The Sports Network';
+        $banned_sources = [
+            'BBC Sport', 'BBC', 'Sky Sports', 'Sky Sport', 'Sky', 'ESPN FC', 'ESPN', 'SuperSport',
+            'France 24', 'France24', 'TalkSport', 'CaughtOffside', 'Football Espana', 'Football Italia',
+            'The Guardian', 'The Sun', 'Daily Mail', 'Mirror Sport', 'MARCA', 'AS.com', 'Gazzetta'
+        ];
+
+        foreach ($banned_sources as $source) {
+            $title = str_ireplace($source, $site_name, $title);
+            $content = str_ireplace($source, $site_name, $content);
+        }
+
+        // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
+        $title = preg_replace('/(\s*[\-\–\—]\s*)/', ' ', $title);
+        $content = preg_replace('/(\s*[\-\–\—]\s*)/', '. ', $content);
+        $content = str_replace(['. .', '. . '], '. ', $content);
+        $content = preg_replace('/\s+/', ' ', $content);
+
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
@@ -258,6 +298,7 @@ try {
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
+        <a href="/automation/news_engine.php" target="_blank" class="btn btn-outline-primary font-condensed fw-black italic px-4 py-2">TRIGGER DISCOVERY</a>
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>

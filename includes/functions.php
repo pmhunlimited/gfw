@@ -192,7 +192,7 @@ function verify_csrf_token($token) {
 function send_mail($to, $subject, $message) {
     $settings = get_settings();
     if (empty($settings['smtp_host'])) {
-        $headers = "From: " . ($settings['smtp_sender_name'] ?: ($settings['name'] ?? 'GFW')) . " <" . ($settings['smtp_sender_email'] ?: 'noreply@gfw.com') . ">\r\n";
+        $headers = "From: " . ($settings['smtp_sender_name'] ?: ($settings['name'] ?? 'Football Intelligence')) . " <" . ($settings['smtp_sender_email'] ?: 'noreply@intelligence.com') . ">\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         return mail($to, $subject, $message, $headers);
@@ -333,7 +333,7 @@ function render_email_template($content, $subtitle = 'Intelligence Protocol Acti
 
 function log_activity($message) {
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GFW';
+    $site_name = $settings['name'] ?? 'Football Intelligence';
     if (!empty($settings['admin_email'])) {
         $html = render_email_template("<p>$message</p>", "Security Alert");
         send_mail($settings['admin_email'], $site_name . " System Alert", $html);
@@ -364,7 +364,7 @@ function notify_subscribers($post_ids) {
     if (empty($subscribers)) return;
 
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GFW';
+    $site_name = $settings['name'] ?? 'Football Intelligence';
 
     $subject = "Intelligence Alert: New Reports Published - " . $site_name;
 

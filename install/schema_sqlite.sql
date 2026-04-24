@@ -110,6 +110,6 @@ CREATE TABLE IF NOT EXISTS categories (
     slug VARCHAR(100)
 );
 
-INSERT INTO site_settings (name, tagline, selected_model) VALUES ('FOOTBALL INTELLIGENCE', 'Elite Coverage', 'deepseek-chat');
+INSERT INTO site_settings (name, tagline, selected_model) VALUES ('FOOTBALL INTELLIGENCE', 'Sports Intelligence Network', 'deepseek-chat');
 INSERT INTO categories (name, slug) VALUES ('Football News', 'football-news'), ('Transfer News', 'transfer-news');
 INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main');

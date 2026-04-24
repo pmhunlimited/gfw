@@ -1,6 +1,6 @@
 <?php
 /**
- * GFW Social Media Broadcaster
+ * Social Media Broadcaster
  * Handles automatic posting to Facebook, X, Instagram, and TikTok
  */
 

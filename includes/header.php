@@ -7,7 +7,7 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : htmlspecialchars($settings['name'] ?? 'GFW') . ' | ' . htmlspecialchars($settings['tagline'] ?? 'Elite Coverage'); ?></title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : htmlspecialchars($settings['name'] ?? 'Football Intelligence') . ' | ' . htmlspecialchars($settings['tagline'] ?? 'Sports Intelligence Network'); ?></title>
     <?php if (isset($custom_meta_description)): ?>
     <meta name="description" content="<?php echo $custom_meta_description; ?>">
     <?php endif; ?>

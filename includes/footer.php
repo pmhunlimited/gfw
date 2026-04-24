@@ -74,7 +74,7 @@
                 </div>
             </div>
             <div class="border-top border-white border-opacity-5 mt-5 pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
-                <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($settings['name'] ?? 'GFW'); ?>. SYSTEM SECURE.</p>
+                <p class="text-white-50 small mb-0 font-monospace uppercase opacity-50">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($settings['name'] ?? 'Football Intelligence'); ?>. SYSTEM SECURE.</p>
             </div>
         </div>
     </footer>
