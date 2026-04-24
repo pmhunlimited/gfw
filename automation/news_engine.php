@@ -168,38 +168,47 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as an Expert Football Columnist for '{$settings['name']}'. You are writing for a high-end football intelligence network with a strong Nigerian presence.
+    $content_prompt = "Act as a Senior Sports Editor for a premium Nigerian daily reporting for '{$settings['name']}'. You are the exclusive voice of the network.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STRICT LINGUISTIC GUIDELINES FOR 0% AI DETECTION SCORE:
-    - REWRITE THE TITLE: Create a completely new, unique, and punchy headline based on the 'Headline'. It must be different from the original to ensure 100% ownership.
-    - REWRITE THE CONTENT: Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 500 words).
-    - ABSOLUTELY WHITE-LABEL: You are the exclusive voice of '{$settings['name']}'. Replace any mentions of external news sources (e.g., BBC, Sky Sports, ESPN, SuperSport, etc.) with '{$settings['name']}'.
-    - TONE: Act as a seasoned, slightly cynical football columnist with a British/European flair. Use colloquialisms (e.g., 'The gaffer', 'Absolute scenes', 'Clinical finish', 'Bottled it', 'Parked the bus').
-    - STRUCTURE: Maximum Perplexity & Burstiness. Vary sentence length. Use rhetorical questions.
-    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'landscape', 'in summary', 'furthermore', 'pivot', 'unlock', 'navigate', 'reimagine', 'ever-evolving', 'notably', 'essential', 'crucial', 'demystify', 'realm', 'underscores', 'moreover', 'consequently', 'ultimately', 'fascinating', 'journey'.
-    - NO HEADERS: Do not use 'Introduction' or 'Conclusion'.
+    STYLE: Nigerian Standard English (NSE). Authoritative, 'flowery' but precise, and highly engaging.
+
+    STRICT LINGUISTIC GUIDELINES (0% AI DETECTION):
+    1. REWRITE THE TITLE: Create a formal, strong Nigerian headline (e.g. 'Victory for Arsenal as they Outclass Opponents at the Emirates'). Ensure 100% ownership.
+    2. WHITE-LABEL: Replace ALL mentions of external sources (BBC, Sky, ESPN, etc.) with '{$settings['name']}'.
+    3. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Jersey/Kit', and 'Boots'. Use strong adjectives: 'clinical', 'resilient', 'stalwart', 'formidable'.
+    4. NSE IDIOMS: Use formal expressions: 'The lion\'s share', 'In the scheme of things', 'At the end of the day', 'The powers that be', 'To give a good account of themselves'.
+    5. NIGERIAN CONTEXT: Highlight Nigerian connections (Osimhen, Boniface, etc.) as 'The Super Eagles talisman' or 'The Nigerian international'.
+    6. CURRENCY: Use Naira (₦) first for financial mentions (use ₦1600/$1 conversion if needed) and Metric units.
+    7. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–) or AI-style bullet points.
+    8. NO PIDGIN: Stay 100% formal but local Nigerian Standard English.
+
+    BANNED PHRASES/AI TELLS:
+    - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage'.
+    - NO '-ing' depth: 'highlighting...', 'symbolizing...', 'reflecting...', 'showcasing...'.
+    - NO Ad-speak: 'groundbreaking', 'transformative', 'cutting-edge', 'seamless', 'robust', 'world-class'.
+    - NO Vague attributions: 'experts say', 'it has been reported'.
+    - NO Copula avoidance: Do not use 'serves as', 'functions as', 'stands as'. Just use 'is' or 'are'.
+    - NO Filler: 'At its core', 'In today\'s world', 'It\'s worth noting', 'Needless to say', 'That being said'.
+    - NO Signposting: 'Let\'s dive in', 'Without further ado'.
+    - NO generic closings: 'The future looks bright', 'Exciting times lie ahead'.
 
     NIGERIAN CONTEXT INJECTOR:
-    - At the end of the article, add 2-8 sentences of 'Nigerian Fan Context'.
-    - Use Nigerian Pidgin or local slang (e.g., 'Omo', 'E don happen', 'Naija fans', 'Viewing center', 'Correct', 'Las las', 'Inside life').
-    - Talk about how Nigerian fans at viewing centers might react to this specific news.
-    - This section must feel 100% organic and human.
+    - At the end of the article, add 2-8 sentences describing how local fans at viewing centers in Lagos or Abuja would react. Use flowing NSE prose.
 
     CATEGORY SELECTION:
     - Categorize strictly into one of: ($cat_list).
 
     Return ONLY a valid JSON object with:
-    - 'title': The rewritten, unique headline.
-    - 'category': The chosen category.
-    - 'content': The rewritten report + Nigerian Context (Markdown).
+    - 'title': The formal, rewritten NSE headline.
+    - 'category': Chosen category.
+    - 'content': Rewritten report + Nigerian Context (flowing prose, no em-dashes).
     - 'tags': 6-10 SEO tags.
-    - 'meta_title': SEO title (max 60 chars).
-    - 'meta_description': SEO description (max 160 chars).
-    - 'meta_keywords': keywords.
+    - 'meta_title': NSE-style invitation (e.g. 'Discover how the title race is shaping up...').
+    - 'meta_description': Targeted at Nigerian fans.
 
     No other text.";
 
@@ -271,6 +280,10 @@ foreach ($discovered_items as $item) {
         $generated_title = str_ireplace($source, $site_name, $generated_title);
         $generated_content = str_ireplace($source, $site_name, $generated_content);
     }
+
+    // Punctuation Cleanup (Remove AI-style em-dashes and fix spacing)
+    $generated_content = str_replace([' — ', ' – ', ' -- '], '. ', $generated_content);
+    $generated_content = preg_replace('/\s+/', ' ', $generated_content);
 
     // 4. Save to Database
     $title = sanitize($generated_title);
