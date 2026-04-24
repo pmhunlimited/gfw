@@ -58,6 +58,7 @@ if (isset($_POST['save_manual'])) {
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
             notify_subscribers([$post_id]);
+            update_sitemap();
             $success = "Intelligence report deployed and broadcasted.";
         } else {
             $success = "Intelligence report scheduled for $publish_date.";
@@ -157,6 +158,7 @@ if (isset($_POST['generate_ai'])) {
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
                 notify_subscribers([$post_id]);
+                update_sitemap();
                 $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
                 $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;

@@ -168,29 +168,34 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as an Expert Football Columnist. You are writing for a high-end football intelligence network.
+    $content_prompt = "Act as an Expert Football Columnist for '{$settings['name']}'. You are writing for a high-end football intelligence network with a strong Nigerian presence.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
     STRICT LINGUISTIC GUIDELINES FOR 0% AI DETECTION SCORE:
-    - Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 450 words).
-    - ABSOLUTELY WHITE-LABEL: You are the voice of '{$settings['name']}'. Replace any mentions of external news sources (e.g., BBC, Sky Sports, ESPN, SuperSport, etc.) with '{$settings['name']}'.
-    - TONE: Act as a seasoned, slightly cynical football columnist with a British or European flair. Use colloquialisms and fan-blog rhetoric (e.g., 'The gaffer', 'Stuck in the mud', 'Absolute scenes', 'Clinical finish', 'Bottled it', 'Parked the bus', 'On a cold rainy night in Stoke', 'Lost the plot', 'Game's gone').
-    - STRUCTURE: Maximum Perplexity & Burstiness. Use a mix of short, staccato sentences and long, multi-clause analytical ones. Start sentences with conjunctions occasionally for a natural flow. Use rhetorical questions. Avoid starting paragraphs with 'In a...', 'With...', or 'As...'.
-    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'overall', 'landscape', 'in summary', 'furthermore', 'shrouded', 'pivot', 'unlock', 'navigate', 'embrace', 'comprehensive', 'reimagine', 'ever-evolving', 'notably', 'essential', 'crucial', 'demystify', 'vibrant', 'realm', 'unveils', 'underscores', 'moreover', 'consequently', 'ultimately', 'fascinating', 'journey', 'empower'.
-    - NO HEADERS: Do not use 'Introduction' or 'Conclusion'. Start immediately with the raw reporting.
-    - Focus strictly on European Football: Premier League, La Liga, Serie A, Ligue 1, Bundesliga, Champions League, Europa League, Conference League and their transfers.
-    - STERNLY EXCLUDE American sports (NFL, NBA, MLB, NHL) or MLS.
-    - ABSOLUTELY NO HALLUCINATIONS. Rewrite ONLY based on the factual data provided. Ensure 100% human-score quality.
+    - REWRITE THE TITLE: Create a completely new, unique, and punchy headline based on the 'Headline'. It must be different from the original to ensure 100% ownership.
+    - REWRITE THE CONTENT: Rewrite the 'Factual Summary' into a unique, sophisticated, and raw reporting style (minimum 500 words).
+    - ABSOLUTELY WHITE-LABEL: You are the exclusive voice of '{$settings['name']}'. Replace any mentions of external news sources (e.g., BBC, Sky Sports, ESPN, SuperSport, etc.) with '{$settings['name']}'.
+    - TONE: Act as a seasoned, slightly cynical football columnist with a British/European flair. Use colloquialisms (e.g., 'The gaffer', 'Absolute scenes', 'Clinical finish', 'Bottled it', 'Parked the bus').
+    - STRUCTURE: Maximum Perplexity & Burstiness. Vary sentence length. Use rhetorical questions.
+    - BANNED AI VOCABULARY: 'delve', 'tapestry', 'testament', 'unleash', 'landscape', 'in summary', 'furthermore', 'pivot', 'unlock', 'navigate', 'reimagine', 'ever-evolving', 'notably', 'essential', 'crucial', 'demystify', 'realm', 'underscores', 'moreover', 'consequently', 'ultimately', 'fascinating', 'journey'.
+    - NO HEADERS: Do not use 'Introduction' or 'Conclusion'.
+
+    NIGERIAN CONTEXT INJECTOR:
+    - At the end of the article, add 2-8 sentences of 'Nigerian Fan Context'.
+    - Use Nigerian Pidgin or local slang (e.g., 'Omo', 'E don happen', 'Naija fans', 'Viewing center', 'Correct', 'Las las', 'Inside life').
+    - Talk about how Nigerian fans at viewing centers might react to this specific news.
+    - This section must feel 100% organic and human.
 
     CATEGORY SELECTION:
     - Categorize strictly into one of: ($cat_list).
 
     Return ONLY a valid JSON object with:
+    - 'title': The rewritten, unique headline.
     - 'category': The chosen category.
-    - 'content': The rewritten report (Markdown).
+    - 'content': The rewritten report + Nigerian Context (Markdown).
     - 'tags': 6-10 SEO tags.
     - 'meta_title': SEO title (max 60 chars).
     - 'meta_description': SEO description (max 160 chars).
@@ -259,7 +264,7 @@ foreach ($discovered_items as $item) {
         'The Guardian', 'The Sun', 'Daily Mail', 'Mirror Sport', 'MARCA', 'AS.com', 'Gazzetta'
     ];
 
-    $generated_title = $item['title'];
+    $generated_title = $content_data['title'] ?? $item['title'];
     $generated_content = $content_data['content'];
 
     foreach ($banned_sources as $source) {
@@ -269,7 +274,7 @@ foreach ($discovered_items as $item) {
 
     // 4. Save to Database
     $title = sanitize($generated_title);
-    $slug = $safe_title . '-' . time();
+    $slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $title))) . '-' . time();
     $content = $generated_content;
     $excerpt = sanitize(substr(strip_tags($content), 0, 150)) . '...';
     $category = $content_data['category'] ?? $item['category'];
@@ -288,6 +293,9 @@ foreach ($discovered_items as $item) {
 
         echo "Broadcasting to social media...\n";
         broadcast_to_social($post_id);
+
+        echo "Updating sitemap...\n";
+        update_sitemap();
 
         $published_post_ids[] = $post_id;
 

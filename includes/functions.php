@@ -675,3 +675,69 @@ function parse_markdown($text) {
     }
     return nl2br($text);
 }
+
+/**
+ * Generates and updates the sitemap.xml file.
+ */
+function update_sitemap() {
+    $settings = get_settings();
+    $site_url = defined('SITE_URL') ? rtrim(SITE_URL, '/') : 'https://goalzaza.com';
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">' . PHP_EOL;
+
+    $now = date('c');
+
+    // Homepage
+    $xml .= '  <url>' . PHP_EOL;
+    $xml .= '    <loc>' . $site_url . '/</loc>' . PHP_EOL;
+    $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+    $xml .= '    <priority>1.00</priority>' . PHP_EOL;
+    $xml .= '  </url>' . PHP_EOL;
+
+    // Static / Core Pages
+    $core_pages = ['watch', 'tables', 'privacy-policy'];
+    foreach ($core_pages as $cp) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/' . $cp . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.80</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // CMS Pages
+    $pages = $conn->query("SELECT slug, created_at FROM pages WHERE is_visible = 1 AND is_external = 0")->fetchAll();
+    foreach ($pages as $p) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/' . $p['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . date('c', strtotime($p['created_at'])) . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.70</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Categories
+    $categories = $conn->query("SELECT slug FROM categories")->fetchAll();
+    foreach ($categories as $cat) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/category/' . $cat['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.60</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Posts
+    $posts = $conn->query("SELECT slug, publish_date FROM posts WHERE is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP ORDER BY publish_date DESC")->fetchAll();
+    foreach ($posts as $post) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/post/' . $post['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . date('c', strtotime($post['publish_date'])) . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.50</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    $xml .= '</urlset>';
+
+    file_put_contents(__DIR__ . '/../sitemap.xml', $xml);
+}
