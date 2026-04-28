@@ -14,12 +14,13 @@ $settings = get_settings();
     <?php if (isset($custom_meta_keywords)): ?>
     <meta name="keywords" content="<?php echo $custom_meta_keywords; ?>">
     <?php endif; ?>
+    <link rel="canonical" href="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
     <?php if (!empty($settings['favicon'])): ?>
     <link rel="shortcut icon" href="<?php echo $settings['favicon']; ?>" type="image/x-icon">
     <?php endif; ?>
     <!-- Bootstrap 5.3.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
@@ -73,6 +74,9 @@ $settings = get_settings();
     </style>
     <?php if (!empty($settings['header_code'])): ?>
         <?php echo $settings['header_code']; ?>
+    <?php endif; ?>
+    <?php if (isset($header_code)): ?>
+        <?php echo $header_code; ?>
     <?php endif; ?>
 </head>
 <body>

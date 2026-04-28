@@ -27,6 +27,58 @@ $custom_meta_title = !empty($post['meta_title']) ? $post['meta_title'] : $post['
 $custom_meta_description = !empty($post['meta_description']) ? $post['meta_description'] : $post['excerpt'];
 $custom_meta_keywords = $post['meta_keywords'] ?? '';
 
+// Schema.org Structured Data
+$post_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]";
+$json_ld = [
+    "@context" => "https://schema.org",
+    "@type" => "NewsArticle",
+    "headline" => $post['title'],
+    "image" => [strpos($post['image'], 'http') === 0 ? $post['image'] : SITE_URL . $post['image']],
+    "datePublished" => date('c', strtotime($post['publish_date'] ?: $post['created_at'])),
+    "dateModified" => date('c', strtotime($post['created_at'])),
+    "author" => [
+        "@type" => "Person",
+        "name" => $post['author'],
+        "url" => SITE_URL . "/author/" . urlencode($post['author'])
+    ],
+    "publisher" => [
+        "@type" => "Organization",
+        "name" => $settings['name'] ?? 'Football Intelligence',
+        "logo" => [
+            "@type" => "ImageObject",
+            "url" => !empty($settings['logo']) ? (strpos($settings['logo'], 'http') === 0 ? $settings['logo'] : SITE_URL . $settings['logo']) : ""
+        ]
+    ]
+];
+
+$breadcrumb_ld = [
+    "@context" => "https://schema.org",
+    "@type" => "BreadcrumbList",
+    "itemListElement" => [
+        [
+            "@type" => "ListItem",
+            "position" => 1,
+            "name" => "Home",
+            "item" => SITE_URL
+        ],
+        [
+            "@type" => "ListItem",
+            "position" => 2,
+            "name" => $post['category'],
+            "item" => SITE_URL . "/category/" . urlencode($post['category'])
+        ],
+        [
+            "@type" => "ListItem",
+            "position" => 3,
+            "name" => $post['title'],
+            "item" => $post_url
+        ]
+    ]
+];
+
+$header_code = '<script type="application/ld+json">' . json_encode($json_ld) . '</script>';
+$header_code .= '<script type="application/ld+json">' . json_encode($breadcrumb_ld) . '</script>';
+
 include __DIR__ . '/../includes/header.php';
 
 // Handle Comment Submission
@@ -78,10 +130,12 @@ $relatedPosts = $stmt_related->fetchAll();
 
                     <div class="flex flex-wrap items-center gap-4 md:gap-6 text-white-50 font-monospace text-[10px] uppercase tracking-[0.15em]">
                         <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-full bg-electric-red flex items-center justify-center text-white fw-bold italic font-condensed">
-                                <?php echo substr($post['author'], 0, 1); ?>
-                            </div>
-                            <span>BY <span class="text-white fw-bold"><?php echo $post['author']; ?></span></span>
+                            <a href="/author/<?php echo urlencode($post['author']); ?>" class="flex items-center gap-2 text-decoration-none text-inherit">
+                                <div class="w-8 h-8 rounded-full bg-electric-red flex items-center justify-center text-white fw-bold italic font-condensed">
+                                    <?php echo substr($post['author'], 0, 1); ?>
+                                </div>
+                                <span>BY <span class="text-white fw-bold"><?php echo $post['author']; ?></span></span>
+                            </a>
                         </div>
                         <span class="w-1 h-1 bg-white/20 rounded-full d-none d-md-block"></span>
                         <div class="flex items-center gap-2">
@@ -236,7 +290,7 @@ $relatedPosts = $stmt_related->fetchAll();
                 <div class="col-md-3">
                     <a href="/post/<?php echo $rp['slug']; ?>" class="card h-100 bg-transparent border-0 group text-decoration-none">
                         <div class="ratio ratio-16x9 mb-3 overflow-hidden rounded-3 border border-white/10">
-                            <img src="<?php echo $rp['image']; ?>" class="object-fit-cover transition-all duration-500 group-hover:scale-110" alt="">
+                                <img src="<?php echo $rp['image']; ?>" class="object-fit-cover transition-all duration-500 group-hover:scale-110" alt="<?php echo htmlspecialchars($rp['title']); ?>">
                         </div>
                         <h4 class="text-white font-condensed fw-black italic uppercase fs-5 leading-tight group-hover:text-electric-red transition-all"><?php echo $rp['title']; ?></h4>
                     </a>

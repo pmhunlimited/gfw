@@ -70,6 +70,18 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Auto-migration for users bio and social links
+    try {
+        $conn->query("SELECT bio FROM users LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE users ADD COLUMN bio TEXT");
+            $conn->exec("ALTER TABLE users ADD COLUMN twitter_url VARCHAR(255)");
+            $conn->exec("ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)");
+            $conn->exec("ALTER TABLE users ADD COLUMN avatar VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
     // Category Consolidation & Data Integrity Migration
     if ($settings && empty($settings['taxonomy_migrated'])) {
         try {
@@ -91,6 +103,13 @@ function get_settings() {
 
             // Clean up old categories
             $conn->exec("DELETE FROM categories WHERE name NOT IN ('Football News', 'Transfer News')");
+
+            // Ensure About Us page exists
+            $check_about = $conn->query("SELECT id FROM pages WHERE slug = 'about-us'")->fetch();
+            if (!$check_about) {
+                $conn->prepare("INSERT INTO pages (title, slug, content, is_visible, position) VALUES (?, ?, ?, 1, 'footer')")
+                     ->execute(['About Us', 'about-us', '# About Football Intelligence Network\n\nWelcome to the most advanced football intelligence hub.\n\n## Our Mission\nOur mission is to provide real-time, professional-grade football intelligence and transfer updates to fans globally. We leverage expert insights to bring you the stories that matter.\n\n## The Team\nOur team consists of veteran sports journalists and data analysts dedicated to 100 percent human-verified reporting.']);
+            }
 
             // Mark as migrated
             $conn->exec("UPDATE site_settings SET taxonomy_migrated = 1 WHERE id = 1");
@@ -698,7 +717,7 @@ function update_sitemap() {
     $xml .= '  </url>' . PHP_EOL;
 
     // Static / Core Pages
-    $core_pages = ['watch', 'tables', 'privacy-policy'];
+    $core_pages = ['watch', 'tables', 'privacy-policy', 'about-us'];
     foreach ($core_pages as $cp) {
         $xml .= '  <url>' . PHP_EOL;
         $xml .= '    <loc>' . $site_url . '/' . $cp . '</loc>' . PHP_EOL;
@@ -724,6 +743,16 @@ function update_sitemap() {
         $xml .= '    <loc>' . $site_url . '/category/' . $cat['slug'] . '</loc>' . PHP_EOL;
         $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
         $xml .= '    <priority>0.60</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Authors
+    $authors = $conn->query("SELECT username FROM users")->fetchAll();
+    foreach ($authors as $a) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/author/' . urlencode($a['username']) . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.50</priority>' . PHP_EOL;
         $xml .= '  </url>' . PHP_EOL;
     }
 

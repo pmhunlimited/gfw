@@ -25,6 +25,9 @@ if ($path == '/' || $path == '' || empty($path)) {
 } elseif (preg_match('/^\/post\/([^\/]+)$/', $path, $matches)) {
     $_GET['slug'] = $matches[1];
     include __DIR__ . '/pages/post_detail.php';
+} elseif (preg_match('/^\/author\/([^\/]+)$/', $path, $matches)) {
+    $_GET['name'] = urldecode($matches[1]);
+    include __DIR__ . '/pages/author.php';
 } elseif ($path == '/watch') {
     include __DIR__ . '/pages/watch.php';
 } elseif ($path == '/betting') {

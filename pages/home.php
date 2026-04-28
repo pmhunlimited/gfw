@@ -78,7 +78,7 @@ if ($category) {
                     <div class="col-lg-8 border-r border-white/10">
                         <div class="relative h-[60vh] md:h-[85vh] flex items-end">
                             <div class="absolute inset-0 z-0">
-                                <img src="<?php echo $hero['image']; ?>" class="w-full h-full object-fit-cover opacity-60" alt="">
+                                <img src="<?php echo $hero['image']; ?>" class="w-full h-full object-fit-cover opacity-60" alt="<?php echo htmlspecialchars($hero['title']); ?>">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
                             </div>
 
@@ -116,7 +116,7 @@ if ($category) {
                                     <a href="/post/<?php echo $sn['slug']; ?>" class="block group text-decoration-none border-b border-white/5 p-4 md:p-5 hover:bg-white/5 transition-all">
                                         <div class="flex gap-4">
                                             <div class="w-20 h-20 md:w-24 md:h-20 flex-shrink-0 overflow-hidden rounded-xl border border-white/10">
-                                                <img src="<?php echo $sn['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110">
+                                                <img src="<?php echo $sn['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110" alt="<?php echo htmlspecialchars($sn['title']); ?>">
                                             </div>
                                             <div class="flex-grow">
                                                 <div class="flex items-center gap-2 mb-1.5">
@@ -153,7 +153,7 @@ if ($category) {
                             <?php foreach ($footballReports as $fr): ?>
                                 <a href="/post/<?php echo $fr['slug']; ?>" class="flex gap-6 group text-decoration-none">
                                     <div class="w-32 h-24 flex-shrink-0 overflow-hidden rounded-xl border border-white/10">
-                                        <img src="<?php echo $fr['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110">
+                                        <img src="<?php echo $fr['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110" alt="<?php echo htmlspecialchars($fr['title']); ?>">
                                     </div>
                                     <div class="flex-grow py-1">
                                         <h4 class="text-lg font-condensed fw-black italic text-white uppercase group-hover:text-electric-red transition-colors line-clamp-2 leading-tight mb-2"><?php echo $fr['title']; ?></h4>
@@ -174,7 +174,7 @@ if ($category) {
                             <?php foreach ($transferUpdates as $tu): ?>
                                 <a href="/post/<?php echo $tu['slug']; ?>" class="flex gap-6 group text-decoration-none">
                                     <div class="w-32 h-24 flex-shrink-0 overflow-hidden rounded-xl border border-white/10">
-                                        <img src="<?php echo $tu['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110">
+                                        <img src="<?php echo $tu['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-500 group-hover:scale-110" alt="<?php echo htmlspecialchars($tu['title']); ?>">
                                     </div>
                                     <div class="flex-grow py-1">
                                         <h4 class="text-lg font-condensed fw-black italic text-white uppercase group-hover:text-electric-red transition-colors line-clamp-2 leading-tight mb-2"><?php echo $tu['title']; ?></h4>
@@ -206,7 +206,7 @@ if ($category) {
                             <div class="col-xl-3 col-lg-4 col-md-6">
                                 <article class="group h-full flex flex-col bg-[#0a0e17] rounded-3xl border border-white/5 overflow-hidden transition-all hover:border-electric-red/30">
                                     <a href="/post/<?php echo $post['slug']; ?>" class="block relative aspect-[4/3] overflow-hidden">
-                                        <img src="<?php echo $post['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-700 group-hover:scale-110" alt="">
+                                        <img src="<?php echo $post['image']; ?>" class="w-full h-full object-fit-cover transition-transform duration-700 group-hover:scale-110" alt="<?php echo htmlspecialchars($post['title']); ?>">
                                     </a>
                                     <div class="p-8 flex-grow flex flex-col">
                                         <div class="text-[10px] font-monospace text-white/30 uppercase mb-4"><?php echo date('d M Y // H:i', strtotime($post['publish_date'])); ?></div>
