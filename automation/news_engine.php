@@ -274,8 +274,8 @@ foreach ($discovered_items as $item) {
         'The Guardian', 'The Sun', 'Daily Mail', 'Mirror Sport', 'MARCA', 'AS.com', 'Gazzetta'
     ];
 
-    $generated_title = $content_data['title'] ?? $item['title'];
-    $generated_content = $content_data['content'];
+    $generated_title = clean_utf8($content_data['title'] ?? $item['title']);
+    $generated_content = clean_utf8($content_data['content']);
 
     foreach ($banned_sources as $source) {
         $generated_title = str_ireplace($source, $site_name, $generated_title);
@@ -284,8 +284,8 @@ foreach ($discovered_items as $item) {
 
     // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
     // Replace all dash variations with proper punctuation or spaces
-    $generated_title = preg_replace('/(\s*[\-\–\—]\s*)/', ' ', $generated_title);
-    $generated_content = preg_replace('/(\s*[\-\–\—]\s*)/', '. ', $generated_content);
+    $generated_title = preg_replace('/(\s*[\-\–\—]\s*)/u', ' ', $generated_title);
+    $generated_content = preg_replace('/(\s*[\-\–\—]\s*)/u', '. ', $generated_content);
     $generated_content = str_replace(['. .', '. . '], '. ', $generated_content);
     $generated_content = preg_replace('/\s+/', ' ', $generated_content);
 

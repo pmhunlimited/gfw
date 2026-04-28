@@ -186,9 +186,12 @@ if (isset($_POST['generate_ai'])) {
             $content = str_ireplace($source, $site_name, $content);
         }
 
+        $title = clean_utf8($title);
+        $content = clean_utf8($content);
+
         // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
-        $title = preg_replace('/(\s*[\-\–\—]\s*)/', ' ', $title);
-        $content = preg_replace('/(\s*[\-\–\—]\s*)/', '. ', $content);
+        $title = preg_replace('/(\s*[\-\–\—]\s*)/u', ' ', $title);
+        $content = preg_replace('/(\s*[\-\–\—]\s*)/u', '. ', $content);
         $content = str_replace(['. .', '. . '], '. ', $content);
         $content = preg_replace('/\s+/', ' ', $content);
 

@@ -168,10 +168,41 @@ function format_site_title($name, $primary_class = 'text-electric-red') {
     return htmlspecialchars($name);
 }
 
+function clean_utf8($string) {
+    if (!is_string($string)) return $string;
+
+    // Remove UTF-8 BOM if present
+    $string = str_replace("\xEF\xBB\xBF", '', $string);
+
+    // Force valid UTF-8 and remove invalid sequences
+    $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+
+    // Specifically remove the replacement character  (U+FFFD)
+    $string = str_replace("\xEF\xBF\xBD", '', $string);
+
+    // Replace common Windows-1252 / CP1252 characters that often cause issues in UTF-8
+    $map = [
+        chr(0x80) => '€', chr(0x82) => '‚', chr(0x83) => 'ƒ', chr(0x84) => '„',
+        chr(0x85) => '…', chr(0x86) => '†', chr(0x87) => '‡', chr(0x88) => 'ˆ',
+        chr(0x89) => '‰', chr(0x8A) => 'Š', chr(0x8B) => '‹', chr(0x8C) => 'Œ',
+        chr(0x8E) => 'Ž', chr(0x91) => '‘', chr(0x92) => '’', chr(0x93) => '“',
+        chr(0x94) => '”', chr(0x95) => '•', chr(0x96) => '–', chr(0x97) => '—',
+        chr(0x98) => '˜', chr(0x99) => '™', chr(0x9A) => 'š', chr(0x9B) => '›',
+        chr(0x9C) => 'œ', chr(0x9E) => 'ž', chr(0x9F) => 'Ÿ',
+    ];
+    $string = strtr($string, $map);
+
+    // Remove any remaining non-printable characters, keeping common accented letters and symbols
+    $cleaned = preg_replace('/[^\x20-\x7E\xA0-\xFF\x{0100}-\x{FFFF}]/u', '', $string);
+
+    return ($cleaned !== null) ? $cleaned : $string;
+}
+
 function sanitize($data) {
     if (is_array($data)) {
         $data = implode(', ', $data);
     }
+    $data = clean_utf8($data);
     return htmlspecialchars(strip_tags(trim($data)));
 }
 
@@ -592,14 +623,14 @@ function extract_json($raw, $as_array = false) {
     if ($json !== null) return $json;
 
     // 2. Try to escape literal newlines inside strings
-    $escaped = preg_replace_callback('/"([^"\\\\]|\\\\.)*"/', function($matches) {
+    $escaped = preg_replace_callback('/"([^"\\\\]|\\\\.)*"/u', function($matches) {
         return str_replace(["\n", "\r"], ["\\n", "\\r"], $matches[0]);
     }, $json_str);
     $json = json_decode($escaped, true);
     if ($json !== null) return $json;
 
     // 3. Last resort: Clean all literal control characters
-    $cleaned = preg_replace('/[\x00-\x1F\x7F]/', '', $json_str);
+    $cleaned = preg_replace('/[\x00-\x1F\x7F]/u', '', $json_str);
     $json = json_decode($cleaned, true);
     return $json;
 }
