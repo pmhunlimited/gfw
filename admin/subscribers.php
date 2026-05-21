@@ -40,4 +40,4 @@ $subs = $conn->query("SELECT * FROM subscribers ORDER BY created_at DESC")->fetc
     </div>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

@@ -1,4 +1,5 @@
 <?php
+ob_start();
 if (!file_exists(__DIR__ . '/includes/config.php')) {
     header("Location: /install/");
     exit;
@@ -24,6 +25,9 @@ if ($path == '/' || $path == '' || empty($path)) {
 } elseif (preg_match('/^\/post\/([^\/]+)$/', $path, $matches)) {
     $_GET['slug'] = $matches[1];
     include __DIR__ . '/pages/post_detail.php';
+} elseif (preg_match('/^\/author\/([^\/]+)$/', $path, $matches)) {
+    $_GET['name'] = urldecode($matches[1]);
+    include __DIR__ . '/pages/author.php';
 } elseif ($path == '/watch') {
     include __DIR__ . '/pages/watch.php';
 } elseif ($path == '/betting') {
@@ -51,7 +55,9 @@ if ($path == '/' || $path == '' || empty($path)) {
     $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
     if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $conn = get_db_connection();
-        $stmt = $conn->prepare("INSERT IGNORE INTO subscribers (email) VALUES (?)");
+        $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+        $sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO subscribers (email) VALUES (?)" : "INSERT IGNORE INTO subscribers (email) VALUES (?)";
+        $stmt = $conn->prepare($sql);
         $stmt->execute([$email]);
         header('Location: /?subscribed=true');
         exit;
@@ -76,12 +82,11 @@ if ($path == '/' || $path == '' || empty($path)) {
             $_GET['page_id'] = $page['id'];
             include __DIR__ . '/pages/cms_page.php';
         } else {
-            http_response_code(404);
+            if (!headers_sent()) http_response_code(404);
             include __DIR__ . '/pages/404.php';
         }
     } else {
-        http_response_code(404);
+        if (!headers_sent()) http_response_code(404);
         include __DIR__ . '/pages/404.php';
     }
 }
-?>

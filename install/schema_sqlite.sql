@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
     ig_access_token TEXT,
     tt_client_key VARCHAR(255),
     tt_client_secret VARCHAR(255),
-    tt_access_token TEXT
+    tt_access_token TEXT,
+    taxonomy_migrated BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -93,6 +94,8 @@ CREATE TABLE IF NOT EXISTS pages (
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     content TEXT,
+    is_external BOOLEAN DEFAULT FALSE,
+    external_url VARCHAR(255),
     is_visible BOOLEAN DEFAULT TRUE,
     position TEXT DEFAULT 'main',
     meta_title VARCHAR(255),
@@ -103,9 +106,11 @@ CREATE TABLE IF NOT EXISTS pages (
 
 CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name VARCHAR(100) UNIQUE NOT NULL
+    name VARCHAR(100) UNIQUE NOT NULL,
+    slug VARCHAR(100)
 );
 
-INSERT INTO site_settings (name, tagline, selected_model) VALUES ('GLOBAL FOOTBALL WATCH', 'Intelligence in Football', 'deepseek-chat');
-INSERT INTO categories (name) VALUES ('PREMIER LEAGUE'), ('TRANSFER NEWS'), ('MATCH ANALYSIS'), ('LA LIGA'), ('CHAMPIONS LEAGUE');
+INSERT INTO site_settings (name, tagline, selected_model) VALUES ('FOOTBALL INTELLIGENCE', 'Sports Intelligence Network', 'deepseek-chat');
+INSERT INTO categories (name, slug) VALUES ('Football News', 'football-news'), ('Transfer News', 'transfer-news');
 INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('Privacy Policy', 'privacy-policy', '# Privacy Policy\n\nYour privacy is important to us.', 1, 'main');
+INSERT INTO pages (title, slug, content, is_visible, position) VALUES ('About Us', 'about-us', '# About Football Intelligence Network\n\nWelcome to the most advanced football intelligence hub.\n\n## Our Mission\nOur mission is to provide real-time, professional-grade football intelligence and transfer updates to fans globally. We leverage expert insights to bring you the stories that matter.\n\n## The Team\nOur team consists of veteran sports journalists and data analysts dedicated to 100 percent human-verified reporting.', 1, 'footer');

@@ -12,7 +12,7 @@ function get_db_connection() {
             $conn = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
         } else {
             try {
-                $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME, DB_USER, DB_PASS);
+                $conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
             } catch (PDOException $e) {
                 // Fallback to SQLite if MySQL fails in this environment
                 $conn = new PDO("sqlite:" . __DIR__ . "/../database.sqlite");
@@ -27,4 +27,3 @@ function get_db_connection() {
         return null;
     }
 }
-?>

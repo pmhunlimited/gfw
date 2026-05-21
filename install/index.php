@@ -98,9 +98,8 @@ define('DB_PASS', '".$db['pass']."');
 define('DB_NAME', '".$db['name']."');
 define('DB_FILE', __DIR__ . '/../database.sqlite');
 define('SITE_URL', '".$base_url."');
-define('INSTALLED', true);
-?>";
-        file_put_contents(__DIR__ . '/../includes/config.php', $config_content);
+define('INSTALLED', true);";
+        file_put_contents(__DIR__ . '/../includes/config.php', trim($config_content));
 
         header('Location: ?stage=4');
         exit;
@@ -115,7 +114,7 @@ define('INSTALLED', true);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GFW Installer - Stage <?php echo $stage; ?></title>
+    <title>System Installer - Stage <?php echo $stage; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&display=swap" rel="stylesheet">
     <style>
@@ -134,7 +133,7 @@ define('INSTALLED', true);
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="installer-card shadow-lg">
-                <h1 class="font-condensed italic text-center mb-4">GFW <span class="text-electric-red">INSTALLER</span></h1>
+                <h1 class="font-condensed italic text-center mb-4">SYSTEM <span class="text-electric-red">INSTALLER</span></h1>
 
                 <?php if ($error): ?>
                     <div class="alert alert-danger"><?php echo $error; ?></div>
@@ -221,7 +220,7 @@ define('INSTALLED', true);
                     <h3 class="font-condensed h5 mb-3 text-white-50 text-center">Stage 4: Congratulations!</h3>
                     <div class="text-center py-4">
                         <div class="display-1 text-success mb-4">✅</div>
-                        <p class="lead">GFW has been successfully installed on your server.</p>
+                        <p class="lead">The system has been successfully installed on your server.</p>
                         <hr class="border-white border-opacity-10">
                         <div class="text-start small text-white-50">
                             <p><strong>Next steps:</strong></p>

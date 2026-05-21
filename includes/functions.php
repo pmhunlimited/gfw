@@ -8,7 +8,7 @@ function get_settings() {
 
     $conn = get_db_connection();
     if (!$conn) return [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'FOOTBALL INTELLIGENCE',
         'logo' => '',
         'favicon' => ''
     ];
@@ -60,8 +60,67 @@ function get_settings() {
         } catch (Exception $ex) {}
     }
 
+    // Auto-migration for pages is_external and external_url
+    try {
+        $conn->query("SELECT is_external FROM pages LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE pages ADD COLUMN is_external BOOLEAN DEFAULT FALSE");
+            $conn->exec("ALTER TABLE pages ADD COLUMN external_url VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
+    // Auto-migration for users bio and social links
+    try {
+        $conn->query("SELECT bio FROM users LIMIT 1");
+    } catch (Exception $e) {
+        try {
+            $conn->exec("ALTER TABLE users ADD COLUMN bio TEXT");
+            $conn->exec("ALTER TABLE users ADD COLUMN twitter_url VARCHAR(255)");
+            $conn->exec("ALTER TABLE users ADD COLUMN linkedin_url VARCHAR(255)");
+            $conn->exec("ALTER TABLE users ADD COLUMN avatar VARCHAR(255)");
+        } catch (Exception $ex) {}
+    }
+
+    // Category Consolidation & Data Integrity Migration
+    if ($settings && empty($settings['taxonomy_migrated'])) {
+        try {
+            $driver = $conn->getAttribute(PDO::ATTR_DRIVER_NAME);
+            $sql = ($driver === 'sqlite') ? "INSERT OR IGNORE INTO categories (name, slug) VALUES " : "INSERT IGNORE INTO categories (name, slug) VALUES ";
+
+            // Ensure categories exist
+            $conn->exec($sql . "('Football News', 'football-news')");
+            $conn->exec($sql . "('Transfer News', 'transfer-news')");
+
+            // Update posts to new categories
+            $conn->exec("UPDATE posts SET category = 'Transfer News' WHERE category LIKE '%Transfer%'");
+            $conn->exec("UPDATE posts SET category = 'Football News' WHERE category != 'Transfer News'");
+
+            // Fix NULLs
+            $conn->exec("UPDATE posts SET is_scheduled = 0 WHERE is_scheduled IS NULL");
+            $conn->exec("UPDATE posts SET is_top_story = 0 WHERE is_top_story IS NULL");
+            $conn->exec("UPDATE posts SET publish_date = created_at WHERE publish_date IS NULL");
+
+            // Clean up old categories
+            $conn->exec("DELETE FROM categories WHERE name NOT IN ('Football News', 'Transfer News')");
+
+            // Ensure About Us page exists
+            $check_about = $conn->query("SELECT id FROM pages WHERE slug = 'about-us'")->fetch();
+            if (!$check_about) {
+                $conn->prepare("INSERT INTO pages (title, slug, content, is_visible, position) VALUES (?, ?, ?, 1, 'footer')")
+                     ->execute(['About Us', 'about-us', '# About Football Intelligence Network\n\nWelcome to the most advanced football intelligence hub.\n\n## Our Mission\nOur mission is to provide real-time, professional-grade football intelligence and transfer updates to fans globally. We leverage expert insights to bring you the stories that matter.\n\n## The Team\nOur team consists of veteran sports journalists and data analysts dedicated to 100 percent human-verified reporting.']);
+            }
+
+            // Mark as migrated
+            $conn->exec("UPDATE site_settings SET taxonomy_migrated = 1 WHERE id = 1");
+            $settings['taxonomy_migrated'] = 1;
+        } catch (Exception $e) {
+            // Silently fail if columns/tables don't exist yet
+        }
+    }
+
     $settings = $settings ?: [
-        'name' => 'GLOBAL FOOTBALL WATCH',
+        'name' => 'FOOTBALL INTELLIGENCE',
         'logo' => '',
         'favicon' => ''
     ];
@@ -87,10 +146,73 @@ function get_categories_with_counts() {
     return $categories;
 }
 
+function format_site_title($name, $primary_class = 'text-electric-red') {
+    $name = trim($name);
+    // Find all capital letters
+    preg_match_all('/[A-Z]/', $name, $matches, PREG_OFFSET_CAPTURE);
+
+    // If there's at least two capital letters, split at the second one
+    if (count($matches[0]) >= 2) {
+        $split_pos = $matches[0][1][1];
+        $first = substr($name, 0, $split_pos);
+        $second = substr($name, $split_pos);
+        return htmlspecialchars($first) . '<span class="' . $primary_class . '">' . htmlspecialchars($second) . '</span>';
+    }
+
+    // Fallback if CamelCase not detected: split by first space
+    $parts = explode(' ', $name, 2);
+    if (count($parts) > 1) {
+        return htmlspecialchars($parts[0]) . ' <span class="' . $primary_class . '">' . htmlspecialchars($parts[1]) . '</span>';
+    }
+
+    return htmlspecialchars($name);
+}
+
+function clean_utf8($string) {
+    if (!is_string($string)) return $string;
+
+    // Remove UTF-8 BOM if present
+    $string = str_replace("\xEF\xBB\xBF", '', $string);
+
+    // Map common UTF-8 "smart" characters to their ASCII equivalents BEFORE encoding conversion
+    $utf8_map = [
+        "\xe2\x80\x98" => "'", "\xe2\x80\x99" => "'", // Smart single quotes
+        "\xe2\x80\x9c" => '"', "\xe2\x80\x9d" => '"', // Smart double quotes
+        "\xe2\x80\x93" => '-', "\xe2\x80\x94" => '-', // En/Em dashes
+        "\xe2\x80\xa6" => '...', // Ellipsis
+    ];
+    $string = strtr($string, $utf8_map);
+
+    // Force valid UTF-8 and remove invalid sequences
+    $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
+
+    // Specifically remove the replacement character (U+FFFD) which often shows as '?'
+    $string = str_replace("\xEF\xBF\xBD", '', $string);
+
+    // Replace common Windows-1252 / CP1252 characters
+    $map = [
+        chr(0x80) => '€', chr(0x82) => '‚', chr(0x83) => 'ƒ', chr(0x84) => '„',
+        chr(0x85) => '...', chr(0x86) => '†', chr(0x87) => '‡', chr(0x88) => 'ˆ',
+        chr(0x89) => '‰', chr(0x8A) => 'Š', chr(0x8B) => '‹', chr(0x8C) => 'Œ',
+        chr(0x8E) => 'Ž', chr(0x91) => "'", chr(0x92) => "'", chr(0x93) => '"',
+        chr(0x94) => '"', chr(0x95) => '•', chr(0x96) => '-', chr(0x97) => '-',
+        chr(0x98) => '~', chr(0x99) => '™', chr(0x9A) => 'š', chr(0x9B) => '›',
+        chr(0x9C) => 'œ', chr(0x9E) => 'ž', chr(0x9F) => 'Ÿ',
+    ];
+    $string = strtr($string, $map);
+
+    // Remove any remaining non-printable characters, keeping common accented letters and symbols
+    // Also explicitly strip literal '?' if they are likely remnants of failed encoding
+    $cleaned = preg_replace('/[^\x20-\x7E\xA0-\xFF\x{0100}-\x{FFFF}]/u', '', $string);
+
+    return ($cleaned !== null) ? $cleaned : $string;
+}
+
 function sanitize($data) {
     if (is_array($data)) {
         $data = implode(', ', $data);
     }
+    $data = clean_utf8($data);
     return htmlspecialchars(strip_tags(trim($data)));
 }
 
@@ -100,7 +222,16 @@ function is_admin() {
 }
 
 function redirect($url) {
-    header("Location: $url");
+    if (!headers_sent()) {
+        header("Location: $url");
+    } else {
+        echo '<script type="text/javascript">';
+        echo 'window.location.href="' . $url . '";';
+        echo '</script>';
+        echo '<noscript>';
+        echo '<meta http-equiv="refresh" content="0;url=' . $url . '" />';
+        echo '</noscript>';
+    }
     exit;
 }
 
@@ -121,7 +252,7 @@ function verify_csrf_token($token) {
 function send_mail($to, $subject, $message) {
     $settings = get_settings();
     if (empty($settings['smtp_host'])) {
-        $headers = "From: " . ($settings['smtp_sender_name'] ?: 'GFW') . " <" . ($settings['smtp_sender_email'] ?: 'noreply@gfw.com') . ">\r\n";
+        $headers = "From: " . ($settings['smtp_sender_name'] ?: ($settings['name'] ?? 'Football Intelligence')) . " <" . ($settings['smtp_sender_email'] ?: 'noreply@intelligence.com') . ">\r\n";
         $headers .= "MIME-Version: 1.0\r\n";
         $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
         return mail($to, $subject, $message, $headers);
@@ -210,7 +341,7 @@ function send_mail($to, $subject, $message) {
 
 function render_email_template($content, $subtitle = 'Intelligence Protocol Active') {
     $settings = get_settings();
-    $site_name = $settings['name'] ?? 'GLOBAL FOOTBALL WATCH';
+    $site_name = $settings['name'] ?? 'FOOTBALL INTELLIGENCE';
     $year = date('Y');
 
     return "
@@ -262,9 +393,58 @@ function render_email_template($content, $subtitle = 'Intelligence Protocol Acti
 
 function log_activity($message) {
     $settings = get_settings();
+    $site_name = $settings['name'] ?? 'Football Intelligence';
     if (!empty($settings['admin_email'])) {
         $html = render_email_template("<p>$message</p>", "Security Alert");
-        send_mail($settings['admin_email'], "GFW System Alert", $html);
+        send_mail($settings['admin_email'], $site_name . " System Alert", $html);
+    }
+}
+
+/**
+ * Notifies all subscribers about new intelligence reports.
+ * @param array $post_ids
+ * @return void
+ */
+function notify_subscribers($post_ids) {
+    if (empty($post_ids)) return;
+
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    // Fetch posts
+    $placeholders = implode(',', array_fill(0, count($post_ids), '?'));
+    $stmt = $conn->prepare("SELECT title, slug, excerpt FROM posts WHERE id IN ($placeholders)");
+    $stmt->execute($post_ids);
+    $posts = $stmt->fetchAll();
+
+    if (empty($posts)) return;
+
+    // Fetch subscribers
+    $subscribers = $conn->query("SELECT email FROM subscribers")->fetchAll(PDO::FETCH_COLUMN);
+    if (empty($subscribers)) return;
+
+    $settings = get_settings();
+    $site_name = $settings['name'] ?? 'Football Intelligence';
+
+    $subject = "Intelligence Alert: New Reports Published - " . $site_name;
+
+    $content = "<p style='font-size:18px; color:#ff3e3e; font-weight:bold; margin-bottom:30px; text-transform:uppercase;'>New Intelligence Reports:</p>";
+
+    foreach ($posts as $post) {
+        $post_url = SITE_URL . "/post/" . $post['slug'];
+        $content .= "
+            <div class='news-item'>
+                <a href='$post_url' class='news-title'>{$post['title']}</a>
+                <p class='news-excerpt'>{$post['excerpt']}</p>
+                <a href='$post_url' class='btn'>Read Full Report</a>
+            </div>
+        ";
+    }
+
+    $message = render_email_template($content, "New Intelligence Dispatch");
+
+    foreach ($subscribers as $email) {
+        send_mail($email, $subject, $message);
     }
 }
 
@@ -321,7 +501,27 @@ function get_ai_insight($prompt) {
 }
 
 /**
- * Fetches and parses RSS feeds from multiple sources.
+ * Centralized registry of sports news RSS feeds.
+ * @return array
+ */
+function get_rss_feed_urls() {
+    return [
+        'https://www.skysports.com/rss/12040', // Sky Sports Football
+        'https://www.espn.com/espn/rss/soccer/news', // ESPN Soccer
+        'https://www.bbc.com/sport/football/rss.xml', // BBC Football
+        'https://www.theguardian.com/football/rss', // The Guardian Football
+        'https://sport.sky.ch/feed', // Sky Sport CH (Euro focus)
+        'https://www.france24.com/en/sports/rss', // France24 Sports
+        'https://talksport.com/football/feed/', // TalkSport Football
+        'https://www.caughtoffside.com/feed/', // CaughtOffside (Transfer Rumours)
+        'https://www.football-espana.net/feed', // Football Espana
+        'https://www.football-italia.net/feed', // Football Italia
+        'https://news.google.com/rss/search?q=football+transfers+premier+league+la+liga+serie+a+ligue+1+bundesliga&hl=en-GB&gl=GB&ceid=GB:en' // Google News Football Search
+    ];
+}
+
+/**
+ * Fetches and parses RSS/Atom feeds from multiple sources.
  * @param array $urls
  * @return array
  */
@@ -333,7 +533,7 @@ function get_rss_news($urls) {
         $ch = curl_init($url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         $xml_data = curl_exec($ch);
         curl_close($ch);
@@ -341,26 +541,35 @@ function get_rss_news($urls) {
         if (!$xml_data) continue;
 
         try {
-            // Suppress errors for malformed XML
-            $xml = @simplexml_load_string($xml_data);
-            if ($xml === false) continue;
+            libxml_use_internal_errors(true);
+            $xml = simplexml_load_string(trim($xml_data), 'SimpleXMLElement', LIBXML_NOCDATA);
+            if (!$xml) {
+                libxml_clear_errors();
+                continue;
+            }
 
-            $items = $xml->xpath('//item');
+            // Handle standard RSS <item> and Atom <entry>
+            $items = $xml->xpath('//item') ?: $xml->xpath('//atom:entry') ?: $xml->xpath('//entry');
             if (!$items) continue;
 
             foreach ($items as $item) {
-                $link = (string)$item->link;
-                if (in_array($link, $seen_links)) continue;
+                $title = (string)($item->title ?? $item->children('atom', true)->title);
+                $link = (string)($item->link['href'] ?? $item->link ?? $item->children('atom', true)->link->attributes()->href);
+                if (empty($link)) $link = (string)$item->guid;
 
-                $pubDate = (string)$item->pubDate;
+                if (empty($title) || empty($link) || in_array($link, $seen_links)) continue;
+
+                $pubDate = (string)($item->pubDate ?? $item->published ?? $item->updated ?? $item->children('dc', true)->date);
                 $timestamp = strtotime($pubDate);
+                if (!$timestamp) continue;
 
-                // Only within last 24 hours
-                if ($timestamp > (time() - 86400)) {
+                // 30 minute window (1800s) for strict real-time relevance as per directive
+                if ($timestamp > (time() - 1800)) {
+                    $description = (string)($item->description ?? $item->summary ?? $item->content ?? '');
                     $all_items[] = [
-                        'title' => (string)$item->title,
-                        'description' => strip_tags((string)$item->description),
-                        'link' => $link,
+                        'title' => trim($title),
+                        'description' => strip_tags(trim($description)),
+                        'link' => trim($link),
                         'pubDate' => $pubDate,
                         'timestamp' => $timestamp,
                         'source' => parse_url($url, PHP_URL_HOST)
@@ -368,16 +577,13 @@ function get_rss_news($urls) {
                     $seen_links[] = $link;
                 }
             }
+            libxml_clear_errors();
         } catch (Exception $e) {
             error_log("RSS Parse Error ($url): " . $e->getMessage());
         }
     }
 
-    // Sort by newest first
-    usort($all_items, function($a, $b) {
-        return $b['timestamp'] - $a['timestamp'];
-    });
-
+    usort($all_items, function($a, $b) { return $b['timestamp'] - $a['timestamp']; });
     return $all_items;
 }
 
@@ -427,14 +633,14 @@ function extract_json($raw, $as_array = false) {
     if ($json !== null) return $json;
 
     // 2. Try to escape literal newlines inside strings
-    $escaped = preg_replace_callback('/"([^"\\\\]|\\\\.)*"/', function($matches) {
+    $escaped = preg_replace_callback('/"([^"\\\\]|\\\\.)*"/u', function($matches) {
         return str_replace(["\n", "\r"], ["\\n", "\\r"], $matches[0]);
     }, $json_str);
     $json = json_decode($escaped, true);
     if ($json !== null) return $json;
 
     // 3. Last resort: Clean all literal control characters
-    $cleaned = preg_replace('/[\x00-\x1F\x7F]/', '', $json_str);
+    $cleaned = preg_replace('/[\x00-\x1F\x7F]/u', '', $json_str);
     $json = json_decode($cleaned, true);
     return $json;
 }
@@ -493,10 +699,31 @@ function upload_image($file, $target_subpath = 'uploads/') {
 
 // Basic Markdown to HTML
 function parse_markdown($text) {
+    if (empty($text)) return '';
     $text = htmlspecialchars($text);
+
+    // Headers
     $text = preg_replace('/^# (.*$)/m', '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 uppercase italic">$1</h2>', $text);
     $text = preg_replace('/^## (.*$)/m', '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>', $text);
+
+    // Bold
     $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+
+    // Paragraphs: Split by double newlines and wrap in <p> if not already a block element
+    $blocks = explode("\n\n", $text);
+    $html_blocks = [];
+    foreach ($blocks as $block) {
+        $block = trim($block);
+        if (empty($block)) continue;
+
+        // If it doesn't start with a header tag or table, wrap in <p>
+        if (!preg_match('/^<(h2|h3|div|table)/i', $block)) {
+            $html_blocks[] = '<p class="mb-4 leading-relaxed">' . nl2br($block) . '</p>';
+        } else {
+            $html_blocks[] = $block;
+        }
+    }
+    $text = implode("\n", $html_blocks);
 
     // Simple table parser
     if (strpos($text, '|') !== false) {
@@ -527,6 +754,81 @@ function parse_markdown($text) {
         if ($inTable) $html .= '</tbody></table></div>';
         return $html;
     }
-    return nl2br($text);
+    return $text;
 }
-?>
+
+/**
+ * Generates and updates the sitemap.xml file.
+ */
+function update_sitemap() {
+    $settings = get_settings();
+    $site_url = defined('SITE_URL') ? rtrim(SITE_URL, '/') : 'https://goalzaza.com';
+    $conn = get_db_connection();
+    if (!$conn) return;
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">' . PHP_EOL;
+
+    $now = date('c');
+
+    // Homepage
+    $xml .= '  <url>' . PHP_EOL;
+    $xml .= '    <loc>' . $site_url . '/</loc>' . PHP_EOL;
+    $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+    $xml .= '    <priority>1.00</priority>' . PHP_EOL;
+    $xml .= '  </url>' . PHP_EOL;
+
+    // Static / Core Pages
+    $core_pages = ['watch', 'tables', 'privacy-policy', 'about-us'];
+    foreach ($core_pages as $cp) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/' . $cp . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.80</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // CMS Pages
+    $pages = $conn->query("SELECT slug, created_at FROM pages WHERE is_visible = 1 AND is_external = 0")->fetchAll();
+    foreach ($pages as $p) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/' . $p['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . date('c', strtotime($p['created_at'])) . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.70</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Categories
+    $categories = $conn->query("SELECT slug FROM categories")->fetchAll();
+    foreach ($categories as $cat) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/category/' . $cat['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.60</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Authors
+    $authors = $conn->query("SELECT username FROM users")->fetchAll();
+    foreach ($authors as $a) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/author/' . urlencode($a['username']) . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . $now . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.50</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    // Posts
+    $posts = $conn->query("SELECT slug, publish_date FROM posts WHERE is_scheduled = 0 OR publish_date <= CURRENT_TIMESTAMP ORDER BY publish_date DESC")->fetchAll();
+    foreach ($posts as $post) {
+        $xml .= '  <url>' . PHP_EOL;
+        $xml .= '    <loc>' . $site_url . '/post/' . $post['slug'] . '</loc>' . PHP_EOL;
+        $xml .= '    <lastmod>' . date('c', strtotime($post['publish_date'])) . '</lastmod>' . PHP_EOL;
+        $xml .= '    <priority>0.50</priority>' . PHP_EOL;
+        $xml .= '  </url>' . PHP_EOL;
+    }
+
+    $xml .= '</urlset>';
+
+    file_put_contents(__DIR__ . '/../sitemap.xml', $xml);
+}

@@ -57,6 +57,8 @@ if (isset($_POST['save_manual'])) {
         $post_id = $conn->lastInsertId();
         if (!$is_scheduled || strtotime($publish_date) <= time()) {
             broadcast_to_social($post_id);
+            notify_subscribers([$post_id]);
+            update_sitemap();
             $success = "Intelligence report deployed and broadcasted.";
         } else {
             $success = "Intelligence report scheduled for $publish_date.";
@@ -107,15 +109,34 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Generate a professional sports news article about '$topic' in the category '$cat'.
-               Write in an engaging first-person 'fan blogger' perspective.
+    $prompt = "Act as a Senior European Football Columnist for '{$settings['name']}'. You are an expert analyst with a deep understanding of the tactical and emotional nuances of the beautiful game.
+               Generate a professional sports news article about '$topic' in the category '$cat'.
+
+               STYLE: Professional British Standard English. Authoritative, insightful, and highly engaging. Think of a blend between a high-end broadsheet sports page and an expert fan-led editorial.
+
+               STRICT LINGUISTIC GUIDELINES (0% AI DETECTION - 100% HUMAN):
+               1. TITLE: Create a strong, punchy, and professional headline. Avoid clichés.
+               2. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Kit' (not uniform). Use expert terminology: 'low block', 'transitional play', 'clinical finishing', 'tactical flexibility'.
+               3. PERSPECTIVE: Write as an insider. Use occasional rhetorical questions to engage the reader.
+               4. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
+               5. STRUCTURE: Organize the content into 3-6 clearly defined paragraphs. Use DOUBLE NEWLINES (\n\n) between paragraphs.
+               6. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
+               6. HUMAN TOUCH: Use colloquialisms common in football culture (e.g., 'bottled it', 'in the mixer', 'squeaky bum time', 'parked the bus') sparingly but effectively to establish authenticity.
+               7. NO HALLUCINATIONS: Stick to the factual context of the topic but you MAY add expert analysis and fan-perspective commentary.
+
+               BANNED PHRASES/AI TELLS (STRICTLY FORBIDDEN):
+               - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage', 'tapestry', 'delve', 'unleash', 'comprehensive', 'ultimate guide'.
+               - NO '-ing' depth: 'highlighting...', 'symbolizing...', 'reflecting...', 'showcasing...'.
+               - NO Ad-speak: 'groundbreaking', 'transformative', 'cutting-edge', 'seamless', 'robust', 'world-class'.
+               - NO Filler: 'At its core', 'In today\'s world', 'It\'s worth noting', 'Needless to say', 'That being said'.
+
                Return JSON with:
-               - 'title': Catchy headline.
-               - 'content': A comprehensive 500-word report structured with 4 to 5 long, detailed paragraphs in Markdown.
-               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story (e.g. specific player names, team names).
-               - 'tags': 5-8 relevant SEO tags (comma separated).
-               - 'meta_title': SEO optimized title (max 60 chars).
-               - 'meta_description': Compelling SEO description (max 160 chars).
+               - 'title': The professional, rewritten headline.
+               - 'content': Rewritten expert report (flowing prose, no em-dashes or hyphens).
+               - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story.
+               - 'tags': 6-10 SEO tags.
+               - 'meta_title': Professional invitation to read.
+               - 'meta_description': Concise, punchy summary for search engines.
                - 'meta_keywords': High ranking keywords for this specific news.
                Ensure the response is a valid JSON object.";
     $raw = get_ai_insight($prompt);
@@ -150,11 +171,42 @@ if (isset($_POST['generate_ai'])) {
             $db_image = "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&q=80&w=1600";
         }
 
+        // White-Label Post-Processing (PHP Safety Sweep)
+        $site_name = $settings['name'] ?? 'The Sports Network';
+        $banned_sources = [
+            'BBC Sport', 'BBC', 'Sky Sports', 'Sky Sport', 'Sky', 'ESPN FC', 'ESPN', 'SuperSport',
+            'France 24', 'France24', 'TalkSport', 'CaughtOffside', 'Football Espana', 'Football Italia',
+            'The Guardian', 'The Sun', 'Daily Mail', 'Mirror Sport', 'MARCA', 'AS.com', 'Gazzetta'
+        ];
+
+        foreach ($banned_sources as $source) {
+            $title = str_ireplace($source, $site_name, $title);
+            $content = str_ireplace($source, $site_name, $content);
+        }
+
+        $title = clean_utf8($title);
+        $content = clean_utf8($content);
+
+        // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
+        $title = preg_replace('/(\s*[\-\–\—]\s*)/u', ' ', $title);
+        $content = preg_replace('/(\s*[\-\–\—]\s*)/u', '. ', $content);
+
+        // Remove stray '?' that often appear from encoding errors
+        $title = str_replace('?', '', $title);
+        $content = str_replace('?', '', $content);
+
+        $content = str_replace(['. .', '. . '], '. ', $content);
+        // Standardize newlines and then remove excess but keep double newlines for paragraphs
+        $content = str_replace("\r", "", $content);
+        $content = preg_replace("/\n{3,}/", "\n\n", $content);
+
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, 'AI', $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
+        if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
             $post_id = $conn->lastInsertId();
             if (!$is_scheduled || strtotime($publish_date) <= time()) {
                 broadcast_to_social($post_id);
+                notify_subscribers([$post_id]);
+                update_sitemap();
                 $success = "AI Intelligence generated, deployed and broadcasted: " . $title;
             } else {
                 $success = "AI Intelligence generated and scheduled for $publish_date: " . $title;
@@ -191,7 +243,58 @@ $posts = $stmt->fetchAll();
 
 $categories = $conn->query("SELECT * FROM categories")->fetchAll();
 
+// Dashboard Stats
+try {
+    $total_reports = $conn->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+    $total_comments = $conn->query("SELECT COUNT(*) FROM comments")->fetchColumn();
+    $total_subscribers = $conn->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
+} catch (Exception $e) {
+    $total_reports = $total_comments = $total_subscribers = 0;
+}
+
 ?>
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-danger/10 flex items-center justify-center">
+                    <i class="bi bi-file-earmark-text text-danger fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Total Reports</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_reports); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <i class="bi bi-chat-dots text-primary fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Total Comments</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_comments); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="bg-[#0a0e17] rounded-3xl p-4 border border-white/5 shadow-xl">
+            <div class="d-flex align-items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center">
+                    <i class="bi bi-people text-success fs-3"></i>
+                </div>
+                <div>
+                    <div class="text-[10px] font-black uppercase text-gray-500 tracking-widest mb-1">Syndication Network</div>
+                    <div class="text-3xl font-black text-white italic"><?php echo number_format($total_subscribers); ?></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4 mb-5">
     <div>
         <h1 class="font-condensed fw-black italic text-white display-5 mb-0">POST <span class="text-danger">REGISTRY</span></h1>
@@ -203,6 +306,7 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
             <button type="submit" class="position-absolute end-0 top-0 h-100 px-3 text-white-50 hover:text-danger"><i class="bi bi-search"></i></button>
         </form>
         <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger font-condensed fw-black italic px-4 py-2 d-none" onclick="confirmBulkDelete()">BULK DELETE</button>
+        <a href="/automation/news_engine.php" target="_blank" class="btn btn-outline-primary font-condensed fw-black italic px-4 py-2">TRIGGER DISCOVERY</a>
         <button class="btn btn-outline-secondary font-condensed fw-black italic px-4 py-2" data-bs-toggle="modal" data-bs-target="#manualModal">CREATE NEW POST</button>
     </div>
 </div>
@@ -244,8 +348,8 @@ $categories = $conn->query("SELECT * FROM categories")->fetchAll();
                         <div class="d-flex align-items-center">
                             <img src="<?php echo $post['image']; ?>" class="rounded-2 me-3" style="width: 40px; height: 40px; object-fit: cover;">
                             <div>
-                                <div class="text-white font-bold small uppercase italic"><?php echo $post['title']; ?></div>
-                                <div class="text-[9px] text-white-50 font-monospace opacity-50">/<?php echo $post['slug']; ?></div>
+                                <div class="text-white font-bold small uppercase italic"><?php echo htmlspecialchars($post['title']); ?></div>
+                                <div class="text-[9px] text-white-50 font-monospace opacity-50">/<?php echo htmlspecialchars($post['slug']); ?></div>
                             </div>
                         </div>
                     </td>
@@ -558,4 +662,4 @@ document.querySelectorAll('.edit-post').forEach(btn => {
 });
 </script>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

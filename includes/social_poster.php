@@ -1,6 +1,6 @@
 <?php
 /**
- * GFW Social Media Broadcaster
+ * Social Media Broadcaster
  * Handles automatic posting to Facebook, X, Instagram, and TikTok
  */
 
@@ -139,4 +139,3 @@ function post_to_tiktok($token, $image_url, $description) {
     curl_exec($ch);
     curl_close($ch);
 }
-?>

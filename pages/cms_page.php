@@ -13,6 +13,10 @@ if (!$page) {
     redirect('/404');
 }
 
+if ($page['is_external'] && !empty($page['external_url'])) {
+    redirect($page['external_url']);
+}
+
 // Set dynamic meta tags for header
 $custom_meta_title = !empty($page['meta_title']) ? $page['meta_title'] : $page['title'];
 $custom_meta_description = !empty($page['meta_description']) ? $page['meta_description'] : '';
@@ -28,4 +32,4 @@ include __DIR__ . '/../includes/header.php';
         </div>
     </div>
 </div>
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php';

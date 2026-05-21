@@ -7,19 +7,20 @@ $settings = get_settings();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : ($settings['name'] ?? 'GFW') . ' | Elite Coverage'; ?></title>
+    <title><?php echo isset($custom_meta_title) ? $custom_meta_title : htmlspecialchars($settings['name'] ?? 'Football Intelligence') . ' | ' . htmlspecialchars($settings['tagline'] ?? 'Sports Intelligence Network'); ?></title>
     <?php if (isset($custom_meta_description)): ?>
     <meta name="description" content="<?php echo $custom_meta_description; ?>">
     <?php endif; ?>
     <?php if (isset($custom_meta_keywords)): ?>
     <meta name="keywords" content="<?php echo $custom_meta_keywords; ?>">
     <?php endif; ?>
+    <link rel="canonical" href="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
     <?php if (!empty($settings['favicon'])): ?>
     <link rel="shortcut icon" href="<?php echo $settings['favicon']; ?>" type="image/x-icon">
     <?php endif; ?>
     <!-- Bootstrap 5.3.3 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
@@ -74,6 +75,9 @@ $settings = get_settings();
     <?php if (!empty($settings['header_code'])): ?>
         <?php echo $settings['header_code']; ?>
     <?php endif; ?>
+    <?php if (isset($header_code)): ?>
+        <?php echo $header_code; ?>
+    <?php endif; ?>
 </head>
 <body>
     <!-- Main Navbar -->
@@ -81,9 +85,9 @@ $settings = get_settings();
         <div class="container-fluid px-4">
             <a class="navbar-brand font-condensed fw-black italic tracking-tighter fs-3 me-4" href="/">
                 <?php if (!empty($settings['logo'])): ?>
-                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 35px;" class="d-inline-block align-middle">
+                    <img src="<?php echo $settings['logo']; ?>" alt="Logo" style="max-height: 80px;" class="d-inline-block align-middle">
                 <?php else: ?>
-                    <?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[0]; ?> <span class="text-electric-red"><?php echo explode(' ', $settings['name'] ?? 'GLOBAL FOOTBALL WATCH')[1] ?? ''; ?></span>
+                    <?php echo format_site_title($settings['name'] ?? 'FootballIntelligence'); ?>
                 <?php endif; ?>
             </a>
 
@@ -99,10 +103,11 @@ $settings = get_settings();
                     <?php
                     $conn = get_db_connection();
                     if ($conn) {
-                        $pages = $conn->query("SELECT title, slug FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
+                        $pages = $conn->query("SELECT title, slug, is_external, external_url FROM pages WHERE is_visible = 1 AND position = 'main'")->fetchAll();
                         foreach ($pages as $p) {
+                            $url = $p['is_external'] ? $p['external_url'] : '/'.$p['slug'];
                             $active = ($current_path == '/'.$p['slug']) ? 'active text-electric-red' : '';
-                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="/'.$p['slug'].'" style="color: #fff;">'.$p['title'].'</a></li>';
+                            echo '<li class="nav-item"><a class="nav-link px-2 '.$active.'" href="'.$url.'" style="color: #fff;">'.$p['title'].'</a></li>';
                         }
                     }
                     ?>

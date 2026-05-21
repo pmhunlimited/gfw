@@ -59,4 +59,4 @@ $comments = $conn->query("SELECT c.*, p.title as post_title FROM comments c JOIN
     </div>
 </div>
 
-<?php admin_footer(); ?>
+<?php admin_footer();

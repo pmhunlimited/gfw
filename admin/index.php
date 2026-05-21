@@ -1,9 +1,15 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) session_start();
 require_once __DIR__ . '/../includes/functions.php';
 
+// Consistent Admin Base Detection
+$admin_root = '/admin';
+$request_uri = $_SERVER['REQUEST_URI'];
+$base_url = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]";
+$admin_base = $base_url . $admin_root;
+
 if (!is_admin()) {
-    redirect('/admin/login');
+    redirect($admin_base . '/login');
 }
 
 $conn = get_db_connection();
@@ -15,24 +21,24 @@ if (!empty($settings['pin_enabled'])) {
         (time() - ($_SESSION['pin_verified_at'] ?? 0)) > 86400) {
 
         // Don't redirect if already on pin_verify page
-        $request = $_SERVER['REQUEST_URI'];
-        if (strpos($request, '/admin/pin_verify') === false) {
-            redirect('/admin/pin_verify');
+        if (strpos($request_uri, $admin_root . '/pin_verify') === false) {
+            redirect($admin_base . '/pin_verify');
         }
     }
 }
 
-// Admin Routing
-$request = $_SERVER['REQUEST_URI'];
-$path = rtrim(strtok($request, '?'), '/');
-if (strpos($path, '/admin') === 0) {
-    $path = substr($path, 6);
+// Extract path after /admin
+$path = '/';
+$admin_pos = strpos($request_uri, $admin_root);
+if ($admin_pos !== false) {
+    $after_admin = substr($request_uri, $admin_pos + strlen($admin_root));
+    $path = rtrim(strtok($after_admin, '?'), '/');
 }
 if (empty($path)) $path = '/';
 
 // Layout helper
 function admin_header($title = "Dashboard") {
-    global $settings, $path;
+    global $settings, $path, $admin_base;
     include __DIR__ . '/header.php';
 }
 
@@ -40,28 +46,34 @@ function admin_footer() {
     include __DIR__ . '/footer.php';
 }
 
-if ($path == '/' || $path == '') {
+// Router Logic
+if ($path == '/' || $path == '' || $path == '/posts') {
     include __DIR__ . '/posts.php';
-} elseif ($path == '/settings') {
+} elseif (strpos($path, '/settings') === 0) {
     include __DIR__ . '/settings.php';
-} elseif ($path == '/comments') {
+} elseif (strpos($path, '/comments') === 0) {
     include __DIR__ . '/comments.php';
-} elseif ($path == '/subscribers') {
+} elseif (strpos($path, '/subscribers') === 0) {
     include __DIR__ . '/subscribers.php';
-} elseif ($path == '/categories') {
+} elseif (strpos($path, '/categories') === 0) {
     include __DIR__ . '/categories.php';
-} elseif ($path == '/pages') {
+} elseif (strpos($path, '/pages') === 0) {
     include __DIR__ . '/pages.php';
-} elseif ($path == '/profile') {
+} elseif (strpos($path, '/profile') === 0) {
     include __DIR__ . '/profile.php';
-} elseif ($path == '/pin_verify') {
+} elseif (strpos($path, '/pin_verify') === 0) {
     include __DIR__ . '/pin_verify.php';
-} elseif ($path == '/ajax_suggest.php' || $path == '/ajax_suggest') {
+} elseif (strpos($path, '/ajax_suggest') === 0) {
     include __DIR__ . '/ajax_suggest.php';
-} elseif ($path == '/logout') {
+} elseif (strpos($path, '/logout') === 0) {
     session_destroy();
     redirect('/admin/login');
 } else {
-    redirect('/admin/');
+    // Fallback or specific file handling
+    $file = __DIR__ . $path . '.php';
+    if (file_exists($file)) {
+        include $file;
+    } else {
+        redirect('/admin/');
+    }
 }
-?>

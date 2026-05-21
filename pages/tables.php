@@ -1,5 +1,5 @@
 <?php
-$custom_meta_title = "League Standings | GFW Intelligence";
+$custom_meta_title = "League Standings | " . ($settings['name'] ?? 'Football Intelligence');
 include __DIR__ . '/../includes/header.php';
 
 $leagues = [
@@ -107,4 +107,4 @@ $leagues = [
     });
 </script>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/../includes/footer.php';

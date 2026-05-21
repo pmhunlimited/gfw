@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS site_settings (
     ig_access_token TEXT,
     tt_client_key VARCHAR(255),
     tt_client_secret VARCHAR(255),
-    tt_access_token TEXT
+    tt_access_token TEXT,
+    taxonomy_migrated BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -93,6 +94,8 @@ CREATE TABLE IF NOT EXISTS pages (
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
     content LONGTEXT,
+    is_external BOOLEAN DEFAULT FALSE,
+    external_url VARCHAR(255),
     is_visible BOOLEAN DEFAULT TRUE,
     position ENUM('top', 'main', 'footer') DEFAULT 'main',
     meta_title VARCHAR(255),
