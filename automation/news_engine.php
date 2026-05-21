@@ -168,24 +168,23 @@ foreach ($discovered_items as $item) {
     // Stage 2: Content Generation for this specific story
     echo "Stage 2: Factual Rewriting and SEO metadata generation...\n";
     $target_cat = $item['category'];
-    $content_prompt = "Act as a Senior Sports Editor for a premium Nigerian daily reporting for '{$settings['name']}'. You are the exclusive voice of the network.
+    $content_prompt = "Act as a Senior European Football Columnist for '{$settings['name']}'. You are an expert analyst with a deep understanding of the tactical and emotional nuances of the beautiful game.
 
     SOURCE DATA:
     Headline: '{$item['title']}'
     Factual Summary: '{$item['description']}'
 
-    STYLE: Nigerian Standard English (NSE). Authoritative, 'flowery' but precise, and highly engaging.
+    STYLE: Professional British Standard English. Authoritative, insightful, and highly engaging. Think of a blend between a high-end broadsheet sports page and an expert fan-led editorial.
 
     STRICT LINGUISTIC GUIDELINES (0% AI DETECTION - 100% HUMAN):
-    1. REWRITE THE TITLE: Create a formal, strong Nigerian headline (e.g. 'Victory for Arsenal as they Outclass Opponents at the Emirates'). Ensure 100% ownership.
+    1. REWRITE THE TITLE: Create a strong, punchy, and professional headline. Avoid clichés.
     2. WHITE-LABEL: Replace ALL mentions of external sources (BBC, Sky, ESPN, etc.) with '{$settings['name']}'.
-    3. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Jersey/Kit', and 'Boots'. Use strong adjectives: 'clinical', 'resilient', 'stalwart', 'formidable'.
-    4. NSE IDIOMS: Use formal expressions: 'The lion\'s share', 'In the scheme of things', 'At the end of the day', 'The powers that be', 'To give a good account of themselves'.
-    5. NIGERIAN CONTEXT: Highlight Nigerian connections (Osimhen, Boniface, etc.) as 'The Super Eagles talisman' or 'The Nigerian international'.
-    6. CURRENCY: Use Naira (₦) first for financial mentions (use ₦1600/$1 conversion if needed) and Metric units.
-    7. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
-    8. NO PIDGIN: Stay 100% formal but local Nigerian Standard English.
-    9. SENTENCE VARIETY: Vary sentence lengths and structures. Avoid starting multiple sentences with the same word. Use active voice.
+    3. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Kit' (not uniform). Use expert terminology: 'low block', 'transitional play', 'clinical finishing', 'tactical flexibility'.
+    4. PERSPECTIVE: Write as an insider. Use occasional rhetorical questions to engage the reader.
+    5. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
+    6. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
+    7. HUMAN TOUCH: Use colloquialisms common in football culture (e.g., 'bottled it', 'in the mixer', 'squeaky bum time', 'parked the bus') sparingly but effectively to establish authenticity.
+    8. NO HALLUCINATIONS: Do not add external facts not present in the summary, but you MAY add expert analysis and fan-perspective commentary based ONLY on the provided summary.
 
     BANNED PHRASES/AI TELLS (STRICTLY FORBIDDEN):
     - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage', 'tapestry', 'delve', 'unleash', 'comprehensive', 'ultimate guide'.
@@ -197,19 +196,16 @@ foreach ($discovered_items as $item) {
     - NO Signposting: 'Let\'s dive in', 'Without further ado'.
     - NO generic closings: 'The future looks bright', 'Exciting times lie ahead'.
 
-    NIGERIAN CONTEXT INJECTOR:
-    - At the end of the article, add 2-8 sentences describing how local fans at viewing centers in Lagos or Abuja would react. Use flowing NSE prose.
-
     CATEGORY SELECTION:
     - Categorize strictly into one of: ($cat_list).
 
     Return ONLY a valid JSON object with:
-    - 'title': The formal, rewritten NSE headline.
+    - 'title': The professional, rewritten headline.
     - 'category': Chosen category.
-    - 'content': Rewritten report + Nigerian Context (flowing prose, no em-dashes).
+    - 'content': Rewritten expert report (flowing prose, no em-dashes or hyphens).
     - 'tags': 6-10 SEO tags.
-    - 'meta_title': NSE-style invitation (e.g. 'Discover how the title race is shaping up...').
-    - 'meta_description': Targeted at Nigerian fans.
+    - 'meta_title': Professional invitation to read.
+    - 'meta_description': Concise, punchy summary for search engines.
 
     No other text.";
 
@@ -286,6 +282,11 @@ foreach ($discovered_items as $item) {
     // Replace all dash variations with proper punctuation or spaces
     $generated_title = preg_replace('/(\s*[\-\–\—]\s*)/u', ' ', $generated_title);
     $generated_content = preg_replace('/(\s*[\-\–\—]\s*)/u', '. ', $generated_content);
+
+    // Remove stray '?' that often appear from encoding errors
+    $generated_title = str_replace('?', '', $generated_title);
+    $generated_content = str_replace('?', '', $generated_content);
+
     $generated_content = str_replace(['. .', '. . '], '. ', $generated_content);
     $generated_content = preg_replace('/\s+/', ' ', $generated_content);
 

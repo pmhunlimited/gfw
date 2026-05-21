@@ -174,25 +174,35 @@ function clean_utf8($string) {
     // Remove UTF-8 BOM if present
     $string = str_replace("\xEF\xBB\xBF", '', $string);
 
+    // Map common UTF-8 "smart" characters to their ASCII equivalents BEFORE encoding conversion
+    $utf8_map = [
+        "\xe2\x80\x98" => "'", "\xe2\x80\x99" => "'", // Smart single quotes
+        "\xe2\x80\x9c" => '"', "\xe2\x80\x9d" => '"', // Smart double quotes
+        "\xe2\x80\x93" => '-', "\xe2\x80\x94" => '-', // En/Em dashes
+        "\xe2\x80\xa6" => '...', // Ellipsis
+    ];
+    $string = strtr($string, $utf8_map);
+
     // Force valid UTF-8 and remove invalid sequences
     $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
 
-    // Specifically remove the replacement character  (U+FFFD)
+    // Specifically remove the replacement character (U+FFFD) which often shows as '?'
     $string = str_replace("\xEF\xBF\xBD", '', $string);
 
-    // Replace common Windows-1252 / CP1252 characters that often cause issues in UTF-8
+    // Replace common Windows-1252 / CP1252 characters
     $map = [
         chr(0x80) => '€', chr(0x82) => '‚', chr(0x83) => 'ƒ', chr(0x84) => '„',
-        chr(0x85) => '…', chr(0x86) => '†', chr(0x87) => '‡', chr(0x88) => 'ˆ',
+        chr(0x85) => '...', chr(0x86) => '†', chr(0x87) => '‡', chr(0x88) => 'ˆ',
         chr(0x89) => '‰', chr(0x8A) => 'Š', chr(0x8B) => '‹', chr(0x8C) => 'Œ',
-        chr(0x8E) => 'Ž', chr(0x91) => '‘', chr(0x92) => '’', chr(0x93) => '“',
-        chr(0x94) => '”', chr(0x95) => '•', chr(0x96) => '–', chr(0x97) => '—',
-        chr(0x98) => '˜', chr(0x99) => '™', chr(0x9A) => 'š', chr(0x9B) => '›',
+        chr(0x8E) => 'Ž', chr(0x91) => "'", chr(0x92) => "'", chr(0x93) => '"',
+        chr(0x94) => '"', chr(0x95) => '•', chr(0x96) => '-', chr(0x97) => '-',
+        chr(0x98) => '~', chr(0x99) => '™', chr(0x9A) => 'š', chr(0x9B) => '›',
         chr(0x9C) => 'œ', chr(0x9E) => 'ž', chr(0x9F) => 'Ÿ',
     ];
     $string = strtr($string, $map);
 
     // Remove any remaining non-printable characters, keeping common accented letters and symbols
+    // Also explicitly strip literal '?' if they are likely remnants of failed encoding
     $cleaned = preg_replace('/[^\x20-\x7E\xA0-\xFF\x{0100}-\x{FFFF}]/u', '', $string);
 
     return ($cleaned !== null) ? $cleaned : $string;

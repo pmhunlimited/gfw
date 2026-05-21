@@ -109,19 +109,19 @@ if (isset($_POST['generate_ai'])) {
     $publish_date = !empty($_POST['publish_date']) ? $_POST['publish_date'] : date('Y-m-d H:i:s');
     $is_top = 1; // AI generated posts are promoted by default
 
-    $prompt = "Act as a Senior Sports Editor for a premium Nigerian daily reporting for '{$settings['name']}'. You are the exclusive voice of the network.
+    $prompt = "Act as a Senior European Football Columnist for '{$settings['name']}'. You are an expert analyst with a deep understanding of the tactical and emotional nuances of the beautiful game.
                Generate a professional sports news article about '$topic' in the category '$cat'.
 
-               STYLE: Nigerian Standard English (NSE). Authoritative, 'flowery' but precise, and highly engaging.
+               STYLE: Professional British Standard English. Authoritative, insightful, and highly engaging. Think of a blend between a high-end broadsheet sports page and an expert fan-led editorial.
 
                STRICT LINGUISTIC GUIDELINES (0% AI DETECTION - 100% HUMAN):
-               1. TITLE: Create a formal, strong Nigerian headline.
-               2. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Jersey/Kit', and 'Boots'. Use strong adjectives: 'clinical', 'resilient', 'stalwart', 'formidable'.
-               3. NSE IDIOMS: Use formal expressions: 'The lion\'s share', 'In the scheme of things', 'At the end of the day', 'The powers that be', 'To give a good account of themselves'.
-               4. NIGERIAN CONTEXT: Highlight Nigerian connections (Osimhen, Boniface, etc.) as 'The Super Eagles talisman' or 'The Nigerian international'.
-               5. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
-               6. NO PIDGIN: Stay 100% formal but local Nigerian Standard English.
-               7. SENTENCE VARIETY: Vary sentence lengths and structures. Avoid starting multiple sentences with the same word. Use active voice.
+               1. TITLE: Create a strong, punchy, and professional headline. Avoid clichés.
+               2. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Kit' (not uniform). Use expert terminology: 'low block', 'transitional play', 'clinical finishing', 'tactical flexibility'.
+               3. PERSPECTIVE: Write as an insider. Use occasional rhetorical questions to engage the reader.
+               4. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
+               5. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
+               6. HUMAN TOUCH: Use colloquialisms common in football culture (e.g., 'bottled it', 'in the mixer', 'squeaky bum time', 'parked the bus') sparingly but effectively to establish authenticity.
+               7. NO HALLUCINATIONS: Stick to the factual context of the topic but you MAY add expert analysis and fan-perspective commentary.
 
                BANNED PHRASES/AI TELLS (STRICTLY FORBIDDEN):
                - NO: 'pivotal moment', 'vital role', 'testament', 'underscores', 'evolving landscape', 'indelible mark', 'shaping the', 'setting the stage', 'tapestry', 'delve', 'unleash', 'comprehensive', 'ultimate guide'.
@@ -129,16 +129,13 @@ if (isset($_POST['generate_ai'])) {
                - NO Ad-speak: 'groundbreaking', 'transformative', 'cutting-edge', 'seamless', 'robust', 'world-class'.
                - NO Filler: 'At its core', 'In today\'s world', 'It\'s worth noting', 'Needless to say', 'That being said'.
 
-               NIGERIAN CONTEXT INJECTOR:
-               - At the end of the article, add 2-8 sentences describing how local fans at viewing centers in Lagos or Abuja would react. Use flowing NSE prose.
-
                Return JSON with:
-               - 'title': The formal, rewritten NSE headline.
-               - 'content': Rewritten report + Nigerian Context (flowing prose, no em-dashes or hyphens).
+               - 'title': The professional, rewritten headline.
+               - 'content': Rewritten expert report (flowing prose, no em-dashes or hyphens).
                - 'image_keyword': 3-5 highly specific keywords for an exact image matching this story.
                - 'tags': 6-10 SEO tags.
-               - 'meta_title': NSE-style invitation.
-               - 'meta_description': Targeted at Nigerian fans.
+               - 'meta_title': Professional invitation to read.
+               - 'meta_description': Concise, punchy summary for search engines.
                - 'meta_keywords': High ranking keywords for this specific news.
                Ensure the response is a valid JSON object.";
     $raw = get_ai_insight($prompt);
@@ -192,6 +189,11 @@ if (isset($_POST['generate_ai'])) {
         // Punctuation Cleanup (Remove AI-style em-dashes, hyphens and fix spacing)
         $title = preg_replace('/(\s*[\-\–\—]\s*)/u', ' ', $title);
         $content = preg_replace('/(\s*[\-\–\—]\s*)/u', '. ', $content);
+
+        // Remove stray '?' that often appear from encoding errors
+        $title = str_replace('?', '', $title);
+        $content = str_replace('?', '', $content);
+
         $content = str_replace(['. .', '. . '], '. ', $content);
         $content = preg_replace('/\s+/', ' ', $content);
 
