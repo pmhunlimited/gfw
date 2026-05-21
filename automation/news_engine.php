@@ -182,7 +182,8 @@ foreach ($discovered_items as $item) {
     3. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Kit' (not uniform). Use expert terminology: 'low block', 'transitional play', 'clinical finishing', 'tactical flexibility'.
     4. PERSPECTIVE: Write as an insider. Use occasional rhetorical questions to engage the reader.
     5. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
-    6. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
+    6. STRUCTURE: Organize the content into 3-6 clearly defined paragraphs. Use DOUBLE NEWLINES (\n\n) between paragraphs.
+    7. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
     7. HUMAN TOUCH: Use colloquialisms common in football culture (e.g., 'bottled it', 'in the mixer', 'squeaky bum time', 'parked the bus') sparingly but effectively to establish authenticity.
     8. NO HALLUCINATIONS: Do not add external facts not present in the summary, but you MAY add expert analysis and fan-perspective commentary based ONLY on the provided summary.
 
@@ -288,7 +289,9 @@ foreach ($discovered_items as $item) {
     $generated_content = str_replace('?', '', $generated_content);
 
     $generated_content = str_replace(['. .', '. . '], '. ', $generated_content);
-    $generated_content = preg_replace('/\s+/', ' ', $generated_content);
+    // Standardize newlines and then remove excess but keep double newlines for paragraphs
+    $generated_content = str_replace("\r", "", $generated_content);
+    $generated_content = preg_replace("/\n{3,}/", "\n\n", $generated_content);
 
     // 4. Save to Database
     $title = sanitize($generated_title);

@@ -699,10 +699,31 @@ function upload_image($file, $target_subpath = 'uploads/') {
 
 // Basic Markdown to HTML
 function parse_markdown($text) {
+    if (empty($text)) return '';
     $text = htmlspecialchars($text);
+
+    // Headers
     $text = preg_replace('/^# (.*$)/m', '<h2 class="h3 font-condensed fw-black text-electric-red mt-4 mb-3 uppercase italic">$1</h2>', $text);
     $text = preg_replace('/^## (.*$)/m', '<h3 class="h4 font-condensed fw-black text-white mt-4 mb-2 uppercase italic">$1</h3>', $text);
+
+    // Bold
     $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+
+    // Paragraphs: Split by double newlines and wrap in <p> if not already a block element
+    $blocks = explode("\n\n", $text);
+    $html_blocks = [];
+    foreach ($blocks as $block) {
+        $block = trim($block);
+        if (empty($block)) continue;
+
+        // If it doesn't start with a header tag or table, wrap in <p>
+        if (!preg_match('/^<(h2|h3|div|table)/i', $block)) {
+            $html_blocks[] = '<p class="mb-4 leading-relaxed">' . nl2br($block) . '</p>';
+        } else {
+            $html_blocks[] = $block;
+        }
+    }
+    $text = implode("\n", $html_blocks);
 
     // Simple table parser
     if (strpos($text, '|') !== false) {
@@ -733,7 +754,7 @@ function parse_markdown($text) {
         if ($inTable) $html .= '</tbody></table></div>';
         return $html;
     }
-    return nl2br($text);
+    return $text;
 }
 
 /**

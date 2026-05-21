@@ -119,7 +119,8 @@ if (isset($_POST['generate_ai'])) {
                2. VOCABULARY: Use 'Football' (never soccer), 'Pitch' (not field), 'Kit' (not uniform). Use expert terminology: 'low block', 'transitional play', 'clinical finishing', 'tactical flexibility'.
                3. PERSPECTIVE: Write as an insider. Use occasional rhetorical questions to engage the reader.
                4. PUNCTUATION: Use flowing prose and proper sentence breaks. ABSOLUTELY NO em-dashes (—/–), NO HYPHENS (-), and NO AI-style bullet points.
-               5. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
+               5. STRUCTURE: Organize the content into 3-6 clearly defined paragraphs. Use DOUBLE NEWLINES (\n\n) between paragraphs.
+               6. SENTENCE VARIETY: Vary sentence lengths and structures significantly. Mix short, impactful sentences with longer, more detailed observations (burstiness).
                6. HUMAN TOUCH: Use colloquialisms common in football culture (e.g., 'bottled it', 'in the mixer', 'squeaky bum time', 'parked the bus') sparingly but effectively to establish authenticity.
                7. NO HALLUCINATIONS: Stick to the factual context of the topic but you MAY add expert analysis and fan-perspective commentary.
 
@@ -195,7 +196,9 @@ if (isset($_POST['generate_ai'])) {
         $content = str_replace('?', '', $content);
 
         $content = str_replace(['. .', '. . '], '. ', $content);
-        $content = preg_replace('/\s+/', ' ', $content);
+        // Standardize newlines and then remove excess but keep double newlines for paragraphs
+        $content = str_replace("\r", "", $content);
+        $content = preg_replace("/\n{3,}/", "\n\n", $content);
 
         $stmt = $conn->prepare("INSERT INTO posts (title, slug, excerpt, content, category, author, image, is_scheduled, publish_date, tags, meta_title, meta_description, meta_keywords, is_top_story) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         if ($stmt->execute([$title, $slug, $excerpt, $content, $cat, $author, $db_image, $is_scheduled, $publish_date, $tags, $meta_title, $meta_desc, $meta_keys, $is_top])) {
